@@ -1,19 +1,10 @@
-
-christen this file schurQR.f
-cut here >>>>>>>>>>>>>>>>>>>
-
-c  Copyright  (C) 2011 Roger Fletcher
-c  Current version dated 17 January 2012
-
-c  THE ACCOMPANYING PROGRAM IS PROVIDED UNDER THE TERMS OF THE ECLIPSE PUBLIC
-c  LICENSE ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THE PROGRAM
-c  CONSTITUTES RECIPIENT'S ACCEPTANCE OF THIS AGREEMENT
-
+christen this file sparseL.f
+cut here >>>>>>>>>>>>>>>>>
 c***************** sparse matrix routines for manipulating L *******************
 
-c        **********************************************************
-c        Basis matrix routines for LCP solvers with sparse matrices
-c        **********************************************************
+c           ***************************************************
+c           Basis matrix routines for bqpd with sparse matrices
+c           ***************************************************
 
 c  These routines form and update L-Implicit-U factors LPB=U of a matrix B
 c  whose columns are the normal vectors of the active constraints. In this
@@ -29,43 +20,35 @@ c  specified in sparse format and the user is referred to the file  sparseA.f.
 c  The data structure used for L is that of a profile or skyline scheme, in
 c  which the nontrivial rows of L are stored as dense row spikes. The use of
 c  a Tarjan+spk1 ordering algorithm to control the length of these spikes has
-c  proved quite effective.
-
-c  In schurQR.f, the factors are updated by the Schur complement method with
-c  QR factors. This is based on the block factorization
-c
-c            | B  V | = | L  0 | | U  V |
-c            | E  0 |   | S  I | | 0  C |
-c
-c  where V are columns of the constraint normals [I A] that have been added to
-c  the active set, and E has unit rows in which the unit element marks
-c  columns of B that have been removed from B. C=-E.inv(B).V is the
-c  Schur complement matrix, which is independent of how L and U are defined,
-c  and its QR factors are stored. The current dimension of C is stored in the
-c  parameter ms of   common/refactorc/mc,mxmc   and the user must set a
-c  maximum permitted value of mc in mxmc (mxmc <= n). The current basis matrix
-c  is refactored if mc would exceed mxmc, or if issues of numerical stability
-c  arise. Typically mxmc=25 is suitable.
-
+c  proved quite effective. The factors are updated by a variant of the
+c  Fletcher-Matthews method, which has proved very reliable in practice.
+c  However the B matrix is re-factored every 30 updates to control growth in
+c  the total spike length.
 
 c  Workspace
 c  *********
-c  The user needs to supply storage for the row spikes in the LIU data
-c  structure of L, Also storage for matrices in the Schur complement scheme
-c  is required. The amount of storage required is unknown a-priori.
-c  Storage for schurQR.f is situated at the end of the workspace arrays ws
-c  and lws in bqpd. Allow as much space for ws as you can afford: the routine
-c  will report if there is not enough. So far 10^6 locations has proved
-c  adequate for problems of up to 5000 variables.
+c  The user needs to supply storage for the rows of L, although the amount
+c  required is unknown a-priori.
+c  sparse.f requires
+c     5*n+nprof          locations of real workspace, and
+c     9*n+m              locations of integer workspace
+c  where nprof is the space required for storing the row spikes of the L matrix.
+c  Storage for sparseL.f is situated at the end of the workspace arrays ws
+c  and lws in bqpd.
+c  Allow as much space for nprof as you can afford: the routine will report if
+c  there is not enough. So far 10^6 locations has proved adequate for problems
+c  of up to 5000 variables.
 
+c  In addition the current version of bqpd.f requires
+c     kmax*(kmax+9)/2+2*n+m   locations of real workspace in ws
+c     kmax                    locations of integer workspace in lws
 c  The user is also allowed to reserve storage in ws and lws, for use in the
 c  user-supplied routine gdotx. This storage is situated at the start of the
 c  arrays ws and lws. The user specifies the amount required by
 c  setting the parameters kk and ll in the common block
 c     common/wsc/kk,ll,kkk,lll,mxws,mxlws
-c  Storage required by the LCP solver is also required: the amount is set by
-c  the LCP solver in kkk and lll. The user MUST set mxws and mxlws to be
-c  the total amount of real and integer workspace for the arrays ws and lws.
+c  The user MUST also set mxws and mxlws to be (respectively) the total amount
+c  of real and integer workspace for the arrays ws and lws.
 
 c  Other information
 c  *****************
@@ -87,18 +70,33 @@ c  documented below.
 
 c  Steepest edge coefficients e(i) are also updated in these routines
 
+c  Copyright, University of Dundee (R.Fletcher), January 1998
+c  Current version dated 16/04/02
+
       subroutine start_up(n,nm,nmi,a,la,nk,e,ls,aa,ll,mode,ifail)
       implicit double precision (a-h,r-z), integer (i-q)
       dimension a(*),la(0:*),e(*),ls(*),aa(*),ll(*)
       common/noutc/nout
       common/wsc/kk,ll_,kkk,lll,mxws,mxlws
       common/epsc/eps,tol,emin
-      common/schurc/ns,ns1,nt,nt1,nu,nu1,nx,nx1,np,np1,neb,neb1,nprof,
-     *  lc,lc1,li,li1,lm,lm1,lp,lp1,lq,lq1,lr,lr1,ls_,ls1,lt,lt1,
-     *  nq,nq1,nr,nr1,ny,ny1,nz,nz1,lv,lv1,le,le1
+      common/sparsec/ns,ns1,nt,nt1,nu,nu1,nx,nx1,np,np1,nprof,
+     *  lc,lc1,li,li1,lm,lm1,lp,lp1,lq,lq1,lr,lr1,ls_,ls1,lt,lt1
       common/factorc/m1,m2,mp,mq,lastr,irow
-      common/refactorc/mc,mxmc
-      mxmc=min(n,mxmc)
+      common/refactorc/nup,nfreq
+      nfreq=min(30,nfreq)
+      nup=0
+      ns=kk+kkk+5*n
+      nt=ll_+lll+8*n+nmi
+      nprof=mxws-ns
+      if(nprof.le.0.or.nt.gt.mxlws)then
+        write(nout,*)'not enough real (ws) or integer (lws) workspace'
+        write(nout,*)'you give values for mxws and mxlws as',mxws,mxlws
+        write(nout,*)'minimum values for mxws and mxlws are',ns,nt
+        ifail=7
+        return
+      endif
+    3 format(A/(20I5))
+    4 format(A/(5E15.7))
 c  set storage map for sparse factors
       ns=n
       ns1=ns+1
@@ -108,25 +106,8 @@ c  set storage map for sparse factors
       nu1=nu+1
       nx=nu+n
       nx1=nx+1
-      nq=nx+n
-      nq1=nq+1
-      nr=nq+mxmc**2
-      nr1=nr+1
-      ny=nr+mxmc*(mxmc+1)/2
-      ny1=ny+1
-      nz=ny+mxmc+1
-      nz1=nz+1
-      np=nz+mxmc+1
+      np=nx+n
       np1=np+1
-      nprof=mxws-kk-kkk-np
-c     print *,'nprof =',nprof
-      if(nprof.le.0)then
-        write(nout,*)'not enough real workspace in ws'
-        write(nout,*)'you give mxws as',mxws
-        write(nout,*)'mxws must be much greater than',mxws-nprof
-        ifail=7
-        return
-      endif
       lc=n
       lc1=lc+1
       li=lc+n
@@ -143,71 +124,11 @@ c     print *,'nprof =',nprof
       ls1=ls_+1
       lt=ls_+n
       lt1=lt+1
-      lv=lt+n
-      lv1=lv+1
-      le=lv+mxmc+1
-      le1=le+1
-      lleft=mxlws-ll_-lll-le-mxmc-1
-      if(lleft.lt.0)then
-        write(nout,*)'not enough integer workspace in lws'
-        write(nout,*)'you give mxlws as',mxlws
-        write(nout,*)'minimum value for mxlws is',mxlws-lleft
-        ifail=7
-        return
-      endif
       m=nm-n
       mp=-1
       mq=-1
 c     write(nout,*)'ls',(ls(ij),ij=1,nk)
-      if(mode.eq.3)then
-        if(nk.lt.n)then
-c  reset ls from e
-          do j=1,nk
-            i=-ls(j)
-            if(i.gt.0)e(i)=-e(i)
-          enddo
-          j=0
-          nk=nmi
-          do i=1,nmi
-            if(e(i).ne.0.D0)then
-              j=j+1
-              if(e(i).gt.0.D0)then
-                ls(j)=i
-              else
-                ls(j)=-i
-                e(i)=-e(i)
-              endif
-            else
-              ls(nk)=i
-              nk=nk-1
-            endif
-          enddo
-          if(j.ne.n)then
-            write(nout,*)'malfunction in reset sequence in start_up'
-            stop
-          endif
-        endif
-c  reset lr, lc, li, m1 and m2 from ls
-        do i=li+n+1,li+nm
-          ll(i)=0
-        enddo
-        m1=n
-        m2=0
-        do j=1,n
-          i=abs(ls(j))
-          if(i.gt.n)then
-            ll(lc+m1)=i
-            ll(li+i)=m1
-            m1=m1-1
-          else
-            m2=m2+1
-            lii=ll(li+i)
-            lrm2=ll(m2)
-            call iexch(ll(lii),ll(m2))
-            call iexch(ll(li+i),ll(li+lrm2))
-          endif
-        enddo
-        m1=n-m1
+      if(mode.ge.3)then
         call re_order(n,nm,a,la(1),la(la(0)),ll,ll(lc1),ll(li1),
      *    ll(lm1),ll(lp1),ll(lq1),ll(lr1),ll(ls1),ll(lt1),aa(np1),
      *    nprof,ifail)
@@ -226,18 +147,32 @@ c         write(nout,*)'failure in re_order (1)'
           mode=2
           goto1
         endif
-        call EBspace(n,ll(lp1),ll(lq1),ll(ls1),ll,aa(np1),
-     *    neb,nprof,ifail)
-        if(ifail.gt.0)return
-        neb=np+neb
-        neb1=neb+1
-        mc=0
-        do i=1,m2
-          ll(lm+i)=ll(i)
+        if(nk.eq.n)return
+c  reset ls from e
+        do j=1,nk
+          i=-ls(j)
+          if(i.gt.0)e(i)=-e(i)
         enddo
-        do i=m2+1,n
-          ll(lm+i)=ll(lc+i)
+        j=0
+        nk=nmi
+        do i=1,nmi
+          if(e(i).ne.0.D0)then
+            j=j+1
+            if(e(i).gt.0.D0)then
+              ls(j)=i
+            else
+              ls(j)=-i
+              e(i)=-e(i)
+            endif
+          else
+            ls(nk)=i
+            nk=nk-1
+          endif
         enddo
+        if(j.ne.n)then
+          write(nout,*)'malfunction in reset sequence in start_up'
+          stop
+        endif
         return
       endif
     1 continue
@@ -254,7 +189,7 @@ c  set a lower bound on e(i): setting emin=0.D0 will force emin to be recalculat
         ll(li+i)=i
         e(i)=1.D0
       enddo
-      do i=n+1,nm
+      do i=n+1,nmi
         ll(li+i)=0
         e(i)=0.D0
       enddo
@@ -278,31 +213,18 @@ c  shift designated bounds to end and order the resulting rows and columns
      *    aa(np1),nprof,ifail)
         if(ifail.gt.0)return
       endif
-      call factor(n,nm,nu_,nk,a,la,e,ls,aa(ns1),aa(nt1),aa(nu1),
+      call factor(n,nmi,nu_,nk,a,la,e,ls,aa(ns1),aa(nt1),aa(nu1),
      *  aa(nx1),ll,ll(lc1),ll(li1),ll(lm1),ll(lp1),ll(lq1),ll(lr1),
      *  ll(ls1),aa(np1),nprof,aa,ifail)
-      call EBspace(n,ll(lp1),ll(lq1),ll(ls1),ll,aa(np1),
-     *  neb,nprof,ifail)
       if(ifail.gt.0)return
-      neb=np+neb
-      neb1=neb+1
-      mc=0
-      do i=1,m2
-        ll(lm+i)=ll(i)
-      enddo
-      do i=m2+1,n
-        ll(lm+i)=ll(lc+i)
-      enddo
-      if(ifail.gt.0)return
-    3 format(A/(15I5))
-    4 format(A/(5E15.7))
 c     write(nout,*)'steepest edge coefficients',(e(ij),ij=1,nm)
 c     emax=0.D0
 c     do i=1,nm
 c       if(e(i).gt.0.D0)then
-c         call eptsol(n,a,la,i,a,aa(nq1),aa(nr1),aa(neb1),aa(ny1),
-c    *    aa(ns1),aa(nu1),aa(nx1),aa,aa(np1),
-c    *    ll,ll(lc1),ll(li1),ll(lv1),ll(le1),ll(lp1),ll(lq1),ei)
+c         call eptsol(n,a,la,i,a,aa(ns1),aa(nt1),aa,aa(np1),
+c    *      ll,ll(lc1),ll(li1),ll(lp1),ll(lq1))
+c         ei=xlen(0.D0,aa(ns1),n)
+c         ei=sqrt(scpr(0.D0,aa(ns1),aa(ns1),n))
 c         emax=max(emax,abs(ei-e(i)))
 c       endif
 c     enddo
@@ -314,143 +236,160 @@ c    *  write(nout,*)'error in steepest edge coefficients =',emax
       subroutine refactor(n,nm,a,la,aa,ll,ifail)
       implicit double precision (a-h,o-z)
       dimension a(*),la(0:*),aa(*),ll(*)
-      common/schurc/ns,ns1,nt,nt1,nu,nu1,nx,nx1,np,np1,neb,neb1,nprof,
-     *  lc,lc1,li,li1,lm,lm1,lp,lp1,lq,lq1,lr,lr1,ls_,ls1,lt,lt1,
-     *  nq,nq1,nr,nr1,ny,ny1,nz,nz1,lv,lv1,le,le1
+      common/sparsec/ns,ns1,nt,nt1,nu,nu1,nx,nx1,np,np1,nprof,
+     *  lc,lc1,li,li1,lm,lm1,lp,lp1,lq,lq1,lr,lr1,ls,ls1,lt,lt1
       common/factorc/m1,m2,mp,mq,lastr,irow
       common/noutc/nout
 c     write(nout,*)'refactor'
-      ifail=1
+      m=nm-n
+      call re_order(n,nm,a,la(1),la(la(0)),ll,ll(lc1),ll(li1),
+     *  ll(lm1),ll(lp1),ll(lq1),ll(lr1),ll(ls1),ll(lt1),aa(np1),
+     *  nprof,ifail)
+      if(ifail.ge.1)then
+c       write(nout,*)'failure in re_order (2)'
+        return
+      endif
+      call re_factor(n,nm,a,la,ll,ll(lc1),ll(li1),ll(lm1),
+     *  ll(lp1),ll(lq1),ll(lr1),ll(ls1),ll(lt1),aa(np1),
+     *  nprof,aa,ifail)
+      if(ifail.eq.7)return
+      call check_L(n,aa,ll(lp1),ifail)
       return
       end
 
-      subroutine pivot(p,q,n,nm,a,la,e,aa,ll,ifail,npv)
+      subroutine pivot(p,q,n,nm,a,la,e,aa,ll,ifail,info)
       implicit double precision (a-h,r-z), integer (i-q)
-      dimension a(*),la(0:*),e(*),aa(*),ll(*)
+      dimension a(*),la(0:*),e(*),aa(*),ll(*),info(*)
       common/noutc/nout
       common/iprintc/iprint
-      common/schurc/ns,ns1,nt,nt1,nu,nu1,nx,nx1,np,np1,neb,neb1,nprof,
-     *  lc,lc1,li,li1,lm,lm1,lp,lp1,lq,lq1,lr,lr1,ls_,ls1,lt,lt1,
-     *  nq,nq1,nr,nr1,ny,ny1,nz,nz1,lv,lv1,le,le1
+      common/sparsec/ns,ns1,nt,nt1,nu,nu1,nx,nx1,np,np1,nprof,
+     *  lc,lc1,li,li1,lm,lm1,lp,lp1,lq,lq1,lr,lr1,ls,ls1,lt,lt1
       common/factorc/m1,m2,mp,mq,lastr,irow
       common/mxm1c/mxm1
-      common/refactorc/mc,mxmc
+      common/refactorc/nup,nfreq
       common/epsc/eps,tol,emin
-      common/pqc/pc,qr,lmp
 c     write(nout,*)'pivot: p,q =',p,q
-      call updateSE(p,q,n,nm,a,la,e,aa(nq1),aa(nr1),aa(neb1),
-     *  aa(ny1),aa(nz1),aa(ns1),aa(nt1),aa(nu1),aa(nx1),aa,aa(np1),ll,
-     *  ll(lc1),ll(li1),ll(lp1),ll(lq1),ll(lm1),ll(lv1),ll(le1),ifail)
-      if(ifail.eq.1)return
-      if(mc.eq.mxmc.and.pc.eq.0.and.qr.eq.0)then
-c  reset permutations and refactorize L
-        mc1=mc+1
-        ll(le+mc1)=p
-        ll(lv+mc1)=q
-c       print 3,'le =',(ll(le+i),i=1,mc1)
-c       print 3,'lv =',(ll(lv+i),i=1,mc1)
-        do i=1,mc1
-          p=ll(le+i)
-          q=ll(lv+i)
-          ip=ll(li+p)
-          if(p.gt.n)then
-            m2=m2+1
-            qq=ll(lc+m2)
-            ll(lc+ip)=qq
-            ll(li+qq)=ip
-            ll(li+p)=0
+      ifail=0
+      if(p.ne.mp)then
+        call eptsol(n,a,la,p,a,aa(ns1),aa(nt1),aa,aa(np1),
+     *    ll,ll(lc1),ll(li1),ll(lp1),ll(lq1))
+        if(p.gt.n)then
+          e(p)=xlen(0.D0,aa(ns1+m2),m1)
+        else
+          e(p)=xlen(1.D0,aa(ns1+m2),m1)
+        endif
+        epp=e(p)
+        mp=p
+      endif
+      if(q.ne.mq)then
+        call aqsol(n,a,la,q,a,aa(nt1),aa(nx1),aa,aa(np1),
+     *    ll,ll(lc1),ll(li1),ll(lp1),ll(lq1))
+        mq=q
+      endif
+c  update steepest edge coefficients
+      tp=aa(nt+ll(li+p))
+      if(tp.eq.0.D0)tp=eps
+      ep=e(p)
+      eq=2.D0/ep
+c     do i=1,m2-1
+c       aa(nu+i)=0.D0
+c     enddo
+c     do i=m2,n
+      do i=1,n
+        aa(nu+i)=eq*aa(ns+i)
+      enddo
+      call aqsol(n,a,la,-1,a,aa(nu1),aa(nx1),aa,aa(np1),
+     *  ll,ll(lc1),ll(li1),ll(lp1),ll(lq1))
+c     write(nout,*)'row perm',(ll(ij),ij=1,n)
+c     write(nout,*)'column perm',(ll(lc+ij),ij=m2+1,n)
+c     write(nout,*)'s =',(aa(ns+ij),ij=1,n)
+c     write(nout,*)'t =',(aa(nt+ij),ij=1,n)
+c     write(nout,*)'u =',(aa(nu+ij),ij=1,n)
+      e(p)=0.D0
+      eq=ep/tp
+      do i=1,nm
+        if(e(i).gt.0.D0)then
+          j=ll(li+i)
+          ei=e(i)
+          wi=aa(nt+j)*eq
+          awi=abs(wi)
+          if(ei.ge.awi)then
+            wi=wi/ei
+            e(i)=max(emin,ei*sqrt(max(0.D0,1.D0+wi*(wi-aa(nu+j)/ei))))
           else
-            ll(ip)=ll(m2)
-            ll(li+ll(ip))=ip
-            ll(m2)=p
-            ll(li+p)=m2
+            wi=ei/wi
+            e(i)=max(emin,awi*sqrt(max(0.D0,1.D0+wi*(wi-aa(nu+j)/ei))))
           endif
-          if(q.gt.n)then
-            ll(lc+m2)=q
-            ll(li+q)=m2
-            m2=m2-1
-          else
-            iq=ll(li+q)
-            ll(iq)=ll(m2)
-            ll(li+ll(iq))=iq
-            ll(m2)=q
-            ll(li+q)=m2
-          endif
-        enddo
-c       print 3,'lr =',(ll(i),i=1,n)
-c       print 3,'lc =',(ll(lc+i),i=m2+1,n)
-c       print 3,'li =',(ll(li+i),i=1,nm)
+        endif
+      enddo
+      e(q)=max(emin,abs(eq))
+      info(1)=info(1)+1
+      if(nup.ge.nfreq)then
+c     if(nup.ge.30)then
+c  refactorize L
+        ip=ll(li+p)
+        if(p.gt.n)then
+          m2=m2+1
+          qq=ll(lc+m2)
+          ll(lc+ip)=qq
+          ll(li+qq)=ip
+          ll(li+p)=0
+        else
+          ll(ip)=ll(m2)
+          ll(li+ll(ip))=ip
+          ll(m2)=p
+          ll(li+p)=m2
+        endif
+        if(q.gt.n)then
+          ll(lc+m2)=q
+          ll(li+q)=m2
+          m2=m2-1
+        else
+          iq=ll(li+q)
+          ll(iq)=ll(m2)
+          ll(li+ll(iq))=iq
+          ll(m2)=q
+          ll(li+q)=m2
+        endif
         m1=n-m2
-c       call checkperms(n,ll,ll(lc1),ll(li1))
-c       mp=-1
-c       mq=-1
         call re_order(n,nm,a,la(1),la(la(0)),ll,ll(lc1),ll(li1),
      *    ll(lm1),ll(lp1),ll(lq1),ll(lr1),ll(ls1),ll(lt1),aa(np1),
      *    nprof,ifail)
         if(ifail.ge.1)then
-c         print *,'no traversal in re_order (3)'
-          ifail=11
+c         write(nout,*)'failure in re_order (3)'
           return
-          stop
         endif
         call re_factor(n,nm,a,la,ll,ll(lc1),ll(li1),
      *    ll(lm1),ll(lp1),ll(lq1),ll(lr1),ll(ls1),ll(lt1),aa(np1),
      *    nprof,aa,ifail)
-        if(ifail.eq.7)return
-        call EBspace(n,ll(lp1),ll(lq1),ll(ls1),ll,aa(np1),
-     *    neb,nprof,ifail)
-        if(ifail.gt.0)return
-        neb=np+neb
-        neb1=neb+1
-        mc=0
-        do i=1,m2
-          ll(lm+i)=ll(i)
-        enddo
-        do i=m2+1,n
-          ll(lm+i)=ll(lc+i)
-        enddo
       else
-        call updateQR(p,q,n,a,la,aa(nq1),aa(nr1),aa(neb1),aa(nx1),
-     *    aa(ny1),aa(nz1),ll,ll(lc1),ll(li1),ll(lv1),ll(le1),ll(lm1),
-     *    ifail)
-        if(ifail.gt.0)return
+c  update L
+        call update_L(p,q,n,nm,a,la,ll,ll(lc1),ll(li1),ll(lm1),ll(lp1),
+     *    ll(lq1),ll(lr1),ll(ls1),aa(np1),nprof,aa,aa(ns1),ifail)
       endif
-      npv=npv+1
+      if(ifail.eq.7)return
       mp=-1
       mq=-1
-c     call check_L(n,aa,ll(lp1),ifail)
-c     print 4,'e =',(e(i),i=1,nm)
-c     print 3,'lm =',(ll(lm+i),i=1,n)
-      return
-c  check Steepest Edge coefficients
-      emax=0.D0
-      do j=1,n
-        i=ll(lm+j)
-        call eptsol(n,a,la,i,a,aa(nq1),aa(nr1),aa(neb1),aa(ny1),
-     *  aa(ns1),aa(nu1),aa(nx1),aa,aa(np1),
-     *  ll,ll(lc1),ll(li1),ll(lv1),ll(le1),ll(lp1),ll(lq1),ei)
-        emax=max(emax,abs(ei-e(i)))
-c       if(abs(ei-e(i)).gt.tol)then
-c         print *,'error in steepest edge coefficient =',i,ei,e(i)
-c         print 4,'s =',(aa(ns+i),i=1,n)
-c         if(abs(ei-e(i)).gt.1.D-6)stop
+      call check_L(n,aa,ll(lp1),ifail)
+c     write(nout,*)'steepest edge coefficients',(e(ij),ij=1,nm)
+c     emax=0.D0
+c     do i=1,nm
+c       if(e(i).gt.0.D0)then
+c         call eptsol(n,a,la,i,a,aa(ns1),aa(nt1),aa,aa(np1),
+c    *      ll,ll(lc1),ll(li1),ll(lp1),ll(lq1))
+c         ei=xlen(0.D0,aa(ns1),n)
+c         ei=sqrt(scpr(0.D0,aa(ns1),aa(ns1),n))
+c         emax=max(emax,abs(ei-e(i)))
 c       endif
-      enddo
-      if(emax.gt.tol)then
-        print 2,'max error in steepest edge coefficients =',emax
-c       if(emax.gt.1.D-2)stop
-      endif
+c     enddo
+c     if(emax.ge.tol)
+c    *  write(nout,*)'error in steepest edge coefficients =',emax
       return
-    2 format(A,5E15.7)
-    3 format(A/(15I5))
-    4 format(A/(5E15.7))
-    5 format((5E15.7))
       end
 
       subroutine fbsub(n,jmin,jmax,a,la,q,b,x,ls,aa,ll,save)
       implicit double precision (a-h,r-z), integer (i-q)
       logical save
-    9 format(A/(15I5))
       dimension a(*),la(*),b(*),x(*),ls(*),aa(*),ll(*)
 
 c  solves a system  B.x=b
@@ -458,52 +397,59 @@ c  solves a system  B.x=b
 c  Parameter list
 c  **************
 c   n   number of variables (as for bqpd)
-c   jmin,jmax  now redundant 
+c   jmin,jmax  (see description of ls below)
 c   a,la   specification of QP problem data (as for bqpd)
 c   q   an integer which, if in the range 1:n+m, specifies that the rhs vector
 c       b is to be column q of the matrix A of general constraint normals.
 c       In this case the parameter b is not referenced by fbsub.
 c       If q=0 then b is taken as the vector given in the parameter b.
-c   b(n)  must be set to the r.h.s. vector b in natural order (but only if q=0)
-c   x(n+m)  contains the solution x, set according to the index number of that
-c           component (in the range 1:n for a simple bound and  n+1:n+m
-c           for a general constraint)
-c   ls(*)  now redundant. Previously ls was an index vector, listing the
-c       components of x that are required. Now all the solution x is provided,
-c       set as described above.
+c   b(n)  must be set to the r.h.s. vector b (but only if q=0)
+c   x(n+m)  contains the required part of the solution x, set according to the
+c       index number of that component (in the range 1:n for a simple bound and
+c       n+1:n+m for a general constraint)
+c   ls(*)  an index vector, listing the components of x that are required.
+c       Only the absolute value of the elements of ls are used (this allows
+c       the possibility of using of the contents of the ls parameter of bqpd).
+c       Elements of x in the range abs(ls(j)), j=jmin:jmax are set by fbsub.
+c       These contortions allow bqpd to be independent of the basis matrix code.
 c   aa(*)  real storage used by the basis matrix code (supply the vector
 c       ws(lu1) with ws as in the call of bqpd and lu1 as in common/bqpdc/...)
 c   ll(*)  integer storage used by the basis matrix code (supply the vector
 c       lws(ll1) with lws as in the call of bqpd and ll1 as in common/bqpdc/...)
-c   save   now redundant
+c   save   indicates if fbsub is to save its copy of the solution for possible
+c       future use. We suggest that the user only sets save = .false.
 
       common/noutc/nout
-      common/schurc/ns,ns1,nt,nt1,nu,nu1,nx,nx1,np,np1,neb,neb1,nprof,
-     *  lc,lc1,li,li1,lm,lm1,lp,lp1,lq,lq1,lr,lr1,ls_,ls1,lt,lt1,
-     *  nq,nq1,nr,nr1,ny,ny1,nz,nz1,lv,lv1,le,le1
+      common/sparsec/ns,ns1,nt,nt1,nu,nu1,nx,nx1,np,np1,nprof,
+     *  lc,lc1,li,li1,lm,lm1,lp,lp1,lq,lq1,lr,lr1,ls_,ls1,lt,lt1
       common/factorc/m1,m2,mp,mq,lastr,irow
 c     write(nout,*)'fbsub  q =',q
-      if(q.eq.0)then
-        do i=1,n
-          aa(nt+ll(li+i))=b(i)
+      if(save)then
+        if(q.ne.mq)then
+          call aqsol(n,a,la,q,b,aa(nt1),aa(nx1),aa,aa(np1),
+     *      ll,ll(lc1),ll(li1),ll(lp1),ll(lq1))
+          mq=q
+        endif
+        do j=jmin,jmax
+          i=abs(ls(j))
+          x(i)=aa(nt+ll(li+i))
+        enddo
+      else
+        call aqsol(n,a,la,q,b,aa(nu1),aa(nx1),aa,aa(np1),
+     *    ll,ll(lc1),ll(li1),ll(lp1),ll(lq1))
+        do j=jmin,jmax
+          i=abs(ls(j))
+          x(i)=aa(nu+ll(li+i))
         enddo
       endif
-      call  aqsol(n,a,la,q,aa(nq1),aa(nr1),aa(neb1),aa(nz1),aa(nt1),
-     *  aa(nu1),aa(nx1),aa,aa(np1),ll,ll(lc1),ll(li1),ll(lv1),
-     *  ll(le1),ll(lp1),ll(lq1))
-      do j=1,n
-        x(ll(lm+j))=aa(nt+j)
-      enddo
-c     print *,'x =',(x(i),i=1,18)
       return
       end
 
       subroutine ztg(n,k,rg,lv,aa,ll)
       implicit double precision (a-h,r-z), integer (i-q)
       dimension rg(*),lv(*),aa(*),ll(*)
-      common/schurc/ns,ns1,nt,nt1,nu,nu1,nx,nx1,np,np1,neb,neb1,nprof,
-     *  lc,lc1,li,li1,lm,lm1,lp,lp1,lq,lq1,lr,lr1,ls_,ls1,lt,lt1,
-     *  nq,nq1,nr,nr1,ny,ny1,nz,nz1,lv_,lv1,le,le1
+      common/sparsec/ns,ns1,nt,nt1,nu,nu1,nx,nx1,np,np1,nprof,
+     *  lc,lc1,li,li1,lm,lm1,lp,lp1,lq,lq1,lr,lr1,ls_,ls1,lt,lt1
 c     print *,'aa =',(aa(nu+i),i=1,18)
       do j=1,k
         rg(j)=aa(nu+ll(li+lv(j)))
@@ -533,23 +479,37 @@ c   aa(*)  real storage used by the basis matrix code (supply the vector
 c       ws(lu1) with ws as in the call of bqpd and lu1 as in common/bqpdc/...)
 c   ll(*)  integer storage used by the basis matrix code (supply the vector
 c       lws(ll1) with lws as in the call of bqpd and ll1 as in common/bqpdc/...)
-c   ep  if p>0, ep contains the L2 norm of the solution
-c   save  now redundant
+c   ep  if p.ne.0 and save is true, ep contains the l_2 length of x on exit
+c   save  indicates if tfbsub is to save its copy of the solution for possible
+c       future use. We suggest that the user only sets save = .false.
 
       common/noutc/nout
-      common/schurc/ns,ns1,nt,nt1,nu,nu1,nx,nx1,np,np1,neb,neb1,nprof,
-     *  lc,lc1,li,li1,lm,lm1,lp,lp1,lq,lq1,lr,lr1,ls_,ls1,lt,lt1,
-     *  nq,nq1,nr,nr1,ny,ny1,nz,nz1,lv,lv1,le,le1
+      common/sparsec/ns,ns1,nt,nt1,nu,nu1,nx,nx1,np,np1,nprof,
+     *  lc,lc1,li,li1,lm,lm1,lp,lp1,lq,lq1,lr,lr1,ls,ls1,lt,lt1
       common/factorc/m1,m2,mp,mq,lastr,irow
 c     write(nout,*)'tfbsub  p =',p
-      call eptsol(n,a,la,p,b,aa(nq1),aa(nr1),aa(neb1),aa(ny1),
-     *  aa(ns1),aa(nu1),aa(nx1),aa,aa(np1),ll,ll(lc1),ll(li1),
-     *  ll(lv1),ll(le1),ll(lp1),ll(lq1),ep)
-      do i=1,n
-        x(ll(i))=aa(ns+i)
-      enddo
-c     print 4,'x =',(x(i),i=1,n)
-    4 format(A/(5E15.7))
+      if(save)then
+        if(p.ne.mp)then
+          call eptsol(n,a,la,p,b,aa(ns1),aa(nt1),aa,aa(np1),
+     *      ll,ll(lc1),ll(li1),ll(lp1),ll(lq1))
+          mp=p
+        endif
+        do i=1,n
+          x(ll(i))=aa(ns+i)
+        enddo
+        if(p.gt.n)then
+          ep=xlen(0.D0,aa(ns1+m2),m1)
+        elseif(p.gt.0)then
+          ep=xlen(1.D0,aa(ns1+m2),m1)
+        endif
+      else
+        call eptsol(n,a,la,p,b,aa(nu1),aa(nt1),aa,aa(np1),
+     *    ll,ll(lc1),ll(li1),ll(lp1),ll(lq1))
+        do i=1,n
+          x(ll(i))=aa(nu+i)
+        enddo
+      endif
+c     write(nout,*)'x =',(x(i),i=1,n)
       return
       end
 
@@ -559,7 +519,7 @@ c     print 4,'x =',(x(i),i=1,n)
       return
       end
 
-c******** The following routines are internal to schurQR.f **************
+c******** The following routines are internal to sparseL.f **************
 
       subroutine check_L(n,d,p,ifail)
       implicit double precision (a-h,r-z), integer (i-q)
@@ -567,14 +527,14 @@ c******** The following routines are internal to schurQR.f **************
       common/noutc/nout
       common/factorc/m1,nu,mp,mq,lastr,irow
       common/epsc/eps,tol,emin
-      write(nout,*)'check_L'
+c     write(nout,*)'check_L'
       ifail=1
-      dmin=1.D37
+c     dmin=1.D37
       do k=nu+1,n
-        dmin=min(dmin,abs(d(k)))
-c       if(abs(d(k)).le.tol)return
+c       dmin=min(dmin,abs(d(k)))
+        if(abs(d(k)).le.tol)return
       enddo
-      write(nout,*)'dmin =',dmin
+c     write(nout,*)'dmin =',dmin
 c     len=0
 c     do i=1,n
 c       len=len+p(i)
@@ -585,102 +545,13 @@ c     write(nout,*)'m1 =',m1,'   file length =',len,'   total =',len+m1
       return
       end
 
-      subroutine aqsol(n,a,la,q,Q_,R,EB,z,t,u,x,d,ws,
-     *  lr,lc,li,lv,le,pp,qq)
+      subroutine aqsol(n,a,la,q,b,tn,xn,d,ws,lr,lc,li,pp,qq)
       implicit double precision (a-h,r-z), integer (i-q)
-      dimension a(*),la(*),Q_(*),R(*),EB(*),z(*),t(*),u(*),x(*),
-     *  d(*),ws(*),lr(*),lc(*),li(*),lv(*),le(*),pp(*),qq(*)
-      common/factorc/m1,m2,mp,mq,lastr,irow
-      common/refactorc/mc,mxmc
-      common/pqc/pc,qr,lmp
-c     print *,'aqsol  q =',q
-      if(q.gt.0)then
-c       print *,'q,n,li(q),m2',q,n,li(q),m2
-        if(q.le.n.and.li(q).le.m2.or.q.gt.n.and.li(q).gt.0)then
-c  q is in the starting active set (and hence in row qr of E)
-          do qr=1,mc
-            if(q.eq.le(qr))goto10
-          enddo
-          print *,'malfunction: q not in E'
-          stop
-   10     continue
-        else
-c  q is a new column
-          qr=0
-        endif
-c  form t=Bk^{-1}.aq, else form t=Bk^{-1}.t
-c  scatter a_q into t
-        liq=li(q)
-        do i=1,n
-          t(i)=0.D0
-        enddo
-        if(q.le.n)then
-          t(liq)=1.D0
-        else
-          call iscatter(a,la,q-n,li,t,n)
-        endif
-      endif
-c     print 4,'t=',(t(i),i=1,n)
-      if(mc.gt.0)then
-c  form u=E.B^{-1}.t and possibly z=-u
-        if(q.eq.0.or.q.gt.n.and.qr.eq.0)then
-          i1=1
-          do i=1,mc
-c           print 4,'EB =',(EB(j),j=i1,i1+m1-1)
-            u(i)=scpr(0.D0,EB(i1),t(m2+1),m1)
-            if(le(i).le.n)u(i)=u(i)+t(li(le(i)))
-            z(i)=-u(i)
-            i1=i1+m1
-          enddo
-        elseif(qr.gt.0)then
-          do i=1,mc
-            u(i)=0.D0
-          enddo
-          u(qr)=1.D0
-        else
-c         print 4,'EB =',(EB(j),j=1,m1*mc)
-          liq=liq-m2
-          do i=1,mc
-            u(i)=EB(liq)
-            z(i)=-u(i)
-            liq=liq+m1
-          enddo
-        endif
-c       print 4,'u=',(u(i),i=1,mc)
-c  form x=C^{-1}.u
-        call Qtprod(mc,mxmc,Q_,u,x)
-        mm=mc*(3-mc)/2+(mc-1)*mxmc
-        call rsol(mc,mm,mxmc,R,x)
-c       print 4,'x=',(x(i),i=1,mc)
-c  accumulate t=t+V.x
-        do i=1,mc
-          lvi=lv(i)
-          if(lvi.le.n)then
-            t(li(lvi))=t(li(lvi))+x(i)
-          else
-            call isaipy(x(i),a,la,lvi-n,t,n,lr,li)
-          endif
-        enddo
-      endif
-c     print 4,'t in natural order =',(t(li(i)),i=1,n)
-c  finally t:=B^{-1}.t-E'.x
-      call aqsol0(n,a,la,0,t,u,d,ws,lr,lc,li,pp,qq)
-      do i=1,mc
-        lei=li(le(i))
-        t(lei)=t(lei)-x(i)
-      enddo
-c     print 4,'t in column order',(t(i),i=1,n)
-      mq=q
-      return
-    3 format(A/(15I5))
-    4 format(A/(5E15.7))
-      end
-
-      subroutine aqsol0(n,a,la,q,tn,xn,d,ws,lr,lc,li,pp,qq)
-      implicit double precision (a-h,r-z), integer (i-q)
-      dimension a(*),la(*),tn(*),xn(*),d(*),ws(*),
+      dimension a(*),la(*),b(*),tn(*),xn(*),d(*),ws(*),
      *  lr(*),lc(*),li(*),pp(*),qq(*)
+      common/noutc/nout
       common/factorc/m1,m2,mp,mq,lastr,irow
+c     write(nout,*)'aqsol  q =',q
       if(q.gt.0)then
         do i=1,n
           tn(i)=0.D0
@@ -690,8 +561,12 @@ c     print 4,'t in column order',(t(i),i=1,n)
         else
           call iscatter(a,la,q-n,li,tn,n)
         endif
+      elseif(q.eq.0)then
+        do i=1,n
+          tn(li(i))=b(i)
+        enddo
       endif
-c     print *,'tn =',(tn(i),i=1,n)
+c     write(nout,*)'tn =',(tn(i),i=1,n)
       do i=n,m2+1,-1
         ir=lr(i)
         pri=pp(ir)
@@ -705,119 +580,19 @@ c     print *,'tn =',(tn(i),i=1,n)
       do i=m2+1,n
         tn(i)=xn(i)
       enddo
-c     print *,'tn =',(tn(i),i=1,n)
+c     write(nout,*)'tn =',(tn(i),i=1,n)
       return
       end
 
-      subroutine eptsol(n,a,la,p,b,Q_,R,EB,y,s,u,x,d,ws,
-     *  lr,lc,li,lv,le,pp,qq,ep)
+      subroutine eptsol(n,a,la,p,b,sn,tn,d,ws,lr,lc,li,pp,qq)
       implicit double precision (a-h,r-z), integer (i-q)
-      dimension a(*),la(*),b(*),Q_(*),R(*),EB(*),y(*),s(*),u(*),x(*),
-     *  d(*),ws(*),lr(*),lc(*),li(*),lv(*),le(*),pp(*),qq(*)
-      common/epsc/eps,tol,emin
-      common/factorc/m1,m2,mp,mq,lastr,irow
-      common/refactorc/mc,mxmc
-      common/pqc/pc,qr,lmp
-c     print *,'eptsol  p =',p
-c  column ordering is that defined by Bk = B + (V-B.E').E
-c  row order is same as for B
-      if(p.eq.0)then
-c       print 3,'lr =',(lr(i),i=1,m2)
-c       print 3,'lc =',(lc(i),i=m2+1,n)
-c       print 3,'le =',(le(i),i=1,mc)
-c       print 3,'lv =',(lv(i),i=1,mc)
-        do i=1,mc
-          x(i)=b(le(i))
-          b(le(i))=0.D0
-        enddo
-        call eptsol0(n,a,la,0,b,s,d,ws,lr,lc,li,pp,qq)
-        do i=1,mc
-          b(le(i))=x(i)
-          if(lv(i).le.n)then
-            x(i)=s(li(lv(i)))-b(lv(i))
-          else
-            x(i)=aiscpri(n,a,la,lv(i)-n,s,-b(lv(i)),lr,li)
-          endif
-        enddo
-      else
-        if(p.le.n.and.li(p).le.m2.or.p.gt.n.and.li(p).gt.0)then
-c  p is in the starting active set (set pc=0)
-          pc=0
-          lmp=li(p)
-        else
-c  p is in V  (pc indicates where p is in V)
-          do pc=1,mc
-            if(p.eq.lv(pc))goto10
-          enddo
-        print 1,'p,pc,li(p),m1,m2 =',p,pc,li(p),m1,m2
-        print 3,'le =',(le(i),i=1,mc)
-        print 3,'lv =',(lv(i),i=1,mc)
-          print *,'malfunction: p not in V'
-          stop
-   10     continue
-          lmp=li(le(pc))
-        endif
-c  get s=Bk^{-T}.ep
-        if(pc.eq.0)then
-          call eptsol0(n,a,la,p,a,s,d,ws,lr,lc,li,pp,qq)
-c       print 4,'s0 ordered by lr',(s(i),i=1,n)
-c       print 4,'s0 in natural order',(s(li(i)),i=1,n)
-          m1mc=m1*mc
-          do i=1,m1
-            EB(m1mc+i)=s(m2+i)
-          enddo
-c         print 1,'eptsol: p =',p
-c         print 4,'EB is',(s(i),i=m2+1,n)
-c         print 4,'EB is',(EB(i),i=1,m1mc+m1)
-c  form s=B^{-T}.ep and then y=-V'.s
-          do i=1,mc
-            if(lv(i).le.n)then
-              x(i)=s(li(lv(i)))
-            else
-              x(i)=aiscpri(n,a,la,lv(i)-n,s,0.D0,lr,li)
-            endif
-            y(i)=-x(i)
-          enddo
-        else
-c  this is pc>0: set s=0 and x=-e_pc
-          do i=1,n
-            s(i)=0.D0
-          enddo
-          do i=1,mc
-            x(i)=0.D0
-          enddo
-          x(pc)=-1.D0
-        endif
-      endif
-c     print 4,'x =',(x(i),i=1,mc)
-      if(mc.gt.0)then
-c  form u=C^{-T}.x and accumulate EB'.u into s
-        call rtsol(mc,mm,mxmc,R,x)
-        call Qprod(mc,mxmc,Q_,x,u)
-        i1=1
-        do i=1,mc
-          call mysaxpy(u(i),EB(i1),s(m2+1),m1)
-          if(le(i).le.n)s(li(le(i)))=u(i)
-          i1=i1+m1
-        enddo
-      endif
-c     print 4,'sk in natural order=',(s(li(i)),i=1,n)
-c     print 4,'s =',(s(i),i=1,n)
-      mp=p
-      if(p.gt.0)ep=xlen(0.D0,s,n)
-      return
-    1 format(A,15I5)
-    2 format(A,6E15.7)
-    3 format(A/(15I5))
-    4 format(A/(5E15.7))
-      end
-
-      subroutine eptsol0(n,a,la,p,b,sn,d,ws,lr,lc,li,pp,qq)
-      implicit double precision (a-h,r-z), integer (i-q)
-      dimension a(*),la(*),b(*),sn(*),d(*),ws(*),
+      dimension a(*),la(*),b(*),sn(*),tn(*),d(*),ws(*),
      *  lr(*),lc(*),li(*),pp(*),qq(*)
+      common/noutc/nout
+      common/iprintc/iprint
       common/epsc/eps,tol,emin
       common/factorc/m1,m2,mp,mq,lastr,irow
+c     write(nout,*)'eptsol  p =',p
       if(p.eq.0)then
         do i=1,m2
           sn(i)=b(lr(i))
@@ -858,10 +633,10 @@ c     print 4,'s =',(s(i),i=1,n)
           enddo
         endif
       endif
-c     print *,'sn =',(sn(i),i=1,n)
+c     write(nout,*)'sn =',(sn(i),i=1,n)
       return
     1 continue
-      print *,'malfunction detected in eptsol0: p =',p
+      write(nout,*)'malfunction detected in eptsol: p =',p
       stop
       end
 
@@ -1022,7 +797,7 @@ c     write(nout,*)'lower profile =',(li(abs(ls(i))),i=nu+1,nc)
 c     character star(1000,80)
       common/factorc/m1,m2,mp,mq,lastr,irow
       common/iprintc/iprint
-      common/refactorc/mc,mxmc
+      common/refactorc/nup,nfreq
       common/epsc/eps,tol,emin
       common/noutc/nout
       parameter (thresh=1.D-1)
@@ -1221,9 +996,9 @@ c  reset mao
         if(ii.eq.i)ilast=i-1
       enddo
 c     write(nout,*)'PAQ factors:  m1 =',m1
-c     write(nout,4)'d =',(d(ij),ij=m2+1,n)
-c     do ij=m2+1,n
-c       rowp=lr(ij)
+c     write(nout,*)'d =',(d(ij),ij=m2+1,n)
+c     do j=m2+1,n
+c       rowp=lr(j)
 c       if(p(rowp).ne.0)then
 c         write(nout,*)'L(',rowp,')',
 c    *      (ws(k),k=q(rowp)+1,q(rowp)+p(rowp))
@@ -1246,15 +1021,12 @@ c     enddo
 c     do i=m2+1,n
 c       write(nout,*)(star(i,j),j=1,m1)
 c     enddo
-c     write(nout,9)'ls =',(ls(j),j=1,n)
+c     write(nout,*)'ls =',(ls(j),j=1,n)
 c     write(nout,*)'s.e. coeffs =',(e(i),i=1,nm)
-c     write(nout,9)'lr =',(lr(j),j=1,n)
-c     write(nout,9)'lc =',(lc(j),j=m2+1,n)
-c     write(nout,9)'li =',(li(j),j=1,nm)
-c     write(nout,9)'mao =',(mao(j),j=m2+1,n)
+c     write(nout,*)'lr =',(lr(j),j=1,n)
+c     write(nout,*)'lc =',(lc(j),j=m2+1,n)
+c     write(nout,*)'mao =',(mao(j),j=m2+1,n)
 c     call checkout(n,a,la,lr,lc,li,p,q,r,s,ws,mxws,d)
-    4 format(A/(5E15.7))
-    9 format(A/(15I5))
       return
       end
 
@@ -1320,7 +1092,6 @@ c  examine successor nodes
             ifail=1
 c           ifail=iq
 c           write(nout,*)'exit: ifail =',iq
-c           print *,'lc(iq) =',lc(iq)
             return
           endif
           istack=istack-1
@@ -1563,7 +1334,6 @@ c  set up pointers for row-wise sparse structure
         q(i)=p(i)-1
       enddo
       if(p(n)+q(n).gt.mxws)then
-        print *,'not enough space for ws in re_order'
         ifail=7
         return
       endif
@@ -1702,7 +1472,7 @@ c     write(nout,*)'lower profile =',(t(j),j=nu+1,n)
 c     character star(1000,80)
       common/factorc/m1,nu,mp,mq,lastr,irow
       common/iprintc/iprint
-      common/refactorc/mc,mxmc
+      common/refactorc/nup,nfreq
       common/epsc/eps,tol,emin
       common/noutc/nout
       double precision thresh,tol
@@ -1934,337 +1704,704 @@ c     write(nout,*)'lc =',(lc(j),j=nu+1,n)
       return
       end
 
-      subroutine updateSE(p,q,n,nm,a,la,e,Q_,R,EB,y,z,s,t,u,x,
-     *  d,ws,lr,lc,li,pp,qq,lm,lv,le,ifail)
-      implicit double precision (a-h,o-z)
-      integer p,q,pc,qr,pp,qq
-      dimension a(*),la(0:*),e(*),Q_(*),R(*),EB(*),y(*),z(*),s(*),t(*),
-     *  x(*),u(*),d(*),ws(*),
-     *  lr(*),lc(*),li(*),pp(*),qq(*),lm(*),lv(*),le(*)
-      common/factorc/m1,m2,mp,mq,lastr,irow
-      common/refactorc/mc,mxmc
+      subroutine update_L(pp,qq,n,nm,a,la,lr,lc,li,mao,p,q,r,s,
+     *  ws,mxws,d,sn,ifail)
+      implicit double precision (a-h,r-z), integer (i-q)
+      dimension a(*),la(0:*),lr(*),lc(*),li(*),mao(*),
+     *  p(*),q(*),r(*),s(*),ws(*),d(*),sn(*)
+c     character star(1000,80)
+      double precision l11,l21
+      integer r,s,rowim,rowi,rowj,rrj
+      common/factorc/m1,nu,mp,mq,lastr,irow
+      common/refactorc/nup,nfreq
+      common/iprintc/iprint
       common/epsc/eps,tol,emin
-      common/pqc/pc,qr,lmp
-    1 format(A,15I5)
-    2 format(A,6E15.7)
-    3 format(A/(15I5))
-    4 format(A/(5E15.7))
-    5 format((5E15.7))
-c     print 1,'updateSE: p,q =',p,q
-c     print 3,'lm =',(lm(i),i=1,n)
-      if(p.ne.mp)then
-        call eptsol(n,a,la,p,a,Q_,R,EB,y,s,u,x,d,ws,
-     *    lr,lc,li,lv,le,pp,qq,ep)
-c       print 4,'sk in natural ordering',(s(li(i)),i=1,n)
-c       print 4,'sk ordered by lr',(s(i),i=1,n)
+      common/noutc/nout
+      parameter (thresh=1.D-1,growth=1.D1)
+c     write(nout,*)'update_L:  p,q =',pp,qq
+      nup=nup+1
+      if(qq.gt.n)then
+        ilast=nu
+        jp=la(0)+qq-n
+        do j=la(jp),la(jp+1)-1
+          ip=li(la(j))
+          if(ip.gt.nu)ilast=max(ilast,mao(ip))
+        enddo
+        qqq=qq
       else
-        ep=e(p)
-      endif
-      if(q.ne.mq)then
-        call aqsol(n,a,la,q,Q_,R,EB,z,t,u,x,d,ws,
-     *    lr,lc,li,lv,le,pp,qq)
-c       print 4,'tk =',(t(i),i=1,n)
-      endif
-
-c  update steepest edge coefficients
-      tp=t(lmp)
-      eq=2.D0/ep
-      do i=1,n
-        u(i)=eq*s(i)
-      enddo
-      call aqsol(n,a,la,0,Q_,R,EB,x,u,s,x,d,ws,
-     *  lr,lc,li,lv,le,pp,qq)
-c     print 4,'u in natural order =',(u(li(i)),i=1,n)
-c     print 4,'u ordered by lr =',(u(i),i=1,n)
-      eq=ep/tp
-      do j=1,n
-        i=lm(j)
-        if(e(i).eq.0.D0)then
-          print *,'malfunction: e(i)=0.D0, i =',i
-          return
-        endif
-        ei=e(i)
-        wi=t(j)*eq
-        awi=abs(wi)
-        if(ei.ge.awi)then
-          wi=wi/ei
-          e(i)=max(emin,ei*sqrt(max(0.D0,1.D0+wi*(wi-u(j)/ei))))
-        else
-          wi=ei/wi
-          e(i)=max(emin,awi*sqrt(max(0.D0,1.D0+wi*(wi-u(j)/ei))))
-        endif
-      enddo
-      e(p)=0.D0
-      e(q)=max(emin,abs(eq))
-c     print 4,'e =',(e(i),i=1,nm)
-      return
-      end
-
-      subroutine updateQR(p,q,n,a,la,Q_,R,EB,x,y,z,
-     *  lr,lc,li,lv,le,lm,ifail)
-      implicit double precision (a-h,o-z)
-      integer p,q,pc,qr
-      dimension a(*),la(0:*),Q_(*),R(*),EB(*),x(*),y(*),z(*),
-     *  lr(*),lc(*),li(*),lv(*),le(*),lm(*)
-      common/factorc/m1,m2,mp,mq,lastr,irow
-      common/refactorc/mc,mxmc
-      common/epsc/eps,tol,emin
-      common/pqc/pc,qr,lmp
-    1 format(A,15I5)
-    2 format(A,6E15.7)
-    3 format(A/(15I5))
-    4 format(A/(5E15.7))
-    5 format((5E15.7))
-c     print 1,'updateQR:  p,q =',p,q,pc,qr
-c     print *,'mc =',mc
-c  x is only used for checking
-      m1mc=m1*mc
-c     print 4,'EB on entry to updateQR =',(EB(i),i=1,m1mc+m1)
-      if(pc.eq.0)then
-c  p is in the starting active set
-        if(qr.eq.0)then
-c  q is a new column: extend QR case
-c         print *,'extend  ',p,q
-          mc1=mc+1
-c         print 4,'EB for c/s p =',(EB(i),i=m1mc+1,m1mc+m1)
-          ii=m1mc-m2
-          if(q.le.n)then
-            if(li(q).gt.m2)sum=-EB(li(q)+ii)
+c  row flma procedure to remove row qq (includes qq amongst the unit vectors)
+        iq=li(qq)
+        if(iq.le.nu)goto99
+        ilast=mao(iq)
+        l11=1.D0
+        u11=d(iq)
+        ss=-sn(iq)
+        nu=nu+1
+        do i=iq,nu+1,-1
+          lr(i)=lr(i-1)
+          li(lr(i))=i
+          sn(i)=sn(i-1)
+          d(i)=d(i-1)
+        enddo
+        lr(nu)=qq
+        li(qq)=nu
+c  update mao
+        do j=iq-1,nu,-1
+          if(mao(j).lt.ilast)goto5
+        enddo
+        j=nu-1
+    5   continue
+        do j=j,nu,-1
+          mao(j+1)=mao(j)+1
+        enddo
+        prq=p(qq)
+        if(prq.gt.0)qrq=q(qq)
+        do i=iq+1,ilast
+          im=i-1
+          rowi=lr(i)
+          pri=p(rowi)
+          u22=d(i)
+          if(prq.gt.0)then
+            u12=aiscpri2(n,a,la,qq,lc(i)-n,ws(qrq+1),l11,im,prq,li)
           else
-            sum=0.D0
-            jp=la(0)+q-n
-            do j=la(jp),la(jp+1)-1
-              i=la(j)
-              if(i.eq.p)then
-                sum=sum-a(j)
-              elseif(li(i).gt.m2)then
-                sum=sum-EB(li(i)+ii)*a(j)
+            u12=l11*aij(qq,lc(i)-n,a,la)
+          endif
+          if(abs(u12).le.tol)u12=0.D0
+          if(pri.gt.0)then
+            qri=q(rowi)
+            is=im-iq
+            ii=pri-is
+            if(ii.le.0)then
+              l21=0.
+            else
+              l21=ws(qri+ii)
+              if(abs(l21).le.tol)l21=0.D0
+              if(ii.eq.1)then
+                call trim_(rowi,pri,qri,q,ws)
+                if(pri.eq.0)call erase(rowi,lastr,irow,r,s)
+                if(s(rowi).eq.0)then
+                  qr_=mxws
+                else
+                  qr_=q(s(rowi))
+                endif
+                if(qri+pri.ge.qr_)then
+                  call r_shift(ws(qri),pri,1)
+                  qri=qri-1
+                  q(rowi)=qri
+                endif
+              else
+                pri=pri-1
+                call r_shift(ws(qri+ii),is,1)
+              endif
+            endif
+            p(rowi)=pri
+          else
+            l21=0.D0
+          endif
+          rr=-l21/l11
+          del=rr*u12+u22
+          test=abs(rr)*max(abs(u11),abs(u22))
+c         write(nout,*)'l11,l21,u11,u12,u22,del,test',
+c    *      l11,l21,u11,u12,u22,del,test
+          is=pri-prq
+          if(is.lt.0)test=test*growth
+          if(u12.eq.0.D0.and.is.gt.0)test=test*thresh
+c           write(nout,*)'rowi,pri,qri =',rowi,pri,qri
+c           write(nout,*)'rowq,prq,qrq =',qq,prq,qrq
+c           write(nout,*)'j,p(j),q(j),r(j),s(j)   irow =',irow
+c           do j=1,n
+c             if(p(j).ne.0)write(nout,*)j,p(j),q(j),r(j),s(j)
+c           enddo
+c           write(nout,*)'rowq =',(ws(qrq+ij),ij=1,prq)
+c           write(nout,*)'rowi =',(ws(qri+ij),ij=1,pri)
+          if(abs(del).le.test)then
+c  no-perm operation for row flma
+c           write(nout,*)'no-perm operation for row flma'
+            if(is.gt.0)then
+              pr_=prq
+              prq=pri+1
+              call newslot(qq,prq,lastr,irow,p,q,r,s,ws,mxws,qr_,ifail)
+              if(ifail.gt.0)return
+              qrq=q(qq)
+              qri=q(rowi)
+              call r_shift(ws(qrq+1),pri,qri-qrq)
+              call mysaxpy(rr,ws(qr_+1),ws(qri+is+1),pr_)
+            else
+              if(prq.eq.0)then
+                call erase(rowi,lastr,irow,r,s)
+                p(rowi)=0
+                call newslot(qq,1,lastr,irow,p,q,r,s,ws,mxws,qr_,ifail)
+                if(ifail.gt.0)return
+                prq=1
+                qrq=q(qq)
+              else
+                is=-is
+                do j=1,is
+                  ws(qrq+j)=rr*ws(qrq+j)
+                enddo
+                if(pri.gt.0)then
+                  call saxpyx(rr,ws(qrq+is+1),ws(qri+1),pri)
+                else
+                  call newslot(rowi,1,lastr,irow,p,q,r,s,ws,mxws,qr_,
+     *              ifail)
+                  if(ifail.gt.0)return
+                  qri=q(rowi)
+                  qrq=q(qq)
+                endif
+                if(abs(ws(qrq+1)).le.tol)call trim_(qq,prq,qrq,q,ws)
+c  rename qq as rowi and vice-versa
+                if(qri.lt.qrq)then
+                  if(s(rowi).eq.qq)then
+                    r(qq)=r(rowi)
+                    r(rowi)=qq
+                    s(rowi)=s(qq)
+                    s(qq)=rowi
+                  else
+                    call iexch(r(qq),r(rowi))
+                    call iexch(s(qq),s(rowi))
+                    r(s(qq))=qq
+                    s(r(rowi))=rowi
+                  endif
+                  if(r(qq).gt.0)then
+                    s(r(qq))=qq
+                  else
+                    irow=qq
+                  endif
+                  if(s(rowi).gt.0)r(s(rowi))=rowi
+                else
+                  if(s(qq).eq.rowi)then
+                    r(rowi)=r(qq)
+                    r(qq)=rowi
+                    s(qq)=s(rowi)
+                    s(rowi)=qq
+                  else
+                    call iexch(r(rowi),r(qq))
+                    call iexch(s(rowi),s(qq))
+                    r(s(rowi))=rowi
+                    s(r(qq))=qq
+                  endif 
+                  if(r(rowi).gt.0)then
+                    s(r(rowi))=rowi
+                  else
+                    irow=rowi
+                  endif
+                  if(s(qq).gt.0)r(s(qq))=qq
+                endif
+                call iexch(pri,prq)
+                call iexch(qri,qrq)
+                call iexch(q(rowi),q(qq))
+                if(pri.eq.0)call erase(rowi,lastr,irow,r,s)
+                prq=prq+1
+              endif
+            endif
+            p(rowi)=pri
+            p(qq)=prq
+            ws(qrq+prq)=1.D0
+            d(i)=rr*u11
+            u11=u22
+            l11=l21
+          else
+c  perm operation for row flma
+c           write(nout,*)'perm operation for row flma'
+            if(rr.ne.0.D0)then
+              if(is.ge.0)then
+                if(prq.gt.0)then
+                  call mysaxpy(rr,ws(qrq+1),ws(qri+is+1),prq)
+                  if(abs(ws(qri+1)).le.tol)call trim_(rowi,pri,qri,q,ws)
+                  if(pri.eq.0)call erase(rowi,lastr,irow,r,s)
+                endif
+                is=pri-prq
+              else
+                pr_=pri
+                pri=prq
+                call newslot(rowi,pri,lastr,irow,p,q,r,s,ws,mxws,qr_,
+     *            ifail)
+                if(ifail.gt.0)return
+                qrq=q(qq)
+                qri=q(rowi)
+                is=-is
+                do j=1,is
+                  ws(qri+j)=rr*ws(qrq+j)
+                enddo
+                call saxpyz(rr,ws(qrq+is+1),ws(qr_+1),ws(qri+is+1),pr_)
+                is=0
+              endif
+            endif
+            p(rowi)=pri
+            if(u12.ne.0.D0)then
+              u12=-u12/del
+              if(is.gt.0)then
+                pr_=prq
+                prq=pri+1
+                call newslot(qq,prq,lastr,irow,p,q,r,s,ws,mxws,qr_,
+     *            ifail)
+                if(ifail.gt.0)return
+                qrq=q(qq)
+                qri=q(rowi)
+                do j=1,is
+                  ws(qrq+j)=u12*ws(qri+j)
+                enddo
+                call saxpyz(u12,ws(qri+is+1),ws(qr_+1),ws(qrq+is+1),pr_)
+                ws(qrq+prq)=u12
+                goto7
+              else
+                if(pri.gt.0)then
+                  is=-is
+                  call mysaxpy(u12,ws(qri+1),ws(qrq+is+1),pri)
+                  if(abs(ws(qrq+1)).le.tol)then
+                    call trim_(qq,prq,qrq,q,ws)
+                    if(prq.eq.0)call erase(qq,lastr,irow,r,s)
+                    p(qq)=prq
+                  endif
+                endif
+              endif
+            endif
+            if(prq.gt.0.or.u12.ne.0.D0)then
+              if(prq.eq.0)then
+                len=0
+              elseif(s(qq).eq.0)then
+                len=mxws-qrq
+              else
+                len=q(s(qq))-qrq
+              endif
+              if(len.eq.prq)then
+                call newslot(qq,prq+1,lastr,irow,p,q,r,s,ws,mxws,qr_,
+     *            ifail)     
+                if(ifail.gt.0)return
+                qrq=q(qq)
+                qri=q(rowi)
+                call r_shift(ws(qrq+1),prq,qr_-qrq)
+              endif
+              prq=prq+1
+              ws(qrq+prq)=u12
+            endif
+   7        continue
+            p(rowi)=pri
+            p(qq)=prq
+            d(i)=del
+            u11=u11*u22/del
+            call iexch(lc(i),lc(im))
+          endif
+c           write(nout,*)'rowi,pri,qri =',rowi,pri,qri
+c           write(nout,*)'rowq,prq,qrq =',qq,prq,qrq
+c           write(nout,*)'j,p(j),q(j),r(j),s(j)   irow =',irow
+c           do j=1,n
+c             if(p(j).ne.0)write(nout,*)j,p(j),q(j),r(j),s(j)
+c           enddo
+c           write(nout,*)'rowq* =',(ws(qrq+ij),ij=1,prq)
+c           write(nout,*)'rowi* =',(ws(qri+ij),ij=1,pri)
+        enddo
+        if(prq.gt.0)then
+c         write(nout,*)'ss,l11,ilast,n,prq',ss,l11,ilast,n,prq
+c         write(nout,*)'sn =',(sn(ij),ij=nu+1,n)
+          call mysaxpy(ss/l11,ws(qrq+1),sn(ilast-prq+1),prq)
+          call erase(qq,lastr,irow,r,s)
+          p(qq)=0
+        endif
+        qqq=lc(ilast)
+        do i=ilast,nu+1,-1
+          lc(i)=lc(i-1)
+          li(lc(i))=i
+        enddo
+c       if(pp.le.n)then
+c         ip=li(pp)
+c         write(nout,*)'check sn'
+c         do i=nu+1,ilast
+c           nodec=lc(i)
+c           u12=aiscpri2(n,a,la,pp,lc(i)-n,sn(nu+1),1.D0,ilast,
+c             ilast-nu,li)
+c           if(abs(u12).gt.tol)write(nout,*)'error,nodec =',u12,nodec
+c         enddo
+c       endif
+c       write(nout,*)'intermediate PAQ factors:  new q =',qqq
+c       write(nout,*)'lr =',(lr(j),j=nu+1,n)
+c       write(nout,*)'lc =',(lc(j),j=nu+1,n)
+c       write(nout,*)'d =',(d(ij),ij=nu+1,n)
+c       do j=nu+1,n
+c         rowj=lr(j)
+c         if(p(rowj).ne.0)then
+c           write(nout,*)'L(',rowj,')',
+c    *        (ws(k),k=q(rowj)+1,q(rowj)+p(rowj))
+c         endif
+c       enddo
+c       call checkout(n,a,la,lr,lc,li,p,q,r,s,ws,mxws,d)
+      endif
+      ip=li(pp)
+      if(pp.gt.n)then
+        li(pp)=0
+        if(pp.eq.qqq)goto30
+        if(ip.le.nu)goto99
+        iout=ip
+        rowim=lr(ip)
+        prim=p(rowim)
+        if(prim.gt.0)qrim=q(rowim)
+      else
+        if(ip.gt.nu.or.p(pp).gt.0)goto99
+        lr(ip)=lr(nu)
+        li(lr(ip))=ip
+c  check for growth in sn
+c       write(nout,*)'sn =',(sn(i),i=nu+1,n)
+        iout=ilast
+        i=nu+1
+        if(i.gt.ilast)goto13
+   11   continue
+          do j=i,mao(i)
+            if(abs(sn(j)).gt.growth)then
+              iout=i-1
+              goto13
+            endif
+          enddo
+          i=mao(i)+1
+          if(i.le.ilast)goto11
+   13   continue
+        do j=nu+1,iout
+          if(abs(sn(j)).gt.tol)goto14
+        enddo
+        j=iout+1
+   14   continue
+        rowim=pp
+        prim=iout-j+1
+        if(prim.gt.0)then
+          call newslot(pp,prim,lastr,irow,p,q,r,s,ws,mxws,qr_,ifail)
+          if(ifail.gt.0)return
+          p(pp)=prim
+          qrim=q(pp)
+          ii=qrim
+          do j=j,iout
+            ii=ii+1
+            ws(ii)=sn(j)
+          enddo
+        endif
+        do i=nu,iout-1
+          lr(i)=lr(i+1)
+          li(lr(i))=i
+          lc(i)=lc(i+1)
+          li(lc(i))=i
+          d(i)=d(i+1)
+        enddo
+        lr(iout)=pp
+        li(pp)=iout
+c       write(nout,*)'lr =',(lr(ij),ij=nu,iout)
+c       write(nout,*)'lc =',(lc(ij),ij=nu,iout-1)
+c       if(prim.gt.0)write(nout,*)'L(',pp,') =',(ws(qrim+j),j=1,prim)
+        nu=nu-1
+      endif
+c     write(nout,*)'iout,ilast,rowim,prim =',iout,ilast,rowim,prim
+c  column flma operations to restore L to triangular form
+      iswap=0
+      do i=iout+1,ilast
+        im=i-1
+        lc(im)=lc(i)
+        li(lc(im))=im
+        rowi=lr(i)
+        pri=p(rowi)
+c       if(pri.gt.0)write(nout,*)'L(',rowi,') =',(ws(q(rowi)+j),j=1,pri)
+        u22=d(i)
+        if(prim.gt.0)then
+          u12=aiscpri2(n,a,la,rowim,lc(i)-n,ws(qrim+1),1.D0,im-1,prim,
+     *      li)
+          if(abs(u12).le.tol)u12=0.D0
+        else
+          u12=aij(rowim,lc(i)-n,a,la)
+        endif
+        if(pri.gt.0)then
+c         write(nout,*)'pri,iswap',pri,iswap
+          qri=q(rowi)
+          ii=pri-iswap
+          if(ii.le.0)then
+            l21=0.D0
+          else
+            l21=ws(qri+ii)
+            if(abs(l21).le.tol)l21=0.D0
+            if(ii.eq.1)then
+              call trim_(rowi,pri,qri,q,ws)
+              if(pri.eq.0)call erase(rowi,lastr,irow,r,s)
+              if(s(rowi).eq.0)then
+                qr_=mxws
+              else
+                qr_=q(s(rowi))
+              endif
+              if(qri+pri.ge.qr_)then
+                call r_shift(ws(qri),pri,1)
+                qri=qri-1
+                q(rowi)=qri
+              endif
+            else
+              pri=pri-1
+              call r_shift(ws(qri+ii),iswap,1)
+            endif
+            p(rowi)=pri
+c           write(nout,*)'rowi =',(ws(qri+ij),ij=1,pri)
+          endif
+        else
+          l21=0.D0
+        endif
+        del=u22-l21*u12
+        test=abs(u12)*max(1.D0,abs(l21))
+c       write(nout,*)'l21,u12,u22,del,test',l21,u12,u22,del,test
+        is=pri-prim
+        if(is.gt.0)test=growth*test
+        if(l21.eq.0.D0.and.is.lt.0)test=thresh*test
+c         write(nout,*)'rowim,prim,qrim =',rowim,prim,qrim
+c         write(nout,*)'rowi,pri,qri =',rowi,pri,qri
+c         write(nout,*)'j,p(j),q(j),r(j),s(j)   irow =',irow
+c         do j=1,n
+c           if(p(j).ne.0)write(nout,*)j,p(j),q(j),r(j),s(j)
+c         enddo
+c         write(nout,*)'rowim =',(ws(qrim+ij),ij=1,prim)
+c         write(nout,*)'rowi =',(ws(qri+ij),ij=1,pri)
+        if(abs(del).le.test)then
+c  no-perm operation for column flma
+c         write(nout,*)'no-perm operation for column flma'
+          rr=-u22/u12
+          l21=l21+rr
+          if(abs(l21).le.tol)l21=0.D0
+          if(is.ge.0)then
+            if(prim.gt.0)then
+              call mysaxpy(rr,ws(qrim+1),ws(qri+is+1),prim)
+              if(abs(ws(qri+1)).le.tol)call trim_(rowi,pri,qri,q,ws)
+              if(pri.eq.0)then
+                call erase(rowi,lastr,irow,r,s)
+                p(rowi)=0
+              endif
+            endif
+            if(pri.gt.0.or.l21.ne.0.D0)then
+              if(pri.eq.0)then
+                len=0
+              elseif(s(rowi).eq.0)then
+                len=mxws-qri
+              else
+                len=q(s(rowi))-qri
+              endif
+              if(len.eq.pri)then
+                call newslot(rowi,pri+1,lastr,irow,p,q,r,s,ws,mxws,qr_,
+     *            ifail)
+                if(ifail.gt.0)return
+                qrim=q(rowim)
+                qri=q(rowi)
+                call r_shift(ws(qri+1),pri,qr_-qri)
+              endif
+              pri=pri+1
+              ws(qri+pri)=l21
+            endif
+          else
+            pr_=pri
+            pri=prim+1
+            call newslot(rowi,pri,lastr,irow,p,q,r,s,ws,mxws,qr_,ifail)      
+            if(ifail.gt.0)return
+            qrim=q(rowim)
+            qri=q(rowi)
+            is=-is
+            do j=1,is
+              ws(qri+j)=rr*ws(qrim+j)
+            enddo
+            call saxpyz(rr,ws(qrim+is+1),ws(qr_+1),ws(qri+is+1),pr_)
+            ws(qri+pri)=l21
+          endif
+c           write(nout,*)'rowim,prim,qrim =',rowim,prim,qrim
+c           write(nout,*)'rowi,pri,qri =',rowi,pri,qri
+c           write(nout,*)'j,p(j),q(j),r(j),s(j)   irow =',irow
+c           do j=1,n
+c             if(p(j).ne.0)write(nout,*)j,p(j),q(j),r(j),s(j)
+c           enddo
+c           write(nout,*)'rowim* =',(ws(qrim+ij),ij=1,prim)
+c           write(nout,*)'rowi* =',(ws(q(rowi)+ij),ij=1,p(rowi))
+          p(rowi)=pri
+          rowim=rowi
+          prim=pri
+          qrim=qri
+          d(im)=u12
+c  perform accumulated cyclic permutation in subsequent rows
+          if(iswap.gt.0)then
+            do j=i+1,ilast
+              rowj=lr(j)
+              prj=p(rowj)
+              is=prj-j+i
+              if(is.gt.0)then
+                qrj=q(rowj)
+                if(is.gt.iswap)then
+                  ii=is-iswap
+                  l21=ws(qrj+ii)
+                  call r_shift(ws(qrj+ii),iswap,1)
+                  ws(qrj+is)=l21
+                  if(abs(ws(qrj+1)).le.tol)call trim_(rowj,prj,qrj,q,ws)
+                  if(prj.eq.0)call erase(rowj,lastr,irow,r,s)
+                else
+                  prj=prj+1
+                  rrj=r(rowj)
+                  if(rrj.eq.0)then
+                    len=qrj
+                  else
+                    len=qrj-q(rrj)-p(rrj)
+                  endif
+                  if(len.gt.0)then
+                    call r_shift(ws(qrj),is,1)
+                    ws(qrj+is)=0.D0
+                    qrj=qrj-1
+                    q(rowj)=qrj
+                  else
+                    call newslot(rowj,prj,lastr,irow,p,q,r,s,ws,mxws,
+     *                qr_,ifail) 
+                    if(ifail.gt.0)return
+                    qrj=q(rowj)
+                    qrim=q(rowim)
+                    call r_shift(ws(qrj+1),is,qr_-qrj)
+                    ws(qrj+is+1)=0.D0
+                    call r_shift(ws(qrj+is+2),j-i,qr_-qrj-1)
+                  endif
+                endif
+                p(rowj)=prj
+c               write(nout,*)'L(',rowj,')* =',(ws(qrj+ij),ij=1,prj)
               endif
             enddo
           endif
-          y(mc1)=sum
-          if(mc.eq.0)then
-            Q_(1)=1.D0
-            R(1)=y(1)
-c           print 2,'R(1) =',R(1)
-            mc=1
-          else
-c  new row and column of C
-c           print 2,'y =',(y(i),i=1,mc1)
-c           print 2,'z =',(z(i),i=1,mc)
-            ic=mc1
-            mmx=mc*mxmc
-            do i=1,mc
-              Q_(ic)=0.D0
-              Q_(mmx+i)=0.D0
-              ic=ic+mxmc
-            enddo
-            Q_(ic)=1.D0 
-            ii=1
-            ic=1
-            mmx1=mmx+1
-            do i=1,mc
-              call angle(R(ii),y(i),cos,sin)
-              call rot(mc-i,R(ii+1),y(i+1),cos,sin)
-              call rot(mc1,Q_(ic),Q_(mmx1),cos,sin)
-              ii=ii+mxmc-i+1
-              ic=ic+mxmc
-            enddo
-            z(mc1)=y(mc1)
-c           print 2,'z =',(z(i),i=1,mc1)
-            ii=mc1
-            ic=1
-            do i=1,mc1
-              R(ii)=scpr(0.D0,Q_(ic),z,mc1)
-              ii=ii+mxmc-i
-              ic=ic+mxmc
-            enddo
-            mc=mc1
-          endif
-          lv(mc)=q
-          le(mc)=p
-          lm(lmp)=q
-          goto10
+          iswap=0
         else
-c  row replacement case: p is in the starting active set and
-c  q is in the starting active set (and hence in row qr of E)
-c         print *,'row     ',p,q
-c         print 3,'lr =',(lr(i),i=1,n)
-c         print 3,'lc =',(lc(i),i=m2+1,n)
-c         print 3,'le =',(le(i),i=1,mc)
-c         print 3,'lv =',(lv(i),i=1,mc)
-c         print 3,'lm =',(lm(i),i=1,n)
-          mc1=mc
-          mc=mc-1
-          j=mc1-qr
-          if(mc.gt.0)then
-            icp=mxmc*mc+mc1
-            ic=icp
-            call rexch(Q_(icp),Q_(icp-j))
-            ii=mc1*(3-mc1)/2+(mc1-1)*mxmc
-            z(mc1)=R(ii)
-            do i=mc,1,-1
-              ic=ic-mxmc
-              call rexch(Q_(ic),Q_(ic-j))
-              call angle(Q_(icp),Q_(ic),cos,sin)
-              call rot(mc,Q_(icp-mc),Q_(ic-mc),cos,sin)
-              ii=ii-mxmc+i-1
-              z(i)=sin*R(ii)
-              R(ii)=-cos*R(ii)
-              call rot(mc1-i,z(i+1),R(ii+1),cos,sin)
-            enddo
-            ic=1
-            icp=icp-mc
-            do i=1,mc
-              call angle(R(ii),y(i),cos,sin)
-              call rot(mc1-i,R(ii+1),y(i+1),cos,sin)
-              call rot(mc1,Q_(ic),Q_(icp),cos,sin)
-              ii=ii+mxmc-i+1
-              ic=ic+mxmc
-            enddo
-            R(ii)=y(mc1)
-            le(qr)=le(mc1)
-          else
-            Q_(1)=1.D0
-            R(1)=y(1)
+c  perm operation for column flma
+c         write(nout,*)'perm operation for column flma'
+          rr=-l21
+          if(rr.ne.0.D0)then
+            if(is.ge.0)then
+              if(prim.gt.0)then
+                call mysaxpy(rr,ws(qrim+1),ws(qri+is+1),prim)
+                if(abs(ws(qri+1)).le.tol)call trim_(rowi,pri,qri,q,ws)
+                if(pri.eq.0)call erase(rowi,lastr,irow,r,s)
+              endif
+              is=pri-prim
+            else
+              pr_=pri
+              pri=prim
+              call newslot(rowi,pri,lastr,irow,p,q,r,s,ws,mxws,qr_,
+     *          ifail)
+              if(ifail.gt.0)return
+              qrim=q(rowim)
+              qri=q(rowi)
+              is=-is
+              do j=1,is
+                ws(qri+j)=rr*ws(qrim+j)
+              enddo
+              call saxpyz(rr,ws(qrim+is+1),ws(qr_+1),ws(qri+is+1),pr_)
+              is=0
+            endif
           endif
-          le(mc1)=p
-c         j=m1*(mc1-qr)
-          j=m1*j
-          do i=m1mc-m1+1,m1mc
-            EB(i-j)=EB(i)
-            EB(i)=EB(i+m1)
-          enddo
-          mc=mc1
+          p(rowi)=pri
+          if(u12.ne.0.D0)then
+            u12=-u12/del
+            if(is.gt.0)then
+              pr_=prim
+              prim=pri+1
+              call newslot(rowim,prim,lastr,irow,p,q,r,s,ws,mxws,qr_,
+     *          ifail)
+              if(ifail.gt.0)return
+              qrim=q(rowim)
+              qri=q(rowi)
+              do j=1,is
+                ws(qrim+j)=u12*ws(qri+j)
+              enddo
+              call saxpyz(u12,ws(qri+is+1),ws(qr_+1),ws(qrim+is+1),pr_)
+              ws(qrim+prim)=u12
+              goto27
+            else
+              if(pri.gt.0)then
+                is=-is
+                call mysaxpy(u12,ws(qri+1),ws(qrim+is+1),pri)
+                if(abs(ws(qrim+1)).le.tol)then
+                  call trim_(rowim,prim,qrim,q,ws)
+                  if(prim.eq.0)call erase(rowim,lastr,irow,r,s)
+                  p(rowim)=prim
+                endif
+              endif
+            endif
+          endif
+          if(prim.gt.0.or.u12.ne.0.D0)then
+            if(prim.eq.0)then
+              len=0
+            elseif(s(rowim).eq.0)then
+              len=mxws-qrim
+            else
+              len=q(s(rowim))-qrim
+            endif
+            if(len.eq.prim)then
+              call newslot(rowim,prim+1,lastr,irow,p,q,r,s,ws,mxws,qr_,
+     *          ifail)
+              if(ifail.gt.0)return
+              qrim=q(rowim)
+              qri=q(rowi)
+              call r_shift(ws(qrim+1),prim,qr_-qrim)
+            endif
+            prim=prim+1
+            ws(qrim+prim)=u12
+          endif
+   27     continue
+          p(rowim)=prim
+          p(rowi)=pri
+c           write(nout,*)'rowim,prim,qrim =',rowim,prim,qrim
+c           write(nout,*)'rowi,pri,qri =',rowi,pri,qri
+c           write(nout,*)'j,p(j),q(j),r(j),s(j)   irow =',irow
+c           do j=1,n
+c             if(p(j).ne.0)write(nout,*)j,p(j),q(j),r(j),s(j)
+c           enddo
+c           write(nout,*)'rowim* =',(ws(qrim+ij),ij=1,prim)
+c           write(nout,*)'rowi* =',(ws(q(rowi)+ij),ij=1,p(rowi))
+          d(im)=del
+          call iexch(lr(i),lr(i-1))
+          call iexch(li(lr(i)),li(lr(i-1)))
+          iswap=iswap+1
         endif
+      enddo
+      lc(ilast)=qqq
+      li(qqq)=ilast
+c     write(nout,*)'rowim* =',(ws(qrim+ij),ij=1,prim)
+c     write(nout,*)'ilast,prim,qrim',ilast,prim,qrim
+      if(prim.gt.0)then
+       d(ilast)=aiscpri2(n,a,la,rowim,qqq-n,ws(qrim+1),1.D0,ilast-1,
+     *    prim,li)
       else
-c  p is not in the starting active set (and hence in column pc of V)
-c  first remove column pc from V
-        call ishift(lv(pc),mc-pc,1)
-        ic=pc
-        do i=1,pc-1
-          call r_shift(R(ic),mc-pc,1)
-          ic=ic+mxmc-i
-        enddo
-        mc1=mc
-        mc=mc-1
-        ii=ic+1
-        iip=ii+mxmc-pc
-        ic=(pc-1)*mxmc+1
-        do i=pc,mc
-          call angle(R(ii),R(iip),cos,sin)
-          call rot(mc-i,R(ii+1),R(iip+1),cos,sin)
-          call r_shift(R(ii-1),mc1-i,1)
-          ii=iip+1
-          iip=ii+mxmc-i-1
-          icp=ic+mxmc
-          call rot(mc1,Q_(ic),Q_(icp),cos,sin)
-          ic=icp
-        enddo
-        if(qr.eq.0)then
-c         print *,'column  ',p,q
-c  q is a new column (column interchange case)
-c         print 2,'z =',(z(i),i=1,mc1)
-          ii=mc1
-          ic=1
-          do i=1,mc1
-            R(ii)=scpr(0.D0,Q_(ic),z,mc1)
-            ii=ii+mxmc-i
-            ic=ic+mxmc
-          enddo
-          mc=mc1
-          lv(mc)=q
-        else
-c  q is in the starting active set and hence in row qr of E (contract QR case)
-c         print *,'contract',p,q
-          icp=mxmc*mc+mc1
-          ic=icp
-          j=mc1-qr
-          call rexch(Q_(icp),Q_(icp-j))
-          ii=mc*(3-mc)/2+(mc-1)*mxmc
-          do i=mc,1,-1
-            ic=ic-mxmc
-            call rexch(Q_(ic),Q_(ic-j))
-            call angle(Q_(icp),Q_(ic),cos,sin)
-            call rot(mc,Q_(icp-mc),Q_(ic-mc),cos,sin)
-            y(i)=sin*R(ii)
-            R(ii)=-cos*R(ii)
-            call rot(mc-i,y(i+1),R(ii+1),cos,sin)
-            ii=ii-mxmc+i-2
-          enddo
-          le(qr)=le(mc1)
-          j=m1*(mc1-qr)
-          do i=m1mc-m1+1,m1mc
-            EB(i-j)=EB(i)
-          enddo
-        endif
+        d(ilast)=aij(rowim,qqq-n,a,la)
       endif
-c  reset lm (except when extending)
-      do i=1,m2
-        lm(i)=lr(i)
+c  reset mao
+      iout=ilast
+      do i=ilast,nu+1,-1
+        mao(i)=ilast
+        iout=min(iout,i-p(lr(i)))
+        if(iout.eq.i)ilast=i-1
       enddo
-      do i=m2+1,n
-        lm(i)=lc(i)
-      enddo
-      do i=1,mc
-        lm(li(le(i)))=lv(i)
-      enddo
-c     print 3,'le =',(le(i),i=1,mc)
-c     print 3,'lv =',(lv(i),i=1,mc)
-c     print 3,'lm =',(lm(i),i=1,n)
-   10 continue
-      ifail=0
-      if(mc.eq.0)return
-c     print 4,'Q transpose =',(Q_(j),j=1,mc)
-c     do i=1,mc-1
-c       print 5,(Q_(j),j=i*mxmc+1,i*mxmc+mc)
+   30 continue
+      m1=n-nu
+c     write(nout,*)'PAQ factors:  nu =',nu
+c     write(nout,*)'d =',(d(ij),ij=nu+1,n)
+c     do j=nu+1,n
+c       rowj=lr(j)
+c       if(p(rowj).ne.0)then
+c         write(nout,*)'L(',rowj,')',
+c    *      (ws(k),k=q(rowj)+1,q(rowj)+p(rowj))
+c       endif
 c     enddo
-c     print 4,'R =',(R(j),j=1,mc)
-c     ii=mxmc+1
-c     do i=1,mc-1
-c       print 5,(R(j),j=ii,ii+mc-i-1)
-c       ii=ii+mxmc-i
+c     call checkout(n,a,la,lr,lc,li,p,q,r,s,ws,mxws,d)
+c  print star diagram
+c     if(m1.gt.80.or.n.gt.1000)stop
+c     write(nout,*)'updated ordering:  nu =',nu
+c     do i=1,n
+c       do j=1,m1
+c         star(i,j)=' '
+c       enddo
 c     enddo
-      sum=R(mc*(3-mc)/2+(mc-1)*mxmc)
-      if(sum-sum.ne.0.D0.or.sum.eq.0.D0)ifail=1
+c     do j=1,m1
+c       jp=la(0)+lc(nu+j)-n
+c       do i=la(jp),la(jp+1)-1
+c         star(li(la(i)),j)='*'
+c       enddo
+c     enddo
+c     do i=nu+1,n
+c       write(nout,*)(star(i,j),j=1,m1)
+c     enddo
+c     write(nout,*)'lr =',(lr(j),j=nu+1,n)
+c     write(nout,*)'lc =',(lc(j),j=nu+1,n)
+c     write(nout,*)'mao =',(mao(j),j=nu+1,n)
       return
-c  check QR factors
-c     print 4,'EB in check =',(EB(i),i=1,m1mc)
-      do j=1,mc
-        do i=1,n
-          x(i)=0.D0
-        enddo
-        if(lv(j).le.n)then
-          x(li(lv(j)))=1.D0
-        else
-          call iscatter(a,la,lv(j)-n,li,x,n)
-        endif
-        do i=1,mc
-          z(i)=0.D0
-        enddo
-        i1=j
-        do i=1,j
-          call mysaxpy(R(i1),Q_((i-1)*mxmc+1),z,mc)
-          i1=i1+mxmc-i
-        enddo
-c       print 4,'z =',(z(i),i=1,mc)
-c       print 4,'x =',(x(i),i=1,n)
-        emax=0.D0
-        do i=1,mc
-          cij=-scpr(0.D0,EB((i-1)*m1+1),x(m2+1),m1)
-          if(le(i).le.n)cij=cij-x(li(le(i)))
-          qrij=z(i)
-          emax=max(emax,abs(cij-qrij))
-c         if(abs(cij-qrij).gt.tol)then
-c           print *,'error in C=QR:  i,j =',i,j
-c           print *,'cij,qrij =',cij,qrij
-c           if(abs(cij-qrij).gt.1.D-6)stop
-c         endif
-        enddo
-      enddo
-      if(emax.gt.tol)print *,'max error in C=QR =',emax
-      if(emax.gt.tol)stop
-      return
+   99 continue
+      write(nout,*)'malfunction in update_L:  p,q =',pp,qq
+      stop
       end
 
       subroutine newslot(row,len,lastr,irow,p,q,r,s,ws,mxws,qr_,
@@ -2398,69 +2535,6 @@ c  trim leading zeros off slot for row i
       if(pri.eq.0)return
       if(abs(ws(qri+1)).le.tol)goto1
       q(rowi)=qri
-      return
-      end
-
-      subroutine EBspace(n,p,q,s,lr,ws,neb,nprof,ifail)
-      implicit double precision (a-h,u-z), integer (i-t)
-      dimension p(*),q(*),s(*),lr(*),ws(*)
-      common/factorc/m1,m2,mp,mq,lastr,irow
-      common/refactorc/mc,mxmc
-      common/noutc/nout
-      ifail=0
-c  find length and last entry in file
-      len=0
-      last=0
-      do i=m2+1,n
-        row=lr(i)
-        if(p(row).gt.0)then
-          len=len+p(row)
-          last=max(last,q(row)+p(row))
-        endif
-      enddo
-      neb=m1*(mxmc+1)
-c     print *,'nprof =',nprof
-c     print *,'m1,len,last,neb',m1,len,last,neb
-      if(last+neb.le.nprof)then
-        neb=last
-        return
-      elseif(len+neb.le.nprof)then
-c  compress the file
-        thisr=irow
-        qrow=0
-    1   continue
-        call r_shift(ws(qrow+1),p(thisr),q(thisr)-qrow)
-        q(thisr)=qrow
-        qrow=qrow+p(thisr)
-        if(s(thisr).ne.0)then
-          thisr=s(thisr)
-          goto1
-        endif
-        neb=len
-        return
-      endif
-      write(nout,*)'not enough additional space for E.B^{-1} matrix'
-      write(nout,*)'space required is at least len+m1*(mxmc+1)'
-      write(nout,*)'space left =',nprof-len,'  len,m1 =',len,m1
-      ifail=7
-    9 format(A/(15I5))
-      return
-      end
-
-      subroutine checkperms(n,lr,lc,li)
-      implicit double precision (a-h,r-z), integer (i-q)
-      dimension lr(*),lc(*),li(*)
-      common/factorc/m1,m2,mp,mq,lastr,irow
-        do i=1,n
-          if(lr(li(i)).ne.i)print *,'wrong perm 1'
-          if(lr(li(i)).ne.i)stop
-          if(li(lr(i)).ne.i)print *,'wrong perm 2'
-          if(li(lr(i)).ne.i)stop
-        enddo
-        do i=m2+1,n
-          if(li(lc(i)).ne.i)print *,'wrong perm 3'
-          if(li(lc(i)).ne.i)stop
-        enddo
       return
       end
 
