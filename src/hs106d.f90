@@ -48,12 +48,12 @@
 !  replicate a(*)
       do i=maxu+1,maxu+maxa
         ws(maxa+i)=ws(i)
-      enddo
+      end do
 
       do i=n+1,nm
         bl(i)=-ainfty
         bu(i)=0.D0
-      enddo
+      end do
 
 !  user workspace
       ws(1)=t

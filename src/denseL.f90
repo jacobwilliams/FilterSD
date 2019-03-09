@@ -68,20 +68,20 @@
       common/factorc/m0,m1,mm0,mm,mp,mq
       common/refactorc/nup,nfreq
       common/mxm1c/mxm1
-      if(mxm1.le.0)then
+      if (mxm1<=0) then
         write(nout,*)'mxm1 =',mxm1,' is not set correctly'
         ifail=7
         return
-      endif
+      end if
       ns=kk+kkk+mxm1*(mxm1+1)/2+3*n+mxm1
       nt=ll_+lll+n+mxm1+nmi
-      if(ns.gt.mxws.or.nt.gt.mxlws)then
+      if (ns>mxws .or. nt>mxlws) then
         write(nout,*)'not enough real (ws) or integer (lws) workspace'
         write(nout,*)'you give values for mxws and mxlws as',mxws,mxlws
         write(nout,*)'minimum values for mxws and mxlws are',ns,nt
         ifail=7
         return
-      endif
+      end if
       nup=0
       small=max(1.D1*tol,sqrt(eps))
       smallish=max(eps/tol,1.D1*small)
@@ -99,112 +99,112 @@
       li1=li+1
 !     write(nout,*)'ls',(ls(ij),ij=1,nk)
 !     write(nout,*)'ls',(ls(ij),ij=nm+1,nmi)
-      if(mode.ge.3)then
+      if (mode>=3) then
         call re_factor(n,nm,a,la,aa,aa(ns1),aa(nt1),ll,ll(lc1),ll(li1))
         call check_L(n,aa,ifail)
-        if(ifail.eq.1)then
+        if (ifail==1) then
           mode=2
            goto 1
-        endif
-        if(nk.eq.n)return
+        end if
+        if (nk==n) return
 !  reset ls from e
         do j=1,nk
           i=-ls(j)
-          if(i.gt.0)e(i)=-e(i)
-        enddo
+          if (i>0)e(i)=-e(i)
+        end do
         j=0
         nk=nmi
         do i=1,nmi
-          if(e(i).ne.0.D0)then
+          if (e(i)/=0.D0) then
             j=j+1
-            if(e(i).gt.0.D0)then
+            if (e(i)>0.D0) then
               ls(j)=i
             else
               ls(j)=-i
               e(i)=-e(i)
-            endif
+            end if
           else
             ls(nk)=i
             nk=nk-1
-          endif
-        enddo
-        if(j.ne.n)then
+          end if
+        end do
+        if (j/=n) then
           write(nout,*)'malfunction in reset sequence in start_up'
           stop
-        endif
+        end if
         ifail=0
         return
-      endif
+      end if
 1     continue
-      if(emin.eq.0.D0)then
+      if (emin==0.D0) then
 !  set a lower bound on e(i)
         emin=1.D0
         do i=1,nmi-n
           emin=max(emin,ailen(n,a,la,i))
-        enddo
+        end do
         emin=1.D0/emin
-      endif
+      end if
       do i=1,n
         e(i)=1.D0
         ll(i)=i
-      enddo
+      end do
       do i=n+1,nmi
         e(i)=0.D0
         ll(li+i)=0
-      enddo
+      end do
 !  shift designated bounds to end
       nn=n
       do j=nk,1,-1
         i=abs(ls(j))
-        if(i.eq.0.or.i.gt.nmi)then
+        if (i==0 .or. i>nmi) then
           write(nout,*) &
             'ls(j) is zero, or greater in modulus than n+m, for j =',j
           ifail=4
           return
-        endif
-        if(i.le.n)then
+        end if
+        if (i<=n) then
           ls(j)=ls(nk)
           nk=nk-1
           call iexch(ll(nn),ll(i))
           nn=nn-1
-        endif
-      enddo
+        end if
+      end do
       do i=1,n
         ll(li+ll(i))=i
-      enddo
+      end do
       m0=(max(mxm1-nk,0))/2
       mm0=m0*(m0+1)/2
       m1=0
       mm=mm0
       j=1
 2     continue
-        if(j.gt.nk) goto 3
+        if (j>nk) goto 3
         q=abs(ls(j))
 !  extend factors
         call aqsol(n,a,la,q,aa,aa(nt1),aa(mx1),aa,ll,ll(lc1),ll(li1))
         m1p=m1+1
         call linf(nn-m1,aa(nt+m1p),z,iz)
         iz=iz+m1
-        if(z.le.tol)then
+        if (z<=tol) then
 !         write(nout,*)'reject c/s',q
           nk=nk-1
           do ij=j,nk
             ls(ij)=ls(ij+1)
-          enddo
+          end do
            goto 2
-        endif
-        if(m1p.gt.mxm1)then
+        end if
+        if (m1p>mxm1) then
           write(nout,*)'mxm1 =',mxm1,'  is insufficient'
           ifail=7
           return
-        endif
-        if(iz.gt.m1p)then
+        end if
+        if (iz>m1p) then
 !  pivot interchange
           ll(li+ll(m1p))=iz
           call iexch(ll(m1p),ll(iz))
           call rexch(aa(nt+m1p),aa(nt+iz))
           ll(li+ll(m1p))=m1p
-        endif
+        end if
         p=ll(m1p)
         tp=aa(nt+m1p)
         call eptsol(n,a,la,p,a,aa,aa(ns1),aa(nt1),ll,ll(lc1),ll(li1))
@@ -218,13 +218,13 @@
         call aqsol(n,a,la,-1,a,aa(nu1),aa(mx1),aa,ll,ll(lc1),ll(li1))
         do i=1,m1p
           aa(nu+i)=aa(ns+i)/ep
-        enddo
+        end do
         do i=m1p+1,n
           aa(nu+i)=0.D0
-        enddo
+        end do
         e(p)=0.D0
         do i=1,nmi
-          if(e(i).gt.0.D0)then
+          if (e(i)>0.D0) then
             ij=ll(li+i)
             ei=e(i)
 !           ti=aa(nt+ij)*eq/ei
@@ -232,15 +232,15 @@
             ti=aa(nt+j)/ei
             e(i)=max(emin, &
               ei*sqrt(max(tpsq-ti*(2.D0*tp*aa(nu+j)/ei-ti),0.D0))*eq)
-          endif
-        enddo
+          end if
+        end do
 !       e(q)=max(emin,abs(eq))
         e(q)=max(emin,eq)
         m1=m1p
         mm=mm+m0
         do ij=1,m1
           aa(mm+ij)=aa(ns+ij)
-        enddo
+        end do
         ll(lc+m1)=q
         ll(li+q)=m1
         mm=mm+m1
@@ -252,43 +252,43 @@
       do i=nn+1,n
         nk=nk+1
         ls(nk)=ll(i)
-      enddo
+      end do
       j=nk
       do i=m1+1,nn
         j=j+1
         ls(j)=ll(i)
-      enddo
+      end do
       do j=nm+1,nmi
         e(abs(ls(j)))=1.D0
-      enddo
+      end do
       j=n
       do i=1,nmi
-        if(e(i).eq.0.D0)then
+        if (e(i)==0.D0) then
           j=j+1
           ls(j)=i
-        endif
-      enddo
+        end if
+      end do
       do j=nm+1,nmi
         e(abs(ls(j)))=0.D0
-      enddo
-      if(mode.gt.2)then
+      end do
+      if (mode>2) then
         z=sqrt(eps)
         do j=1,n
           i=abs(ls(j))
           e(i)=max(z,e(i))
-        enddo
+        end do
         do j=n+1,nmi
           i=abs(ls(j))
           e(i)=0.D0
-        enddo
-      endif
+        end do
+      end if
 !     write(nout,*)'e =',(e(ij),ij=1,nmi)
 !     write(nout,*)'PAQ factors'
 !     ij=mm0+m0
 !     do ii=1,m1
 !       write(nout,*)(aa(ij+j),j=1,ii)
 !       ij=ij+m0+ii
-!     enddo
+!     end do
 !     write(nout,*)'m0,mm0,m1,mm',m0,mm0,m1,mm
 !     write(nout,*)'ls',(ls(ij),ij=1,nmi)
 !     write(nout,*)'row perm',(ll(ij),ij=1,n)
@@ -324,18 +324,18 @@
       common/epsc/eps,tol,emin
 !     write(nout,*)'pivot: p,q =',p,q
       ifail=0
-      if(p.ne.mp)then
+      if (p/=mp) then
         call eptsol(n,a,la,p,a,aa,aa(ns1),aa(nt1),ll,ll(lc1),ll(li1))
         e(p)=sqrt(scpr(0.D0,aa(ns1),aa(ns1),m1+1))
         mp=p
-      endif
-      if(q.ne.mq)then
+      end if
+      if (q/=mq) then
         call aqsol(n,a,la,q,a,aa(nt1),aa(mx1),aa,ll,ll(lc1),ll(li1))
         mq=q
-      endif
+      end if
 !  update steepest edge coefficients
       tp=aa(nt+ll(li+p))
-      if(tp.eq.0.D0)tp=eps
+      if (tp==0.D0)tp=eps
       ep=e(p)
 !     eq=ep/tp
       eq=abs(ep/tp)
@@ -343,10 +343,10 @@
       tpsq=tp**2
       do i=1,m1+1
         aa(nu+i)=aa(ns+i)/ep
-      enddo
+      end do
       do i=m1+2,n
         aa(nu+i)=0.D0
-      enddo
+      end do
       call aqsol(n,a,la,-1,a,aa(nu1),aa(mx1),aa,ll,ll(lc1),ll(li1))
 !     write(nout,*)'row perm',(ll(ij),ij=1,n)
 !     write(nout,*)'column perm',(ll(lc+ij),ij=1,m1)
@@ -355,7 +355,7 @@
 !     write(nout,*)'u =',(aa(nu+ij),ij=1,n)
       e(p)=0.D0
       do i=1,nm
-        if(e(i).gt.0.D0)then
+        if (e(i)>0.D0) then
           j=ll(li+i)
           ei=e(i)
 !         ti=aa(nt+j)*eq/ei
@@ -363,15 +363,15 @@
           ti=aa(nt+j)/ei
           e(i)=max(emin, &
             ei*sqrt(max(tpsq-ti*(2.D0*tp*aa(nu+j)/ei-ti),0.D0))*eq)
-        endif
-      enddo
+        end if
+      end do
 !     e(q)=max(emin,abs(eq))
       e(q)=max(emin,eq)
       info(1)=info(1)+1
-      if(nup.ge.nfreq)then
+      if (nup>=nfreq) then
 !  refactorize L
         ip=ll(li+p)
-        if(p.gt.n)then
+        if (p>n) then
           qq=ll(lc+m1)
           ll(lc+ip)=qq
           ll(li+qq)=ip
@@ -383,12 +383,12 @@
           ll(li+ll(ip))=ip
           ll(m1p)=p
           ll(li+p)=m1p
-        endif
-        if(q.gt.n)then
-          if(m1.eq.mxm1)then
+        end if
+        if (q>n) then
+          if (m1==mxm1) then
             ifail=7
             return
-          endif
+          end if
           m1=m1+1
           ll(lc+m1)=q
           ll(li+q)=m1
@@ -399,19 +399,19 @@
           ll(li+ll(iq))=iq
           ll(m1p)=q
           ll(li+q)=m1p
-        endif
+        end if
         call re_factor(n,nm,a,la,aa,aa(ns1),aa(nt1),ll,ll(lc1),ll(li1))
       else
 !  update L
         nup=nup+1
-        if(p.le.n)then
-          if(m1.eq.mxm1)then
+        if (p<=n) then
+          if (m1==mxm1) then
             ifail=7
             return
-          endif
+          end if
           call linf(m1,aa(ns1),z,iz)
-          if(z.le.4.D0)then
-            if(m0+m1.eq.mxm1)then
+          if (z<=4.D0) then
+            if (m0+m1==mxm1) then
 !             write(nout,*)'m0 + m1 = mxm1:  re-centre triangle'
               ii=mm0
               mo=m0
@@ -423,38 +423,38 @@
                 mm=mm+m0+i
                 do j=1-i,0
                   aa(mm+j)=aa(ii+j)
-                enddo
-              enddo
-            endif
+                end do
+              end do
+            end if
             do i=1,m1
               aa(mm+m0+i)=aa(ns+i)
-            enddo
+            end do
              goto 1
-          endif
-        endif
+          end if
+        end if
         call c_flma(n,a,la,p,aa,ll,ll(lc1),ll(li1))
 1       continue
-        if(q.le.n)then
+        if (q<=n) then
           call r_flma(n,a,la,q,aa,ll,ll(lc1),ll(li1))
         else
           m1=m1+1
           mm=mm+m0+m1
           aa(mm)=1.D0
           aa(mm)=aiscpri1(n,a,la,q-n,aa(mm-m1+1),0.D0,ll,ll(li1),m1)
-          if(abs(aa(mm)).le.eps)aa(mm)=eps
+          if (abs(aa(mm))<=eps)aa(mm)=eps
           ll(lc+m1)=q
           ll(li+q)=m1
-        endif
+        end if
         mp=-1
         mq=-1
-      endif
+      end if
       call check_L(n,aa,ifail)
 !     write(nout,*)'PAQ factors'
 !     ij=m0+mm0
 !     do ii=1,m1
 !       write(nout,*)(aa(ij+j),j=1,ii)
 !       ij=ij+m0+ii
-!     enddo
+!     end do
 !     write(nout,*)'m0,mm0,m1,mm',m0,mm0,m1,mm
 !     write(nout,*)'row perm',(ll(ij),ij=1,n)
 !     write(nout,*)'column perm',(ll(lc+ij),ij=1,m1)
@@ -463,13 +463,13 @@
 !     write(nout,*)'steepest edge coefficients',(e(ij),ij=1,nm)
 !     emax=0.D0
 !     do i=1,nm
-!       if(e(i).gt.0.D0)then
+!       if (e(i)>0.D0) then
 !         call eptsol(n,a,la,i,a,aa,aa(ns1),aa(nt1),ll,ll(lc1),ll(li1))
 !         ei=sqrt(scpr(0.D0,aa(ns1),aa(ns1),n))
 !         emax=max(emax,abs(ei-e(i)))
-!       endif
-!     enddo
-!     if(emax.ge.tol)
+!       end if
+!     end do
+!     if (emax>=tol)
 !    *  write(nout,*)'error in steepest edge coefficients =',emax
       return
       end
@@ -510,22 +510,22 @@
       common/densec/ns,ns1,nt,nt1,nu,nu1,mx1,lc,lc1,li,li1
       common/factorc/m0,m1,mm0,mm,mp,mq
 !     write(nout,*)'fbsub  q =',q
-      if(save)then
-        if(q.ne.mq)then
+      if (save) then
+        if (q/=mq) then
           call aqsol(n,a,la,q,b,aa(nt1),aa(mx1),aa,ll,ll(lc1),ll(li1))
           mq=q
-        endif
+        end if
         do j=jmin,jmax
           i=abs(ls(j))
           x(i)=aa(nt+ll(li+i))
-        enddo
+        end do
       else
         call aqsol(n,a,la,q,b,aa(nu1),aa(mx1),aa,ll,ll(lc1),ll(li1))
         do j=jmin,jmax
           i=abs(ls(j))
           x(i)=aa(nu+ll(li+i))
-        enddo
-      endif
+        end do
+      end if
       return
       end
 
@@ -551,7 +551,7 @@
 !       ws(lu1) with ws as in the call of bqpd and lu1 as in common/bqpdc/...)
 !   ll(*)  integer storage used by the basis matrix code (supply the vector
 !       lws(ll1) with lws as in the call of bqpd and ll1 as in common/bqpdc/...)
-!   ep  if p.ne.0 and save is true, ep contains the l_2 length of x on exit
+!   ep  if p/=0 and save is true, ep contains the l_2 length of x on exit
 !   save  indicates if tfbsub is to save its copy of the solution for possible
 !       future use. We suggest that the user only sets save = .false.
 
@@ -559,21 +559,21 @@
       common/densec/ns,ns1,nt,nt1,nu,nu1,mx1,lc,lc1,li,li1
       common/factorc/m0,m1,mm0,mm,mp,mq
 !     write(nout,*)'tfbsub  p =',p
-      if(save)then
-        if(p.ne.mp)then
+      if (save) then
+        if (p/=mp) then
           call eptsol(n,a,la,p,b,aa,aa(ns1),aa(nt1),ll,ll(lc1),ll(li1))
           mp=p
-        endif
+        end if
         do i=1,n
           x(ll(i))=aa(ns+i)
-        enddo
-        if(p.gt.0)ep=sqrt(scpr(0.D0,aa(ns1),aa(ns1),m1+1))
+        end do
+        if (p>0)ep=sqrt(scpr(0.D0,aa(ns1),aa(ns1),m1+1))
       else
         call eptsol(n,a,la,p,b,aa,aa(nu1),aa(nt1),ll,ll(lc1),ll(li1))
         do i=1,n
           x(ll(i))=aa(nu+i)
-        enddo
-      endif
+        end do
+      end if
 !     write(nout,*)'x =',(x(i),i=1,n)
       return
       end
@@ -597,21 +597,21 @@
       common/epsc/eps,tol,emin
 !     write(nout,*)'re_factor'
       nup=0
-      if(m1.eq.0)return
+      if (m1==0) return
       m0=(mxm1-m1)/2
       mm0=m0*(m0+1)/2
 !     write(nout,*)'row perm',(lr(ij),ij=1,n)
 !     write(nout,*)'column perm',(lc(ij),ij=1,m1)
       do i=1,m1
         sn(i)=0.D0
-      enddo
+      end do
       mm=mm0
       do i=1,m1-1
         mm=mm+m0+i
         im=i-1
         i1=mm-im
         q=lc(i)-n
-        if(q.le.0) goto 1
+        if (q<=0) goto 1
 !  form L.a_q
         call iscatter(a,la,q,li,sn,n)
 !       write(nout,*)'aq =',(sn(ij),ij=1,m1)
@@ -621,11 +621,11 @@
           tn(j)=scpr(sn(j),T(j1),sn,im)
           j1=jj+m0+1
           jj=j1+j
-        enddo
+        end do
         call iunscatter(a,la,q,li,sn,n)
 !       write(nout,*)'L.aq =',(tn(ij),ij=i,m1)
         call linf(m1-im,tn(i),z,iz)
-        if(iz.gt.1)then
+        if (iz>1) then
 !  pivot interchange
           iz=iz-1
           call vexch(T(i1),T(i1+iz*(m0+i)+iz*(iz-1)/2),im)
@@ -634,8 +634,8 @@
           li(lr(i))=iz
           call iexch(lr(i),lr(iz))
           li(lr(i))=i
-        endif
-        if(tn(i).eq.0.D0)tn(i)=eps
+        end if
+        if (tn(i)==0.D0)tn(i)=eps
 !  update L
         j1=i1+m0+i
         zz=-tn(i)
@@ -645,21 +645,21 @@
           T(j1+im)=z
 !         write(nout,*)'L(j) =',(T(ij),ij=j1,j1+im)
           j1=j1+m0+j
-        enddo
+        end do
         T(mm)=-zz
-      enddo
+      end do
       mm=mm+m0+m1
       q=lc(i)-n
-      if(q.le.0) goto 1
+      if (q<=0) goto 1
       call iscatter(a,la,q,li,sn,n)
       T(mm)=scpr(sn(m1),T(mm-m1+1),sn,m1-1)
-      if(T(mm).eq.0.D0)T(mm)=eps
+      if (T(mm)==0.D0)T(mm)=eps
 !     write(nout,*)'PAQ factors'
 !     ij=mm0+m0
 !     do ii=1,m1
 !       write(nout,*)(T(ij+j),j=1,ii)
 !       ij=ij+m0+ii
-!     enddo
+!     end do
 !     write(nout,*)'m0,mm0,m1,mm',m0,mm0,m1,mm
 !     write(nout,*)'row perm',(lr(ij),ij=1,n)
 !     write(nout,*)'column perm',(lc(ij),ij=1,m1)
@@ -686,8 +686,8 @@
       do k=1,m1
         kk=kk+m0+k
 !       dmin=min(dmin,abs(T(kk)))
-        if(abs(T(kk)).le.tol)return
-      enddo
+        if (abs(T(kk))<=tol) return
+      end do
 !     write(nout,*)'dmin =',dmin
       ifail=0
       return
@@ -699,31 +699,31 @@
       common/noutc/nout
       common/factorc/m0,m1,mm0,mm,mp,mq
 !     write(nout,*)'aqsol  q =',q
-      if(q.gt.0)then
+      if (q>0) then
         do i=1,n
           tn(i)=0.D0
-        enddo
-        if(q.le.n)then
+        end do
+        if (q<=n) then
           tn(li(q))=1.D0
         else
 !         call isaipy(1.D0,a,la,q-n,tn,n,lr,li)
           call iscatter(a,la,q-n,li,tn,n)
-        endif
-      elseif(q.eq.0)then
+        end if
+      else if (q==0) then
         do i=1,n
           tn(li(i))=b(i)
-        enddo
-      endif
+        end do
+      end if
 !     write(nout,*)'tn =',(tn(i),i=1,n)
       ii=mm
       do i=m1,1,-1
         xm(i)=(scpr(tn(i),T(ii-i+1),tn,i-1))/T(ii)
         call isaipy(-xm(i),a,la,lc(i)-n,tn,n,lr,li)
         ii=ii-m0-i
-      enddo
+      end do
       do i=1,m1
         tn(i)=xm(i)
-      enddo
+      end do
 !     write(nout,*)'tn =',(tn(i),i=1,n)
       return
       end
@@ -736,17 +736,17 @@
       common/epsc/eps,tol,emin
       common/factorc/m0,m1,mm0,mm,mp,mq
 !     write(nout,*)'eptsol  p =',p
-!     if(p.eq.9)then
+!     if (p==9) then
 !         write(nout,9)'row perm',(lr(ij),ij=1,n)
 !         write(nout,9)'column perm',(lc(ij),ij=1,m1)
 !         write(nout,9)'inverse perm',(li(ij),ij=1,p)
 !   9     format(A/(15I5))
-!     endif
-      if(p.gt.n)then
+!     end if
+      if (p>n) then
         pr=li(p)
-        if(pr.le.0)print *,'here1'
-        if(pr.le.0) goto 1
-        if(pr.ne.m1)then
+        if (pr<=0) print *,'here1'
+        if (pr<=0) goto 1
+        if (pr/=m1) then
           z=tn(pr)
           call r_shift(tn(pr),m1-pr,1)
           tn(m1)=z
@@ -757,37 +757,37 @@
           lc(m1)=p
           T(mm)=1.D0
           T(mm)=aiscpri1(n,a,la,p-n,T(mm-m1+1),0.D0,lr,li,m1)
-          if(T(mm).eq.0.D0)T(mm)=eps
+          if (T(mm)==0.D0)T(mm)=eps
 !         write(nout,*)'PAQ factors'
 !         ij=m0+mm0
 !         do ii=1,m1
 !           write(nout,*)(T(ij+j),j=1,ii)
 !           ij=ij+m0+ii
-!         enddo
+!         end do
 !         write(nout,*)'m0,mm0,m1,mm',m0,mm0,m1,mm
 !         write(nout,*)'row perm',(lr(ij),ij=1,n)
 !         write(nout,*)'column perm',(lc(ij),ij=1,m1)
 !         write(nout,*)'inverse perm',(li(ij),ij=1,p)
 !         call checkout(n,a,la,T,lr,lc,li)
-        endif
+        end if
         ii=mm-m1
         z=1.D0/T(mm)
         do i=1,m1-1
           sn(i)=T(ii+i)*z
-        enddo
+        end do
         sn(m1)=z
         do i=m1+1,n
           sn(i)=0.D0
-        enddo
+        end do
       else
         ii=m0+mm0
-        if(p.eq.0)then
+        if (p==0) then
           do i=1,m1
             sn(i)=0.D0
-          enddo
+          end do
           do i=m1+1,n
             sn(i)=b(lr(i))
-          enddo
+          end do
           do i=1,m1
             ii=ii+i
             j=lc(i)
@@ -795,18 +795,18 @@
             call mysaxpy(sn(i),T(ij),sn,i-1)
             ii=ii+m0
             ij=ii+1
-          enddo
+          end do
         else
           pr=li(p)
-          if(pr.le.m1)print *,'here2'
-          if(pr.le.m1) goto 1
+          if (pr<=m1) print *,'here2'
+          if (pr<=m1) goto 1
           m1p=m1+1
           call iexch(lr(pr),lr(m1p))
           call iexch(li(lr(pr)),li(lr(m1p)))
           call rexch(tn(pr),tn(m1p))
           do i=1,n
             sn(i)=0.D0
-          enddo
+          end do
           sn(m1p)=1.D0
           do i=1,m1
             ii=ii+i
@@ -814,9 +814,9 @@
             call mysaxpy(sn(i),T(ij),sn,i-1)
             ii=ii+m0
             ij=ii+1
-          enddo
-        endif
-      endif
+          end do
+        end if
+      end if
 !     write(nout,*)'sn =',(sn(i),i=1,n)
       return
 1     continue
@@ -834,25 +834,25 @@
       double precision l21
 !     write(nout,*)'c_flma: q =',q
       qc=li(q)
-      if(q.gt.n)then
-        if(qc.le.0) goto 1
+      if (q>n) then
+        if (qc<=0) goto 1
         call ishift(lc(qc),m1-qc,1)
         do j=qc,m1-1
           li(lc(j))=j
-        enddo
+        end do
         li(q)=0
         mm=mm-m1-m0
         m1=m1-1
       else
-        if(qc.le.m1) goto 1
+        if (qc<=m1) goto 1
         call iexch(lr(qc),lr(m1+1))
         call iexch(li(lr(qc)),li(lr(m1+1)))
         call ishift(lr(2),m1,-1)
         lr(1)=q
         do i=1,m1+1
           li(lr(i))=i
-        enddo
-        if(m0.eq.0)then
+        end do
+        if (m0==0) then
 !         write(nout,*)'m0 = 0:  re-centre triangle'
           m0=(mxm1+1-m1)/2
           mm0=m0*(m0+1)/2
@@ -864,17 +864,17 @@
             ij=ij-m0-i
             call r_shift(T(ij),i,ii)
             ii=ii+m0
-          enddo
-        endif
+          end do
+        end if
         mm=mm-m0-m1
         m0=m0-1
         do i=1,m1
           mm0=mm0+m0+i
           T(mm0)=0.D0
-        enddo
+        end do
         mm0=m0*(m0+1)/2
         qc=1
-      endif
+      end if
       iswap=0
       ii=(qc+m0)*(qc+m0+1)/2
       do i=qc,m1
@@ -887,44 +887,44 @@
         ij=ii+im-iswap
 !       write(nout,*)'i,im,ii,iip,iswap,ij',i,im,ii,iip,iswap,ij
         l21=T(ij)
-        if(abs(l21).le.eps)l21=0.D0
-        if(iswap.gt.0)call r_shift(T(ij),iswap,1)
+        if (abs(l21)<=eps)l21=0.D0
+        if (iswap>0) call r_shift(T(ij),iswap,1)
         del=u21-l21*u11
 !       write(nout,*)'l21,u11,u21,del =',l21,u11,u21,del
 !       write(nout,*)'old row =',(T(j),j=ii1-im,ii)
 !       write(nout,*)'new row =',(T(j),j=ii1,ii+im)
-        if(abs(del).le.abs(u11)*max(1.D0,abs(l21)))then
-!         if(u11.eq.0.D0)then
+        if (abs(del)<=abs(u11)*max(1.D0,abs(l21))) then
+!         if (u11==0.D0) then
 !           r=0.D0
 !         else
-            if(u11.eq.0.D0)u11=eps
+            if (u11==0.D0)u11=eps
             r=-u21/u11
-            if(abs(r).le.eps)r=0.D0
+            if (abs(r)<=eps)r=0.D0
             call mysaxpy(r,T(ii1-im),T(ii1),i-1)
-!         endif
+!         end if
           T(ii)=u11
           T(ii+im)=l21+r
-          if(iswap.gt.0)then
+          if (iswap>0) then
             do j=im+1,m0+m1
               ij=ij+j
               r=T(ij)
               call r_shift(T(ij),iswap,1)
               T(ij+iswap)=r
-            enddo
-          endif
+            end do
+          end if
           iswap=0
         else
           r=-u11/del
-          if(abs(r).le.eps)r=0.D0
+          if (abs(r)<=eps)r=0.D0
           call permop(T(ii1-im),T(ii1),r,-l21,i-1)
           T(ii)=del
           T(ii+im)=r
           call iexch(lr(i),lr(i+1))
           call iexch(li(lr(i)),li(lr(i+1)))
           iswap=iswap+1
-        endif
+        end if
         ii=iip
-      enddo
+      end do
       return
 1     continue
       write(nout,*)'malfunction detected in c_flma: q =',q
@@ -940,11 +940,11 @@
       double precision l11
 !     write(nout,*)'r_flma: p =',p
       pr=li(p)
-      if(pr.gt.m1)then
-        if(pr.eq.m1+1)return
+      if (pr>m1) then
+        if (pr==m1+1) return
         write(nout,*)'malfunction detected in r_flma: p =',p
         stop
-      endif
+      end if
       ii=(pr+m0)*(pr+m0+1)/2
       u11=T(ii)
       T(ii)=1.D0
@@ -955,44 +955,44 @@
         iip=ii1+i
         u22=T(iip)
         l11=-T(ip+im)/T(ip)
-        if(abs(l11).le.eps)l11=0.D0
+        if (abs(l11)<=eps)l11=0.D0
         u12=aiscpri1(n,a,la,lc(i+1)-n,T(ii1-im),0.D0,lr,li,i)
         del=l11*u12+u22
 !       write(nout,*)'l11,u11,u12,u22,del',l11,u11,u12,u22,del
 !       write(nout,*)'old row =',(T(j),j=ii1-im,ii)
 !       write(nout,*)'new row =',(T(j),j=ii1,ii+im)
-        if(abs(del).le.abs(l11)*max(abs(u11),abs(u12)))then
+        if (abs(del)<=abs(l11)*max(abs(u11),abs(u12))) then
           call saxpyx(l11,T(ii1-im),T(ii1),i)
           u11=l11*u11
-          if(u11.eq.0.D0)u11=eps
+          if (u11==0.D0)u11=eps
           T(iip)=1.D0
         else
           r=-u12/del
-          if(abs(r).le.eps)r=0.D0
+          if (abs(r)<=eps)r=0.D0
           call permop(T(ii1-im),T(ii1),r,l11,i)
           call iexch(lc(i),lc(i+1))
           call iexch(li(lc(i)),li(lc(i+1)))
           T(iip)=r
           u22=u11*u22/del
           u11=del
-        endif
+        end if
         call r_shift(T(ip),i-pr,1)
         T(ii)=u11
         u11=u22
         ip=ip+im
         ii=iip
-      enddo
+      end do
       call ishift(lr(pr),m1-pr+1,1)
       lr(m1+1)=p
       do j=pr,m1+1
         li(lr(j))=j
-      enddo
-!     if(T(ip).eq.0.D0)T(ip)=eps
+      end do
+!     if (T(ip)==0.D0)T(ip)=eps
       l11=-T(ip+m0+m1)/T(ip)
       call saxpyx(l11,T(mm-m1+1),T(mm+m0+1),m1)
       call r_shift(T(ip),m1-pr,1)
       T(mm)=l11*u11
-      if(T(mm).eq.0.D0)T(mm)=eps
+      if (T(mm)==0.D0)T(mm)=eps
       return
       end
 
@@ -1000,31 +1000,31 @@
       implicit double precision (a-h,o-z)
       dimension v1(*),v2(*)
       common/noutc/nout
-      if(s.eq.0)then
-        if(r.eq.0)then
+      if (s==0) then
+        if (r==0) then
           call vexch(v1,v2,n)
         else
           do i=1,n
             z=v2(i)
             v2(i)=v1(i)+r*z
             v1(i)=z
-          enddo
-        endif
+          end do
+        end if
       else
-        if(r.eq.0)then
+        if (r==0) then
           do i=1,n
             z=v1(i)
             v1(i)=v2(i)+s*z
             v2(i)=z
-          enddo
+          end do
         else
           do i=1,n
             z=v1(i)
             v1(i)=v2(i)+s*z
             v2(i)=z+r*v1(i)
-          enddo
-        endif
-      endif
+          end do
+        end if
+      end if
       return
       end
 
@@ -1047,12 +1047,12 @@
           e=aiscpri1(n,a,la,lc(j)-n,T(ii1),0.D0,lr,li,i)
           emax=max(emax,abs(e))
           gmax=max(gmax,abs(T(ii+m0+j)))
-        enddo
+        end do
         e=aiscpri1(n,a,la,lc(i)-n,T(ii1),-d,lr,li,i)
         emax=max(emax,abs(e))
         T(ii)=d
-      enddo
-!     if(emax.gt.tol.or.gmax.gt.1.D1)
+      end do
+!     if (emax>tol .or. gmax>1.D1)
 !    *  write(nout,*)'error in LA=U is ',emax,'  growth in L =',gmax
       write(nout,*)'error in LA=U is ',emax,'  growth in L =',gmax
       return

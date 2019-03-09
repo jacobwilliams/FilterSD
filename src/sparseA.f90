@@ -46,12 +46,12 @@
       implicit double precision (a-h,o-z)
       dimension a(*),la(0:*),y(*)
 !  saxpy with column i of A
-      if(s.eq.0.D0)return
+      if (s==0.D0) return
       jp=la(0)+i
       do j=la(jp),la(jp+1)-1
         ir=la(j)
         y(ir)=y(ir)+s*a(j)
-      enddo
+      end do
 1     format(A,15I2)
 2     format(A,5E15.7)
 3     format(A/(20I4))
@@ -68,20 +68,20 @@
       do j=la(jp),la(jp+1)-1
         ir=la(j)
         y(ir)=y(ir)+s*abs(a(j))
-      enddo
+      end do
       return
       end
 
 !     subroutine daipy(s,a,la,i,y,n)
 !     DOUBLE PRECISION a(*),y(*),d
 !     dimension la(0:*)
-!     if(s.eq.0.D0)return
+!     if (s==0.D0) return
 !     d=dble(s)
 !     jp=la(0)+i
 !     do j=la(jp),la(jp+1)-1
 !       ir=la(j)
 !       y(ir)=y(ir)+d*dble(a(j))
-!     enddo
+!     end do
 !     return
 !     end
 
@@ -89,12 +89,12 @@
       implicit double precision (a-h,o-z)
       dimension a(*),la(0:*),y(*),lr(*),li(*)
 !  indirectly addressed saxpy with column i of A
-      if(s.eq.0.D0)return
+      if (s==0.D0) return
       jp=la(0)+i
       do j=la(jp),la(jp+1)-1
         ir=li(la(j))
         y(ir)=y(ir)+s*a(j)
-      enddo
+      end do
       return
       end
 
@@ -104,12 +104,12 @@
       implicit double precision (a-h,o-z)
       dimension a(*),la(0:*),y(*),lr(*),li(*)
 !  indirectly addressed saxpy with column i of A_1
-      if(s.eq.0.D0)return
+      if (s==0.D0) return
       jp=la(0)+i
       do j=la(jp),la(jp+1)-1
         ir=li(la(j))
-        if(ir.le.m1)y(ir)=y(ir)+s*a(j)
-      enddo
+        if (ir<=m1)y(ir)=y(ir)+s*a(j)
+      end do
       return
       end
 
@@ -117,12 +117,12 @@
 !     implicit double precision (a-h,o-z)
 !     dimension a(*),la(0:*),y(*)
 !  saxpy with squares of column i of A
-!     if(s.eq.0.D0)return
+!     if (s==0.D0) return
 !     jp=la(0)+i
 !     do j=la(jp),la(jp+1)-1
 !       ir=la(j)
 !       y(ir)=y(ir)+s*(a(j))**2
-!     enddo
+!     end do
 !     return
 !     end
 
@@ -135,7 +135,7 @@
       do j=la(jp),la(jp+1)-1
         ir=la(j)
         aiscpr=aiscpr+x(ir)*a(j)
-      enddo
+      end do
       return
       end
 
@@ -148,7 +148,7 @@
       do j=la(jp),la(jp+1)-1
         ir=la(j)
         daiscpr=daiscpr+dble(x(ir))*dble(a(j))
-      enddo
+      end do
       return
       end
 
@@ -161,7 +161,7 @@
       do j=la(jp),la(jp+1)-1
         ir=li(la(j))
         aiscpri=aiscpri+x(ir)*a(j)
-      enddo
+      end do
       return
       end
 
@@ -174,7 +174,7 @@
       do j=la(jp),la(jp+1)-1
         ir=li(la(j))
         daiscpri=daiscpri+dble(x(ir))*dble(a(j))
-      enddo
+      end do
       return
       end
 
@@ -188,8 +188,8 @@
       jp=la(0)+i
       do j=la(jp),la(jp+1)-1
         ir=li(la(j))
-        if(ir.le.m1)aiscpri1=aiscpri1+x(ir)*a(j)
-      enddo
+        if (ir<=m1)aiscpri1=aiscpri1+x(ir)*a(j)
+      end do
       return
       end
 
@@ -201,7 +201,7 @@
       jp=la(0)+i
       do j=la(jp),la(jp+1)-1
         ailen=ailen+a(j)**2
-      enddo
+      end do
       ailen=sqrt(ailen)
       return
       end
@@ -213,7 +213,7 @@
       jp=la(0)+i
       do j=la(jp),la(jp+1)-1
         an(li(la(j)))=a(j)
-      enddo
+      end do
       return
       end
 
@@ -224,7 +224,7 @@
       jp=la(0)+i
       do j=la(jp),la(jp+1)-1
         an(li(la(j)))=0.D0
-      enddo
+      end do
       return
       end
 
@@ -235,11 +235,11 @@
       jp=la(0)+j
       do ij=la(jp),la(jp+1)-1
         ir=la(ij)
-        if(ir.eq.i)then
+        if (ir==i) then
           aij=a(ij)
           return
-        endif
-      enddo
+        end if
+      end do
       aij=0.D0
       return
       end
@@ -251,12 +251,12 @@
       jp=la(0)+j
       do jj=la(jp+1)-1,la(jp),-1
         ir=la(jj)
-        if(ir.eq.i)then
+        if (ir==i) then
           a(jj)=aij
           return
-        endif
-      enddo
-      if(aij.eq.0.D0)return
+        end if
+      end do
+      if (aij==0.D0) return
       print *,'malfunction: no slot for A(i,j)'
       stop
       end
@@ -301,53 +301,53 @@
       integer pjp
 
       ifail=2
-      if(menu.lt.1.or.menu.gt.2)return
+      if (menu<1 .or. menu>2) return
       pjp=la(0)
 !     z=1.D0/log(2.D0)
-      if(menu.eq.1)then
+      if (menu==1) then
         do j=1,n
           s(j)=1.D0
-        enddo
+        end do
       else
         ifail=1
         do j=1,n
-          if(s(j).le.0.D0)return
-        enddo
-!       if(menu.eq.2)then
+          if (s(j)<=0.D0) return
+        end do
+!       if (menu==2) then
 !         do j=1,n
 !           s(j)=2.D0**nint(log(s(j))*z)
-!         enddo
-!       endif
+!         end do
+!       end if
         do j=1,n
-          if(s(j).ne.1.D0)then
+          if (s(j)/=1.D0) then
             x(j)=x(j)/s(j)
             bl(j)=bl(j)/s(j)
             bu(j)=bu(j)/s(j)
-          endif
-        enddo
+          end if
+        end do
         do j=1,la(pjp+1)-1
           a(j)=a(j)*s(la(j))
-        enddo
-      endif
+        end do
+      end if
       do i=1,m
         t=0.D0
         do j=la(pjp+i),la(pjp+i+1)-1
           a(j)=s(la(j))*a(j)
           t=t+a(j)**2
-        enddo
+        end do
         t=sqrt(t)
-        if(t.eq.0.D0)then
+        if (t==0.D0) then
           s(n+i)=1.D0
         else
 !         t=2.D0**nint(log(t)*z)
           s(n+i)=t
           do j=la(pjp+i),la(pjp+i+1)-1
             a(j)=a(j)/t
-          enddo
+          end do
           bl(n+i)=bl(n+i)/t
           bu(n+i)=bu(n+i)/t
-        endif
-      enddo
+        end if
+      end do
       ifail=0
       return
       end
@@ -369,13 +369,13 @@
       nextra=la(la0+m1)-la(la0+1)+m1+m
       ij=la(la0+m1)+nextra
 !     print 1,'la0,nextra,ij',la0,nextra,ij
-      if(ij-1.gt.maxa)then
+      if (ij-1>maxa) then
         print *,'not enough space:  reset maxa to at least ',ij-1
         stop
-      endif
+      end if
       do i=1,m1
         iws(i)=la(la0+i)
-      enddo
+      end do
       la0=ij
       la(la0+m1+m)=ij
 !  set lower bounds
@@ -388,9 +388,9 @@
           ij=ij-1
           a(ij)=-a(j)
           la(ij)=la(j)
-        enddo
+        end do
         la(la0+m+i)=ij
-      enddo
+      end do
 !  set upper bounds
       do i=m,1,-1
         ij=ij-1
@@ -401,9 +401,9 @@
           ij=ij-1
           a(ij)=a(j)
           la(ij)=la(j)
-        enddo
+        end do
         la(la0+i)=ij
-      enddo
+      end do
       ij=ij-1
       la(ij)=n1
       a(ij)=sigma
@@ -430,9 +430,9 @@
         do j=la(la0+i),la(la0+i+1)-2
           la(j-i)=la(j)
           a(j-i)=a(j)
-        enddo
+        end do
         la(la0+i)=la(la0+i)-i
-      enddo
+      end do
       la(la0+m+1)=la(la0+m+1)-m-1
 !     print 3,'pointers =',(la(i),i=la0,la0+m+1)
 !     print 4,'a =',(a(i),i=1,la(la0+m+1)-1)
@@ -464,12 +464,12 @@
           do ij=la(la0+j),la(la0+j+1)-1
             lax(ijx)=la(ij)
             ijx=ijx+1
-          enddo
+          end do
           lax(ijx)=n1
           ijx=ijx+1
           jp=jp+1
-        enddo
-      enddo
+        end do
+      end do
       lax(jp)=ijx
 !     print 3,'lax pointers =',(lax(i),i=lax0,lax0+m+m+1)
 !     print 3,'lax =',(lax(i),i=1,lax(lax0+m+m+1)-1)
@@ -494,19 +494,19 @@
         do ij=la(la0+j),la(la0+j+1)-1
           ax(ijx)=-a(ij)
           ijx=ijx+1
-        enddo
+        end do
         ax(ijx)=-s(j)
         ijx=ijx+1
-      enddo
+      end do
 !  set upper bounds
       do j=1,m
         do ij=la(la0+j),la(la0+j+1)-1
           ax(ijx)=a(ij)
           ijx=ijx+1
-        enddo
+        end do
         ax(ijx)=-s(j)
         ijx=ijx+1
-      enddo
+      end do
 !     print 4,'ax =',(ax(i),i=1,lax(lax(0)+m+m+1)-1)
 4     format(A/(5E15.7))
       return

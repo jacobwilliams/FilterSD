@@ -67,7 +67,7 @@
 !  saxpy with squares of x
 !     do i=1,n
 !       y(i)=y(i)+a*x(i)**2
-!     enddo
+!     end do
 !     return
 !     end
 
@@ -134,7 +134,7 @@
 !  indirect scatter into vector an
       do j=1,n
         an(li(j))=a(j,i)
-      enddo
+      end do
       return
       end
 
@@ -164,10 +164,10 @@
       implicit double precision (a-h,r-z), integer (i-q)
       dimension x(*),lr(*),y(*)
 !  saxpy with x indirectly addressed
-      if(a.eq.0.D0)return
+      if (a==0.D0) return
       do i=1,n
         y(i)=y(i)+a*x(lr(i))
-      enddo
+      end do
       return
       end
 
@@ -178,7 +178,7 @@
       dscpr=dble(a)
       do i=1,n
         dscpr=dscpr+dble(x(i))*dble(y(i))
-      enddo
+      end do
       return
       end
 
@@ -189,7 +189,7 @@
       scpri=a
       do i=1,n
         scpri=scpri+x(lr(i))*y(i)
-      enddo
+      end do
       return
       end
 
@@ -200,7 +200,7 @@
       dscpri=dble(a)
       do i=1,n
         dscpri=dscpri+dble(x(lr(i)))*dble(y(i))
-      enddo
+      end do
       return
       end
 
@@ -240,50 +240,50 @@
 !       Otherwise ifail = 0.
 
       ifail=2
-      if(menu.lt.1.or.menu.gt.2)return
+      if (menu<1 .or. menu>2) return
 !     z=1.D0/log(2.D0)
-      if(menu.eq.1)then
+      if (menu==1) then
         do j=1,n
           s(j)=1.D0
-        enddo
+        end do
       else
         ifail=1
         do j=1,n
-          if(s(j).le.0.D0)return
-        enddo
-!       if(menu.eq.2)then
+          if (s(j)<=0.D0) return
+        end do
+!       if (menu==2) then
 !         do j=1,n
 !           s(j)=2.D0**nint(log(s(j))*z)
-!         enddo
-!       endif
+!         end do
+!       end if
         do j=1,n
-          if(s(j).ne.1.D0)then
+          if (s(j)/=1.D0) then
             x(j)=x(j)/s(j)
             bl(j)=bl(j)/s(j)
             bu(j)=bu(j)/s(j)
             a(j,0)=a(j,0)*s(j)
-          endif
-        enddo
-      endif
+          end if
+        end do
+      end if
       do i=1,m
         t=0.D0
         do j=1,n
           a(j,i)=a(j,i)*s(j)
           t=t+a(j,i)**2
-        enddo
+        end do
         t=sqrt(t)
-        if(t.eq.0.D0)then
+        if (t==0.D0) then
           s(n+i)=1.D0
         else
 !         t=2.D0**nint(log(t)*z)
           s(n+i)=t
           do j=1,n
             a(j,i)=a(j,i)/t
-          enddo
+          end do
           bl(n+i)=bl(n+i)/t
           bu(n+i)=bu(n+i)/t
-        endif
-      enddo
+        end if
+      end do
       ifail=0
       return
       end

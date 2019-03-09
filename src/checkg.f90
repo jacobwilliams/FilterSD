@@ -49,15 +49,15 @@
         call funct(n,x,fxh,user,iuser,cuser)
         call grad(n,x,b,user,iuser,cuser)
         dfi=(fxh-fx)/h(i)
-        if((dfi.ge.a(i)-tol.and.dfi.le.b(i)+tol).or. &
-          (dfi.ge.b(i)-tol.and.dfi.le.a(i)+tol)) goto 10
+        if ((dfi>=a(i)-tol .and. dfi.le.b(i)+tol) .or.  &
+          (dfi>=b(i)-tol .and. dfi.le.a(i)+tol)) goto 10
         print 1,'derivative inconsistency in variable',i
         print 2,'deriv at x, diff quotient, deriv at x+h =', &
               a(i),dfi,b(i)
         stop
 10      continue
         x(i)=xi
-      enddo
+      end do
       print *,'exiting checkg'
 1     format(A,15I5)
 2     format(A,6E15.7)

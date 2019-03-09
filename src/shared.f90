@@ -18,20 +18,20 @@
       rp=0.D0
       do 1 j=jmin,jmax
         i=abs(ls(j))
-        if(e(i).eq.0.D0)print *,'e(i).eq.0.D0: i =',i
+        if (e(i)==0.D0) print *,'e(i)==0.D0: i =',i
         ri=r(i)/e(i)
-        if(ri.ge.rp) goto 1
-!       if((i/2)*2.eq.i)then
+        if (ri>=rp) goto 1
+!       if ((i/2)*2==i) then
 !         ic=i-1
 !  this change is needed when nm is odd
 !         ic=i+1
 !       else
 !         ic=i+1
 !         ic=i-1
-!       endif
+!       end if
 !       do jj=jmin,jmax
-!         if(ls(jj).eq.ic) goto 2
-!       enddo
+!         if (ls(jj)==ic) goto 2
+!       end do
 !        goto 1
 !   2   continue
         rp=ri
@@ -45,41 +45,41 @@
       dimension a(*),la(*),an(*),w(*),ls(*)
       logical plus
 !  form At.s and denominators
-      if(plus)then
+      if (plus) then
         do j=jmin,jmax
           i=abs(ls(j))
-          if(i.gt.n)then
+          if (i>n) then
             wi=aiscpr(n,a,la,i-n,an,0.D0)
           else
             wi=an(i)
-          endif
-          if(wi.ne.0.D0)then
-            if(abs(wi).le.tol)then
+          end if
+          if (wi/=0.D0) then
+            if (abs(wi)<=tol) then
               wi=0.D0
-            elseif(ls(j).ge.0)then
+            else if (ls(j)>=0) then
               wi=-wi
-            endif
-          endif
+            end if
+          end if
           w(i)=wi
-        enddo
+        end do
       else
         do j=jmin,jmax
           i=abs(ls(j))
-          if(i.gt.n)then
+          if (i>n) then
             wi=aiscpr(n,a,la,i-n,an,0.D0)
           else
             wi=an(i)
-          endif
-          if(wi.ne.0.D0)then
-            if(abs(wi).le.tol)then
+          end if
+          if (wi/=0.D0) then
+            if (abs(wi)<=tol) then
               wi=0.D0
-            elseif(ls(j).lt.0)then
+            else if (ls(j)<0) then
               wi=-wi
-            endif
-          endif
+            end if
+          end if
           w(i)=wi
-        enddo
-      endif
+        end do
+      end if
       return
       end
 
@@ -89,10 +89,10 @@
       common/noutc/nout
       do j=1,n-k
         w(abs(ls(j)))=0.D0
-      enddo
+      end do
       do j=n-k+1,n
         w(ls(j))=-r(ls(j))
-      enddo
+      end do
       call tfbsub(n,a,la,0,w,an,aa,ll,ep,.false.)
       return
       end
@@ -103,12 +103,12 @@
 !  transfer with sign change as necessary
         do j=1,n
           i=abs(ls(j))
-          if(ls(j).ge.0)then
+          if (ls(j)>=0) then
             r(i)=w(i)
           else
             r(i)=-w(i)
-          endif
-        enddo
+          end if
+        end do
       return
       end
 
@@ -122,16 +122,16 @@
       common/iprintc/iprint
       do j=1,n
         i=abs(ls(j))
-        if(i.le.n)then
+        if (i<=n) then
           b(i)=0.D0
         else
-          if(ls(j).ge.0)then
+          if (ls(j)>=0) then
             b(i)=daiscpr(n,a,la,i-n,x,-bl(i))
           else
             b(i)=daiscpr(n,a,la,i-n,x,-bu(i))
-          endif
-        endif
-      enddo
+          end if
+        end if
+      end do
 !     print 3,'ls =',(ls(i),i=1,n)
 3     format(A/(15I5))
 !     write(nout,1000)'x =',(x(i),i=1,n)
@@ -140,23 +140,23 @@
       call tfbsub(n,a,la,0,b,an,aa,ll,ep,.false.)
 !     write(nout,1000)'d =',(an(i),i=1,n)
       call linf(n,an,vstep,i)
-      if(iprint.ge.1) &
+      if (iprint>=1) &
         write(nout,*)'infinity norm of vertical step =',vstep
       do i=1,n
         x(i)=x(i)-an(i)
-      enddo
+      end do
       do j=1,n
         i=abs(ls(j))
-        if(i.le.n)then
-          if(x(i).ge.bu(i)-tol)then
+        if (i<=n) then
+          if (x(i)>=bu(i)-tol) then
             x(i)=bu(i)
             ls(j)=-i
           else
             ls(j)=i
-            if(x(i).le.bl(i)+tol)x(i)=bl(i)
-          endif
-        endif
-      enddo
+            if (x(i)<=bl(i)+tol)x(i)=bl(i)
+          end if
+        end if
+      end do
 !     write(nout,*)'x =',(x(i),i=1,n)
 1000  format(a/(e16.5,4e16.5))
 !1001 format(a/(i4,1x,e11.5,4(i4,1x,e11.5)))
@@ -172,35 +172,35 @@
       ninf=0
       do i=1,n
         g(i)=0.D0
-      enddo
+      end do
       do j=jmin,jmax
         i=abs(ls(j))
-        if(i.gt.n)then
+        if (i>n) then
           z=daiscpr(n,a,la,i-n,x,0.D0)
         else
           z=dble(x(i))
-        endif
+        end if
         ri=z-dble(bl(i))
         ro=dble(bu(i))-z
-        if(ri.le.ro)then
+        if (ri<=ro) then
           ls(j)=i
         else
           ri=ro
           ls(j)=-i
-        endif
-        if(abs(ri).le.tol)then
+        end if
+        if (abs(ri)<=tol) then
           ri=0.D0
-        elseif(ri.lt.0.D0)then
+        else if (ri<0.D0) then
           f=f-ri
           ninf=ninf+1
-          if(i.gt.n)then
+          if (i>n) then
             call saipy(-sign(1.D0,dble(ls(j))),a,la,i-n,g,n)
           else
             g(i)=g(i)-sign(1.D0,dble(ls(j)))
-          endif
-        endif
+          end if
+        end if
         r(i)=ri
-      enddo
+      end do
       return
       end
 
@@ -209,7 +209,7 @@
       dimension G(k,*),r(*),ls(*)
       do j=1,k
         G(j,ig)=r(ls(j))
-      enddo
+      end do
       return
       end
 
@@ -220,18 +220,18 @@
 !  is diagonal and e(i) i=1,..,n-1 is subdiagonal (storage for dummy e(n)
 !  must be available). Eigenvalues returned in d
 !  This routine is adapted from the EISPAK subroutine imtq11.
-      if(n.eq.1)return
+      if (n==1) return
       e(n)=0.D0
       do 15 l=1,n
       iter=0
 1     continue
       do 12 m=l,n-1
       dd=abs(d(m))+abs(d(m+1))
-      if(abs(e(m))+dd.eq.dd) goto 2
+      if (abs(e(m))+dd==dd) goto 2
 12    continue
       m=n
 2     continue
-      if(m.eq.l.or.iter.eq.30) goto 15
+      if (m==l .or. iter==30) goto 15
       iter=iter+1
       g=(d(l+1)-d(l))*5.D-1/e(l)
       r=sqrt(g**2+1.D0)
@@ -242,7 +242,7 @@
       do 14 i=m-1,l,-1
       f=s*e(i)
       b=c*e(i)
-      if(abs(f).ge.abs(g))then
+      if (abs(f)>=abs(g)) then
         c=g/f
         r=sqrt(c**2+1.D0)
         e(i+1)=f*r
@@ -254,7 +254,7 @@
         e(i+1)=g*r
         c=1.D0/r
         s=s*c
-      endif
+      end if
       g=d(i+1)-p
       r=(d(i)-g)*s+2.*c*b
       p=s*r
@@ -275,50 +275,50 @@
 !     print *,'G and ig',ig
 !     do i=1,k
 !       print 5,(G(i,j),j=1,6)
-!     enddo
+!     end do
 !     print 4,'a =',(a(i),i=1,6)
 !     print 4,'b =',(b(i),i=1,6)
 !     print 4,'c =',(c(i),i=1,6)
 10    ii=ig-nv
-      if(ii.lt.0)ii=ii+maxg
+      if (ii<0)ii=ii+maxg
       do i=1,nv
         ii=ii+1
-        if(ii.gt.maxg)ii=1
+        if (ii>maxg)ii=1
         e(i)=a(ii)
         nvi=nv-i+1
         nvi1=nvi+1
         d(1)=b(ii)
         d(2)=c(ii)
         jj=ii+1
-        if(jj.gt.maxg)jj=1
+        if (jj>maxg)jj=1
         do j=3,nvi1
           jj=jj+1
-          if(jj.gt.maxg)jj=1
+          if (jj>maxg)jj=1
           d(j)=scpr(0.D0,G(1,jj),G(1,ii),k)
-        enddo
+        end do
         ij=i
         do j=1,i-1
           call mysaxpy(-R(ij),R(ij),d,nvi1)
           ij=ij+maxg-j
-        enddo
-        if(d(1).le.0.D0)then
+        end do
+        if (d(1)<=0.D0) then
 !         print *,'R is singular'
           nv=i-1
            goto 10
-        endif
+        end if
         t=sqrt(d(1))
         R(ij)=t
         do j=1,nvi
           R(ij+j)=d(j+1)/t
-        enddo
+        end do
 !       print 4,'row of R =',(R(ij+j),j=0,nvi)
-      enddo
+      end do
 !     print 4,'R matrix',(R(j),j=1,nv+1)
 !     ii=maxg
 !     do i=1,nv-1
 !       print 5,(0.D0,j=1,i),(R(ii+j),j=1,nv-i+1)
 !       ii=ii+maxg-i
-!     enddo
+!     end do
       return
 2     format(A,5E13.5)
 4     format(A/(6E13.5))
@@ -341,7 +341,7 @@
         dii=t
         t=e(i)*R(ir+1)/R(ir)
         d(i)=dii+e(i)-t
-      enddo
+      end do
       return
       end
 
@@ -352,16 +352,16 @@
       do i=2,nv
         t=v(i)
         do j=i-1,1,-1
-          if(v(j).gt.t)then
+          if (v(j)>t) then
             v(j+1)=v(j)
           else
             v(j+1)=t
              goto 10
-          endif
-        enddo
+          end if
+        end do
         v(1)=t
 10      continue
-      enddo
+      end do
       return
       end
 
@@ -369,44 +369,44 @@
       implicit double precision (a-h,o-z)
       dimension R(*),a(*),d(*)
       dimension T(10,10)
-      if(n.gt.9)print *,'Increase dimension of T'
-      if(n.gt.9)stop
+      if (n>9) print *,'Increase dimension of T'
+      if (n>9) stop
       do j=1,n+1
         T(1,j)=R(j)
-      enddo
+      end do
       ii=nmax
       do i=1,n-1
         do j=1,i
           T(i+1,j)=0.D0
-        enddo
+        end do
         do j=1,n-i+1
           T(i+1,j+i)=R(ii+j)
-        enddo
+        end do
         ii=ii+nmax-i
-      enddo
+      end do
 !     print 4,'R matrix'
 !     do i=1,n
 !       print 5,(T(i,j),j=1,n+1)
-!     enddo
+!     end do
 !     print 2,'a =',(a(i),i=1,n)
       do i=1,n
         call mysaxpy(-1.D0,T(1,i+1),T(1,i),n)
         do j=1,n
           T(j,i)=T(j,i)*a(i)
-        enddo
-      enddo
+        end do
+      end do
 !     print 4,'R*J matrix'
 !     do i=1,n
 !       print 5,(T(i,j),j=1,n)
-!     enddo
+!     end do
       print 4,'T matrix'
       do i=1,n
         do j=1,n
           d(j)=T(i,j)
-        enddo
+        end do
         call rtsol(n,nn,nmax,R,d)
         print 5,(d(j),j=1,n)
-      enddo
+      end do
       return
 2     format(A,6E15.7)
 4     format(A/(5E15.7))

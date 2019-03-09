@@ -23,7 +23,7 @@
       do i=n-1,1,-1
         ii=ii-n1+i
         b(i)=-scpr(-b(i),R(ii+1),b(i+1),n-i)/R(ii)
-      enddo
+      end do
       return
       end
 
@@ -40,7 +40,7 @@
         call mysaxpy(-b(i1),R(nn+1),b(i),n-i1)
         nn=nn+n2-i
         b(i)=b(i)/R(nn)
-      enddo
+      end do
       return
       end
 
@@ -50,12 +50,12 @@
 !  forms b=M.x where Q is nxn, stored by columns, with stride nmax
       do i=1,n
         b(i)=0.D0
-      enddo
+      end do
       i1=1
       do i=1,n
         call mysaxpy(x(i),Q(i1),b,n)
         i1=i1+nmax
-      enddo
+      end do
       return
       end
 
@@ -67,7 +67,7 @@
       do i=1,n
         b(i)=scpr(0.D0,Q(i1),x,n)
         i1=i1+nmax
-      enddo
+      end do
       return
       end
 
@@ -84,7 +84,7 @@
         v(ip)=sin*R(ii)
         R(ii)=cos*R(ii)
         ipip=ii
-      enddo
+      end do
       return
       end
 
@@ -100,18 +100,18 @@
         call angle(R(ii),v(ip),cos,sin)
         call rot(nr-i,R(ipi),R(ipip),cos,sin)
         ii=ipip
-      enddo
+      end do
       return
       end
 
       subroutine angle(a,b,cos,sin)
       implicit double precision (a-h,o-z)
       z=sqrt(a**2+b**2)
-      if(z.eq.0.D0)then
+      if (z==0.D0) then
         cos=1.D0
         sin=0.D0
         return
-      endif
+      end if
       cos=a/z
       sin=b/z
       a=z
@@ -122,47 +122,47 @@
       subroutine rot(n,a,b,cos,sin)
       implicit double precision (a-h,o-z)
       dimension a(*),b(*)
-      if(sin.eq.0.D0)then
-        if(cos.gt.0.D0)then
+      if (sin==0.D0) then
+        if (cos>0.D0) then
           do i=1,n
             b(i)=-b(i)
-          enddo
+          end do
         else
           do i=1,n
             a(i)=-a(i)
-          enddo
-        endif
-      elseif(cos.eq.0.D0)then
-        if(sin.ge.0.D0)then
+          end do
+        end if
+      else if (cos==0.D0) then
+        if (sin>=0.D0) then
           do i=1,n
             z=a(i)
             a(i)=b(i)
             b(i)=z
-          enddo
+          end do
         else
           do i=1,n
             z=a(i)
             a(i)=-b(i)
             b(i)=-z
-          enddo
-        endif
+          end do
+        end if
       else
         do i=1,n
           z=a(i)
           a(i)=cos*z+sin*b(i)
           b(i)=sin*z-cos*b(i)
-        enddo
-      endif
+        end do
+      end if
       return
       end
 
       subroutine mysaxpy(a,x,y,n)
       implicit double precision (a-h,o-z)
       dimension x(*),y(*)
-      if(a.eq.0.D0)return
+      if (a==0.D0) return
       do i=1,n
         y(i)=y(i)+a*x(i)
-      enddo
+      end do
       return
       end
 
@@ -170,12 +170,12 @@
       implicit double precision (a-h,o-z)
 !  saxpy with stride
       dimension x(*),y(*)
-      if(a.eq.0.D0)return
+      if (a==0.D0) return
       ix=1
       do i=1,n
         y(i)=y(i)+a*x(ix)
         ix=ix+is
-      enddo
+      end do
       return
       end
 
@@ -183,15 +183,15 @@
       implicit double precision (a-h,o-z)
 !  saxpy with result in x
       dimension x(*),y(*)
-      if(a.eq.0.D0)then
+      if (a==0.D0) then
         do i=1,n
           x(i)=y(i)
-        enddo
+        end do
       else
         do i=1,n
           x(i)=y(i)+a*x(i)
-        enddo
-      endif
+        end do
+      end if
       return
       end
 
@@ -199,15 +199,15 @@
       implicit double precision (a-h,o-z)
 !  saxpy with result in z
       dimension x(*),y(*),z(*)
-      if(a.eq.0.D0)then
+      if (a==0.D0) then
         do i=1,n
           z(i)=y(i)
-        enddo
+        end do
       else
         do i=1,n
           z(i)=y(i)+a*x(i)
-        enddo
-      endif
+        end do
+      end if
       return
       end
 
@@ -215,17 +215,17 @@
       implicit double precision (a-h,o-z)
 !  saxpy with interchange of x and y
       dimension x(*),y(*)
-      if(a.eq.0.D0)then
+      if (a==0.D0) then
         do i=1,n
           call rexch(x(i),y(i))
-        enddo
+        end do
       else
         do i=1,n
           z=y(i)
           y(i)=x(i)+a*y(i)
           x(i)=z
-        enddo
-      endif
+        end do
+      end if
       return
       end
 
@@ -235,7 +235,7 @@
       scpr=a
       do i=1,n
         scpr=scpr+x(i)*y(i)
-      enddo
+      end do
       return
       end
 
@@ -261,19 +261,19 @@
 !     xlen=a
 !     do i=1,n
 !       xlen=xlen+x(i)**2
-!     enddo
+!     end do
 !     xlen=sqrt(xlen)
 !     ieeer=ieee_flags ( 'get','exception','',out )
-!     if(out.eq.'overflow')then
+!     if (out=='overflow') then
 !       call linf(n,x,xmx,i)
 !       xmx=max(xmx,1.D0) %this is needed if normalization is always used
 !       xlen=(a/xmx)**2
 !       do i=1,n
 !         xlen=xlen+(x(i)/xmx)**2
-!       enddo
+!       end do
 !       xlen=xmx*sqrt(xlen)
 !       ieeer=ieee_flags ( 'clear','overflow','',out )
-!     endif
+!     end if
 !     ieeer=ieee_handler('set','overflow',abort)
 !     return
 !     end
@@ -284,7 +284,7 @@
       xlen=a
       do i=1,n
         xlen=xlen+x(i)**2
-      enddo
+      end do
       xlen=sqrt(xlen)
       return
       end
@@ -295,41 +295,41 @@
       z=0.D0
       do i=1,n
         a=abs(x(i))
-        if(a.gt.z)then
+        if (a>z) then
           z=a
           iz=i
-        endif
-      enddo
+        end if
+      end do
       return
       end
 
       subroutine r_shift(r,n,k)
       implicit double precision (a-h,o-z)
       dimension r(*)
-      if(k.gt.0)then
+      if (k>0) then
         do i=1,n
           r(i)=r(i+k)
-        enddo
-      elseif(k.lt.0)then
+        end do
+      else if (k<0) then
         do i=n,1,-1
           r(i)=r(i+k)
-        enddo
-      endif
+        end do
+      end if
       return
       end
 
       subroutine ishift(l,n,k)
       implicit double precision (a-h,o-z)
       dimension l(*)
-      if(k.gt.0)then
+      if (k>0) then
         do i=1,n
           l(i)=l(i+k)
-        enddo
-      elseif(k.lt.0)then
+        end do
+      else if (k<0) then
         do i=n,1,-1
           l(i)=l(i+k)
-        enddo
-      endif
+        end do
+      end if
       return
       end
 
@@ -348,7 +348,7 @@
         z=a(i)
         a(i)=b(i)
         b(i)=z
-      enddo
+      end do
       return
       end
 

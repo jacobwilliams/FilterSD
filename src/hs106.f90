@@ -47,12 +47,12 @@
 !  initializing second copy of a(*)
       do i=maxu+1,maxu+maxa
         ws(maxa+i)=ws(i)
-      enddo
+      end do
 
       do i=n+1,nm
         bl(i)=-ainfty
         bu(i)=0.D0
-      enddo
+      end do
 
 !  user information passed to subroutines
       ws(1)=t
@@ -122,10 +122,10 @@
 !  grad f
 !     do i=1,3
 !       a(i)=1.D0
-!     enddo
+!     end do
 !     do i=4,n
 !       a(i)=0.D0
-!     enddo
+!     end do
 !  Jacobian matrix
       a(16)=1.D2-x(6)
       a(18)=-x(1)

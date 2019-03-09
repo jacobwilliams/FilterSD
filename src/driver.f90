@@ -65,7 +65,7 @@
 
 !     do i=1,n
 !       x(i)=y(i)
-!     enddo
+!     end do
 
       v(1)=1.D0
       nv=1
@@ -99,14 +99,14 @@
 !     do i=1,n
 !       al(i)=1.D-2*x(i)
 !       al(i)=1.D-2
-!     enddo
+!     end do
 !     call checkd(n,m,x,al,ws,lws,maxa,maxla,maxu,maxiu,
 !    *  mxws,mxlws,1.D-8)
 !     stop
 
 !     do i=1,n
 !       x(i)=x(i)+dble(i)*0.01
-!     enddo
+!     end do
 
 10    continue
 
@@ -117,10 +117,10 @@
         nout,ifail)
 
 
-      if(ifail.eq.4.and.h.gt.ubd)then
+      if (ifail==4 .and. h>ubd) then
         ubd=11.D-1*h
          goto 10
-      endif
+      end if
 
 !     print *,'cstype =',(cstype(i),i=1,m)
 !     print 1,'number of function and gradient calls =',nft,ngt
@@ -137,17 +137,17 @@
 
       nout1=99
       nout1=0
-      if(ifail.eq.0)then
-        if(abs(f).lt.1.D5.and.abs(f).ge.1.D0)then
+      if (ifail==0) then
+        if (abs(f)<1.D5 .and. abs(f)>=1.D0) then
           write(nout1,1111)pname,n,m,f,h,rgnorm,k,itn,nft,ngt
         else
           write(nout1,2222)pname,n,m,f,h,rgnorm,k,itn,nft,ngt
-        endif
-      elseif(ifail.eq.3)then
+        end if
+      else if (ifail==3) then
         write(nout1,3333)pname,n,m,hJt,h,rgnorm,k,itn,nft,ngt,ifail
       else
         write(nout1,3333)pname,n,m,f,h,rgnorm,k,itn,nft,ngt,ifail
-      endif
+      end if
 
       stop
 

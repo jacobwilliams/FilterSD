@@ -15,7 +15,7 @@
       do i=1,m
         bl(n+i)=bl(nmax+i)
         bu(n+i)=bu(nmax+i)
-      enddo
+      end do
 !     print 4,'bl =',(bl(i),i=1,n+m)
 !     print 4,'bu =',(bu(i),i=1,n+m)
       call unames(n,pname,ws)
@@ -27,11 +27,11 @@
 !     print 3,'i =',(iuser(k),k=1,mxa)
 !     print 3,'j =',(lws(k),k=1,mxa)
 !     print 4,'a(ij) =',(ws(k),k=1,mxa)
-      if(3*mxa+m+3.gt.maxa)then
+      if (3*mxa+m+3>maxa) then
         print *,'not enough space for CUTE Jacobian indices'
         print *,'mxa =',mxa,'   maxa =',maxa
         stop
-      endif
+      end if
       maxa=mxa
       lws(2*maxa+1)=maxa+1
       ip=3*maxa+3
@@ -40,19 +40,19 @@
       k=1
       do j=1,m
 10      continue
-        if(lws(k).eq.j)then
+        if (lws(k)==j) then
           k=k+1
            goto 10
-        endif
+        end if
         lws(ip+j)=k+n
-      enddo
+      end do
 !     print 3,'pointers',(lws(ip+i),i=-1,m)
       do i=maxa-n+1,maxa
         lws(maxa+n+1+i)=iuser(i)
-      enddo
+      end do
       do i=1,maxa-n
         lws(2*maxa+n+1+i)=iuser(i)
-      enddo
+      end do
 !     print 3,'indices',(lws(i),i=2*maxa+2,3*maxa+1)
 1     format(A,15I4)
 2     format(A,5E15.7)
@@ -71,12 +71,12 @@
 !     print *,'f =',f
 !     print 4,'c =',(c(i),i=1,m)
 !     do j=1,m
-!       if(c(j)-c(j).ne.0.D0)then
+!       if (c(j)-c(j)/=0.D0) then
 !         print 4,'x =',(x(i),i=1,n)
 !         print 4,'c =',(c(i),i=1,m)
 !         stop
-!       endif
-!     enddo
+!       end if
+!     end do
 4     format(A/(5E15.7))
       return
       end
@@ -91,13 +91,13 @@
 !     print 4,'a(ij) =',(a(k),k=1,mxa)
       do i=1,n
         user(i)=a(maxa-n+i)
-      enddo
+      end do
       do i=maxa-n,1,-1
         a(n+i)=a(i)
-      enddo
+      end do
       do i=1,n
         a(i)=user(i)
-      enddo
+      end do
 !     print 4,'new a(ij) =',(a(k),k=1,mxa)
 4     format(A/(5E15.7))
       return

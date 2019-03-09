@@ -205,69 +205,69 @@
       tol=t0l
       iter=0
       npv=0
-      if(m.lt.0.or.n.le.0.or.mlp.lt.2.or.mode.lt.0.or.mode.gt.4.or. &
-        kmax.lt.0.or.(kmax.gt.0.and.maxg.le.1).or.tol.le.D0)then
+      if (m<0 .or. n<=0 .or. mlp<2 .or. mode<0 .or. mode>4 .or.  &
+        kmax<0 .or. (kmax>0 .and. maxg<=1) .or. tol<=D0) then
         ifail=6
         return
-      endif
+      end if
       rgt0l=rgtol
       n1=n+1
       nm=n+m
       nmi=nm
       ngr=0
       nv0=nv
-      if(iprint.ge.3)then
+      if (iprint>=3) then
         write(nout,1000)'lower bounds',(bl(i),i=1,nm)
         write(nout,1000)'upper bounds',(bu(i),i=1,nm)
-      endif
+      end if
       irep=0
       ires=0
       mres=0
       bestf=ainfty
       do i=1,nm
         t=bu(i)-bl(i)
-        if(t.lt.-tol)then
+        if (t<-tol) then
           ifail=2
           return
-        endif
-        if(t.le.tol.and.t.gt.0.D0)then
+        end if
+        if (t<=tol .and. t>0.D0) then
           bl(i)=5.D-1*(bl(i)+bu(i))
           bu(i)=bl(i)
-        endif
-      enddo
+        end if
+      end do
       vmax=0.D0
       do i=1,n
         x(i)=min(bu(i),max(bl(i),x(i)))
         vmax=max(vmax,bu(i)-bl(i))
-      enddo
-      if(mode.le.2)then
+      end do
+      if (mode<=2) then
         call stmapq(n,nm,kmax,maxg)
-        if(mode.eq.0)then
+        if (mode==0) then
           nk=0
-        elseif(mode.eq.1)then
+        else if (mode==1) then
 !  collect equality c/s
           nk=0
           do i=1,nm
-            if(bu(i).eq.bl(i))then
+            if (bu(i)==bl(i)) then
               nk=nk+1
               ls(nk)=i
-            endif
-          enddo
+            end if
+          end do
 !         write(nout,*)'number of eqty c/s =',nk
         else
           nk=n-k
-        endif
-      endif
+        end if
+      end if
 !  restarts loop
 7     continue
       lp(1)=nm
       lev=1
-      if(mode.le.3)then
+      if (mode<=3) then
 !  set up factors of basis matrix and permutation vectors
         ifail=mode
         call start_up(n,nm,nmi,a,la,nk,e,ls,ws(lu1),lws(ll1),mode,ifail)
-        if(ifail.gt.0)return
-      endif
+        if (ifail>0) return
+      end if
 8     continue
       peq=0
       ig=0
@@ -276,77 +276,77 @@
       ninf=0
       do i=1,n
         g(i)=0.D0
-      enddo
-      if(mode.gt.0)then
+      end do
+      if (mode>0) then
         call warm_start(n,nm,a,la,x,bl,bu,r,ls,ws(lu1), &
           lws(ll1),ws(na1),vstep)
 !       print *,'vstep,vmax',vstep,vmax
-        if(vstep.gt.2.D0*vmax)then
+        if (vstep>2.D0*vmax) then
           mpiv=0
           mode=0
           nk=0
           do i=1,n
             x(i)=min(bu(i),max(bl(i),x(i)))
-          enddo
+          end do
            goto 7
-        endif
-        if(vstep.gt.tol)mpiv=0
-      endif
+        end if
+        if (vstep>tol)mpiv=0
+      end if
       k=0
 !  collect free variables
       do j=n,1,-1
         i=abs(ls(j))
-        if(i.le.n.and.x(i).gt.bl(i).and.x(i).lt.bu(i))then
+        if (i<=n .and. x(i)>bl(i) .and. x(i)<bu(i)) then
           call iexch(ls(j),ls(n-k))
           k=k+1
-        endif
-      enddo
-      if(mode.eq.0)then
+        end if
+      end do
+      if (mode==0) then
         do j=1,n-k
           i=ls(j)
-          if(x(i).eq.bu(i))ls(j)=-i
-        enddo
+          if (x(i)==bu(i))ls(j)=-i
+        end do
         lp(1)=n
          goto 9
-      endif
+      end if
       phase=0
 !  move inactive general c/s to the end
       do j=nm,n1,-1
         i=abs(ls(j))
-        if(i.gt.n)then
+        if (i>n) then
           call iexch(ls(j),ls(lp(1)))
           lp(1)=lp(1)-1
-        endif
-      enddo
+        end if
+      end do
       call residuals(n,n1,lp(1),a,la,x,bl,bu,r,ls,f,g,ninf)
-      if(ninf.gt.0)then
+      if (ninf>0) then
         gnorm=sqrt(dble(ninf))
         gtol=sgnf*gnorm
         rgtol=max(rgt0l,gtol)
          goto 15
-      endif
+      end if
 9     continue
 !  enter phase 1
       phase=1
 !  collect active equality c/s
       do j=1,n-k
         i=abs(ls(j))
-        if(bu(i).eq.bl(i))then
+        if (bu(i)==bl(i)) then
           peq=peq+1
           call iexch(ls(j),ls(peq))
-        endif
-      enddo
+        end if
+      end do
       call residuals(n,lp(1)+1,nm,a,la,x,bl,bu,r,ls,f,g,ninf)
       lp(1)=nm
-      if(ninf.gt.0)then
+      if (ninf>0) then
         gnorm=sqrt(scpr(0.D0,g,g,n))
         gtol=sgnf*gnorm
         rgtol=max(rgt0l,gtol)
          goto 15
-      endif
+      end if
 10    continue
       phase=2
-      if(iprint.ge.1)write(nout,*)'FEASIBILITY OBTAINED at level 1'
+      if (iprint>=1) write(nout,*)'FEASIBILITY OBTAINED at level 1'
       n_inf=0
       call setfg2(n,linear,a,la,x,f,g,ws,lws)
       fbase=f
@@ -358,14 +358,14 @@
       gtol=sgnf*gnorm
       rgtol=max(rgt0l,gtol)
       ig=0
-      if(iprint.ge.1)write(nout,'(''pivots ='',I5, &
+      if (iprint>=1) write(nout,'(''pivots ='',I5, &
         ''  level = 1    f ='',E16.8)')npv,fbase
        goto 16
 !  start of major iteration
 15    continue
-      if(iprint.ge.1)then
-        if(ninf.eq.0)then
-          if(k.gt.0)then
+      if (iprint>=1) then
+        if (ninf==0) then
+          if (k>0) then
 !           write(nout,'(''pivots ='',I5,
 !    *        ''  level = 1    df ='',E16.8,''   k ='',I4)')npv,f,k
             write(nout,'(''pivots ='',I5, &
@@ -374,198 +374,198 @@
           else
             write(nout,'(''pivots ='',I5, &
               ''  level = 1    f ='',E16.8)')npv,fbase+f
-          endif
-        elseif(phase.eq.0)then
+          end if
+        else if (phase==0) then
           write(nout,'(''pivots ='',I5,''  level = 1    f ='', &
             E16.8,''   ninfb ='',I4)')npv,f,ninf
         else
           write(nout,'(''pivots ='',I5,''  level = 1    f ='', &
             E16.8,''   ninf ='',I4)')npv,f,ninf
-        endif
-      endif
+        end if
+      end if
 16    continue
 !  calculate multipliers
       do i=1,nm
         w(i)=0.D0
-      enddo
+      end do
 !     write(nout,4)'g =',(g(i),i=1,n)
       call fbsub(n,1,n,a,la,0,g,w,ls,ws(lu1),lws(ll1),.true.)
       call signst(n,r,w,ls)
 !  opposite bound or reset multiplier loop
 20    continue
-      if(iprint.ge.3)then
+      if (iprint>=3) then
         write(nout,1001)'costs vector and indices', &
           (ls(j),r(abs(ls(j))),j=1,n)
 !       write(nout,1000)'steepest edge coefficients',
 !    *    (e(abs(ls(j))),j=1,n)
-        if(peq.gt.0.or.k.gt.0)write(nout,1) &
+        if (peq>0 .or. k>0) write(nout,1) &
           '# active equality c/s and free variables = ',peq,k
-      endif
-!     if(iphase.le.1)fbase=0.D0
+      end if
+!     if (iphase<=1)fbase=0.D0
 !     call checkq(n,lp(1),nmi,kmax,g,a,la,x,bl,bu,r,ls,ws(nb1),fbase+f,
 !    *  ws,lws,ninf,peq,k,1,p,rp,linear)
 
 21    continue
       call optest(peq+1,n-k,r,e,ls,rp,pj)
-      if(phase.eq.0)then
+      if (phase==0) then
 !  possibly choose an active general c/s to relax (marked by rp>0)
         t=-1.D1*rp
         do 13 j=1,n
           i=abs(ls(j))
-          if(i.le.n) goto 13
-          if(bu(i).eq.bl(i).and.r(i).lt.0.D0)then
+          if (i<=n) goto 13
+          if (bu(i)==bl(i) .and. r(i)<0.D0) then
             r(i)=-r(i)
             ls(j)=-ls(j)
-          endif
-          if(r(i)/e(i).le.t) goto 13
+          end if
+          if (r(i)/e(i)<=t) goto 13
           rp=r(i)
           t=rp/e(i)
           pj=j
 13      continue
-      endif
+      end if
 
-      if(ig.eq.0)then
+      if (ig==0) then
         gg=0.D0
         do j=n-k+1,n
           i=ls(j)
           gg=gg+r(i)**2
-        enddo
+        end do
         rgnorm=sqrt(gg)
-      endif
+      end if
 !     print 2,'rgtol,rgnorm,rp',rgtol,rgnorm,rp
 
 25    continue
-      if(rgnorm.le.rgtol.and.abs(rp).le.gtol)then
+      if (rgnorm<=rgtol .and. abs(rp)<=gtol) then
 !  allow for changes to norm(g)
         gnorm=sqrt(scpr(0.D0,g,g,n))
         gtol=sgnf*gnorm
         rgtol=max(rgt0l,gtol)
-      endif
+      end if
 
-      if((rgnorm.le.rgtol.and.abs(rp).le.gtol).or.ngr.gt.mxgr)then
+      if ((rgnorm<=rgtol .and. abs(rp)<=gtol) .or. ngr>mxgr) then
 !  optimal at current level: first tidy up x
         do j=peq+1,n-k
           i=abs(ls(j))
-          if(i.le.n)then
-            if(ls(j).ge.0)then
+          if (i<=n) then
+            if (ls(j)>=0) then
               x(i)=bl(i)
             else
               x(i)=bu(i)
-            endif
-          endif
-        enddo
+            end if
+          end if
+        end do
         do i=1,n
           x(i)=max(min(x(i),bu(i)),bl(i))
-        enddo
+        end do
         do j=n1,nm
           i=abs(ls(j))
-          if(r(i).eq.0.D0.and.i.le.n)then
-            if(ls(j).ge.0)then
+          if (r(i)==0.D0 .and. i<=n) then
+            if (ls(j)>=0) then
               x(i)=bl(i)
             else
               x(i)=bu(i)
-            endif
-          endif
-        enddo
-        if(ngr.gt.mxgr)then
+            end if
+          end if
+        end do
+        if (ngr>mxgr) then
           f=fbase+f
           ifail=5
           return
-        endif
-        if(iprint.ge.2)then
+        end if
+        if (iprint>=2) then
           write(nout,*)'OPTIMAL at level 1'
-          if(iprint.ge.3)then
+          if (iprint>=3) then
 !           write(nout,1000)'x variables',(x(i),i=1,n)
             write(nout,1001)'residual vector and indices', &
               (ls(j),r(abs(ls(j))),j=n1,nm)
-          endif
-        endif
+          end if
+        end if
         irep=irep+1
-        if(irep.le.nrep.and.iter.gt.mpiv)then
-          if(iprint.ge.1)write(nout,1)'refinement step #',irep
+        if (irep<=nrep .and. iter>mpiv) then
+          if (iprint>=1) write(nout,1)'refinement step #',irep
           mode=4
            goto 8
-        endif
-        if(iprint.ge.2.and.nrep.gt.0) &
+        end if
+        if (iprint>=2 .and. nrep>0) &
           write(nout,*)'total number of restarts =',ires
-        if(ninf.gt.0)then
+        if (ninf>0) then
           ifail=3
           return
-        endif
+        end if
         nv=nv0
         ifail=0
         f=fbase+f
         return
-      endif
+      end if
 
-      if(rgnorm.ge.abs(rp))then
+      if (rgnorm>=abs(rp)) then
 !  ignore the multiplier of c/s p and set up or continue SD steps
         p=0
       else
         p=abs(ls(pj))
-        if(iprint.ge.2)print 1,'CHOOSE p =',p
+        if (iprint>=2) print 1,'CHOOSE p =',p
         rp=r(p)
         call iexch(ls(pj),ls(n-k))
         pj=n-k
         ig=0
-      endif
+      end if
 
-      if(p.gt.0)then
+      if (p>0) then
 
 !  compute +/- Steepest Edge (SE) search direction s in an(.)
         call tfbsub(n,a,la,p,ws(na1),ws(na1),ws(lu1),lws(ll1), &
           e(p),.true.)
         rp=scpr(0.D0,ws(na1),g,n)
-        if(ls(pj).lt.0)rp=-rp
-        if(rp*r(p).le.0.D0)then
+        if (ls(pj)<0)rp=-rp
+        if (rp*r(p)<=0.D0) then
           r(p)=0.D0
            goto 21
-        endif
-        if(abs(rp-r(p)).gt.5.D-1*max(abs(rp),abs(r(p))))then
-!       if(abs(rp-r(p)).gt.1.D-1*gnorm)then
+        end if
+        if (abs(rp-r(p))>5.D-1*max(abs(rp),abs(r(p)))) then
+!       if (abs(rp-r(p))>1.D-1*gnorm) then
           print 2,'1rp,r(p),rp-r(p)',rp,r(p),rp-r(p)
            goto 98
-        endif
+        end if
         snorm=e(p)
-        plus=ls(pj).ge.0.eqv.rp.lt.0.D0
+        plus=ls(pj)>=0.eqv.rp<0.D0
         f0=f
         ig=0
       else
-        if(ig.eq.0)then
+        if (ig==0) then
 !  start up the limited memory sweep method
-!         if(p.gt.0)then
+!         if (p>0) then
 !  transfer c/s p into Z
-!           if(ls(pj).lt.0)then
+!           if (ls(pj)<0) then
 !             r(p)=-r(p)
 !             ls(pj)=-ls(pj)
-!           endif
+!           end if
 !           k=k+1
 !           gg=gg+r(p)**2
-!         endif
+!         end if
           ig=1
           ngv=1
           f0=f
           ws(kb1)=gg
           rgnorm=sqrt(gg)
 !         print 2,'initial rg =',(r(ls(j)),j=n-k+1,n)
-          if(k*ngv.gt.kmax*maxg)then
+          if (k*ngv>kmax*maxg) then
             f=fbase+f
             ifail=9
             return
-          endif
+          end if
           call store_rg(k,ig,ws(krg1),r,ls(n-k+1))
-        endif
+        end if
 !  compute Steepest Descent (SD) search direction s = -Z.rg in an(.)
         call zprod(k,n,a,la,ws(na1),r,w,ls,ws(lu1),lws(ll1))
         rp=scpr(0.D0,ws(na1),g,n)
-        if(abs(gg+rp).gt.5.D-1*max(gg,abs(rp)))then
-!       if(abs(gg+rp).gt.1.D-2*max(gg,abs(rp)))then
+        if (abs(gg+rp)>5.D-1*max(gg,abs(rp))) then
+!       if (abs(gg+rp)>1.D-2*max(gg,abs(rp))) then
           print 2,'gg,rp,gg+rp',gg,rp,gg+rp
            goto 98
-        endif
+        end if
         snorm=sqrt(scpr(0.D0,ws(na1),ws(na1),n))
         plus=.true.
-      endif
+      end if
 !     print 4,'s (or -s if .not.plus) =',(ws(i),i=na1,na+n)
 !     print *,'plus =',plus
 
@@ -574,12 +574,12 @@
 
 !  return from degeneracy code
 30    continue
-      if(iprint.ge.3)then
+      if (iprint>=3) then
         write(nout,1000)'x variables',(x(i),i=1,n)
         write(nout,1001)'residual vector and indices', &
           (ls(j),r(abs(ls(j))),j=n1,lp(1))
         write(nout,1000)'denominators',(w(abs(ls(j))),j=n1,lp(1))
-      endif
+      end if
 !     read *,i
 
 40    continue
@@ -589,230 +589,230 @@
       qj1=0
       do 41 j=n-k+1,n
         i=ls(j)
-        if(i.le.0)print *,'i.le.0'
-        if(i.le.0)stop
+        if (i<=0) print *,'i<=0'
+        if (i<=0) stop
         si=ws(na+i)
-        if(si.eq.0.D0) goto 41
+        if (si==0.D0) goto 41
         t=abs(si)
-        if(si.gt.0.D0.eqv.plus)then
+        if (si>0.D0.eqv.plus) then
           z=bu(i)-x(i)
-          if(abs(z).lt.tol)then
+          if (abs(z)<tol) then
             z=0.D0
             x(i)=bu(i)
           else
             z=z/t
-          endif
+          end if
         else
           z=x(i)-bl(i)
-          if(abs(z).lt.tol)then
+          if (abs(z)<tol) then
             z=0.D0
             x(i)=bl(i)
           else
             z=z/t
-          endif
-        endif
-        if(z.gt.amax) goto 41
+          end if
+        end if
+        if (z>amax) goto 41
         amax=z
         qj=j
 41    continue
-      if(ig.eq.0.and.rp.lt.0.D0.and.bu(p)-bl(p).lt.amax)then
+      if (ig==0 .and. rp<0.D0 .and. bu(p)-bl(p)<amax) then
         amax=bu(p)-bl(p)
         qj=pj
-      endif
-      if(ninf.gt.0)then
+      end if
+      if (ninf>0) then
         alpha1=ainfty
         do 42 j=n1,lp(1)
           i=abs(ls(j))
           wi=w(i)
-          if(wi.eq.0.D0) goto 42
+          if (wi==0.D0) goto 42
           ri=r(i)
-          if(wi.gt.0.D0)then
-            if(ri.lt.0.D0) goto 42
+          if (wi>0.D0) then
+            if (ri<0.D0) goto 42
             z=(ri+tol)/wi
           else
-            if(ri.lt.0.D0)then
+            if (ri<0.D0) then
               z=ri/wi
-              if(z.lt.alpha1)then
+              if (z<alpha1) then
                 alpha1=z
                 qj1=j
-              endif
-            endif
+              end if
+            end if
             z=((bl(i)-bu(i))+ri-tol)/wi
-          endif
-          if(z.ge.amax) goto 42
+          end if
+          if (z>=amax) goto 42
           amax=z
           qj=j
 42      continue
-        if(qj1.gt.0.and.alpha1.le.amax)then
+        if (qj1>0 .and. alpha1<=amax) then
 !  find feasible step that zeros most infeasible c/s
           do 43 j=n1,lp(1)
             i=abs(ls(j))
             wi=w(i)
-            if(wi.ge.0.D0) goto 43
+            if (wi>=0.D0) goto 43
             ri=r(i)
-            if(ri.lt.0.D0)then
+            if (ri<0.D0) then
               z=ri/wi
-              if(z.gt.alpha1.and.z.le.amax)then
+              if (z>alpha1 .and. z<=amax) then
                 alpha1=z
                 qj1=j
-              endif
-            endif
+              end if
+            end if
 43        continue
           amax=alpha1
           qj=qj1
         else
           qj1=0
-        endif
+        end if
       else
         do 44 j=n1,lp(1)
           i=abs(ls(j))
           wi=w(i)
-          if(wi.eq.0.D0) goto 44
+          if (wi==0.D0) goto 44
           ri=r(i)
-          if(wi.gt.0.D0)then
+          if (wi>0.D0) then
             z=(ri+tol)/wi
           else
             z=(bl(i)-bu(i)+ri-tol)/wi
-          endif
-          if(z.ge.amax) goto 44
+          end if
+          if (z>=amax) goto 44
           amax=z
           qj=j
 44      continue
-      endif
+      end if
       q=abs(ls(qj))
-      if(iprint.ge.2.and.q.ne.p.and.qj.gt.n) &
+      if (iprint>=2 .and. q/=p .and. qj>n) &
         write(nout,*)'q,r(q),w(q) =',q,r(q),w(q)
-      if(qj.gt.n.and.qj1.eq.0)then
-        if(w(q).gt.0.D0)then
+      if (qj>n .and. qj1==0) then
+        if (w(q)>0.D0) then
           amax=r(q)/w(q)
         else
           amax=(bl(q)-bu(q)+r(q))/w(q)
-        endif
-      endif
+        end if
+      end if
 
-      if(amax.eq.0.D0.and.rp.le.0.D0)then
+      if (amax==0.D0 .and. rp<=0.D0) then
         alpha=0.D0
 !  potential degeneracy block at level 1
-        if(p.eq.0) goto 65
-        if(bu(q).eq.bl(q)) goto 70
+        if (p==0) goto 65
+        if (bu(q)==bl(q)) goto 70
         plev=n
         do j=n1,lp(1)
           i=abs(ls(j))
-          if(r(i).eq.0.D0)then
+          if (r(i)==0.D0) then
             plev=plev+1
             call iexch(ls(j),ls(plev))
-            if(bu(i).gt.bl(i))r(i)=1.D0
-          endif
-        enddo
-        if(plev.gt.n1)then
+            if (bu(i)>bl(i))r(i)=1.D0
+          end if
+        end do
+        if (plev>n1) then
           lp(2)=plev
           lev=2
           alp(1)=f
           f=0.D0
           qj=pj
           q=p
-          if(iprint.ge.1)write(nout,'(''pivots ='',I5,''     level = 2'', &
+          if (iprint>=1) write(nout,'(''pivots ='',I5,''     level = 2'', &
             ''    f ='',E16.8)')npv,f
            goto 86
-        endif
+        end if
         qj=n1
         r(q)=0.D0
 !       print *,'only one degenerate c/s'
          goto 70
-      endif
+      end if
 
-      if(ninf.gt.0)then
+      if (ninf>0) then
         alpha=amax
       else
-        if(linear)then
+        if (linear) then
           alpha=amax
           ff=f+alpha*rp
-          if(ff.lt.fmin) goto 75
+          if (ff<fmin) goto 75
           f=ff
            goto 60
-        endif
+        end if
         call gdotx(n,ws(na1),ws,lws,ws(nb1))
         ngr=ngr+1
         sgs=scpr(0.D0,ws(na1),ws(nb1),n)
 !       print 2,'rp,sgs',rp,sgs
         ggo=gg
-        if(p.eq.0)then
+        if (p==0) then
           t=v(nv)
-          if(t.le.0.D0) goto 52
+          if (t<=0.D0) goto 52
           alpha=1.D0/t
-          if(alpha.ge.amax) goto 52
+          if (alpha>=amax) goto 52
           nv=nv-1
           ff=f+alpha*(rp+5.D-1*alpha*sgs)
-          if(ff.ge.f0) goto 52
+          if (ff>=f0) goto 52
 !           print 2,'alphar =',alpha
 !  need to set f0 somewhere
-          if(iprint.ge.2)write(nout,*)'Ritz value step:  alpha =', &
+          if (iprint>=2) write(nout,*)'Ritz value step:  alpha =', &
             alpha,'   p =',p
            goto 54
-        endif
+        end if
 52      continue
-        if(sgs.gt.0.D0)then
+        if (sgs>0.D0) then
           alpha=-rp/sgs
-          if(alpha.lt.amax)then
+          if (alpha<amax) then
 !     accept Cauchy step
-            if(iprint.ge.2)write(nout,*)'Cauchy step:  alpha =', &
+            if (iprint>=2) write(nout,*)'Cauchy step:  alpha =', &
               alpha,'   p =',p
             ff=f+alpha*(rp+5.D-1*alpha*sgs)
             nv=0
 !           print 2,'alphac =',alpha
              goto 54
-          endif
-        endif
+          end if
+        end if
 !  Cauchy step infeasible
         alpha=amax
         ff=f+alpha*(rp+5.D-1*alpha*sgs)
-        if(ff.lt.fmin) goto 75
-        if(ff.ge.f)then
-          if(ires.lt.nres) goto 98
+        if (ff<fmin) goto 75
+        if (ff>=f) then
+          if (ires<nres) goto 98
           f=fbase+f
-          if(iprint.ge.1)write(nout,'(''pivots ='',I5, &
+          if (iprint>=1) write(nout,'(''pivots ='',I5, &
             ''  level = 1    f ='',E16.8)')npv,f
           ifail=4
           return
-        endif
+        end if
         f=ff
-        if(plus)then
+        if (plus) then
           call mysaxpy(alpha,ws(nb1),g,n)
         else
           call mysaxpy(-alpha,ws(nb1),g,n)
-        endif
+        end if
 !       print 4,'new g =',(g(i),i=1,n)
         call newg
          goto 60
 54    continue
-        if(ff.lt.fmin) goto 75
-        if(ff.ge.f)then
-          if(ires.lt.nres) goto 98
+        if (ff<fmin) goto 75
+        if (ff>=f) then
+          if (ires<nres) goto 98
           f=fbase+f
-          if(iprint.ge.1)write(nout,'(''pivots ='',I5, &
+          if (iprint>=1) write(nout,'(''pivots ='',I5, &
             ''  level = 1    f ='',E16.8)')npv,f
           ifail=4
           return
-        endif
+        end if
         f=ff
-        if(plus)then
+        if (plus) then
           call mysaxpy(alpha,ws(nb1),g,n)
         else
           call mysaxpy(-alpha,ws(nb1),g,n)
-        endif
+        end if
 !       print 4,'new g =',(g(i),i=1,n)
         call newg
-        if(ig.eq.0) goto 60
+        if (ig==0) goto 60
         ig1=ig+1
-        if(ig1.gt.maxg)ig1=1
+        if (ig1>maxg)ig1=1
         call fbsub(n,1,n,a,la,0,g,w,ls,ws(lu1),lws(ll1),.true.)
 !       print 4,'new rg =',(w(ls(j)),j=n-k+1,n)
-        if(ngv.lt.maxg)ngv=ngv+1
-        if(k*ngv.gt.kmax*maxg)then
+        if (ngv<maxg)ngv=ngv+1
+        if (k*ngv>kmax*maxg) then
           f=fbase+f
           ifail=9
           return
-        endif
+        end if
         call store_rg(k,ig1,ws(krg1),w,ls(n-k+1))
         gpg=0.D0
         gg=0.D0
@@ -820,7 +820,7 @@
           i=ls(j)
           gpg=gpg+r(i)*w(i)
           gg=gg+w(i)**2
-        enddo
+        end do
         rgnorm=sqrt(gg)
 !       print 2,'gpg,gg',gpg,gg
 !       print 2,'f =',f
@@ -828,15 +828,15 @@
         ws(ka+ig)=1.D0/alpha
         ws(kb+ig1)=gg
         ws(kc+ig)=gpg
-        if(nv.eq.0.or.gg.gt.ggo)then
+        if (nv==0 .or. gg>ggo) then
 !  compute new Ritz values
-          if(ngv.eq.2)then
+          if (ngv==2) then
             nv=1
             v(1)=1.D0/alpha
           else
             nv=min(ngv-1,k)
-            if(nv.le.0)print 1,'ngv,k,ig,nv =',ngv,k,ig,nv
-            if(nv.le.0)stop
+            if (nv<=0) print 1,'ngv,k,ig,nv =',ngv,k,ig,nv
+            if (nv<=0) stop
 !           print 1,'ngv,k,ig,nv =',ngv,k,ig,nv
 !           print 4,'G =',(ws(krg+i),i=1,k*ngv)
 !           print 4,'a =',(ws(ka+i),i=1,ngv)
@@ -847,280 +847,280 @@
 !           call checkT(nv,maxg,ws(kr1),ws(ke1),ws(kd1))
             call formT(nv,maxg,ws(kr1),v,ws(ke1))
 !           print 4,'T matrix',(v(i),i=1,nv)
-!             if(nv.gt.1)print 5,(ws(ke+i),i=1,nv-1)
+!             if (nv>1) print 5,(ws(ke+i),i=1,nv-1)
             call trid(v(1),ws(ke1),nv)
 !           print 4,'eigenvalues of T',(v(i),i=1,nv)
             call insort(nv,v)
 !           print 4,'sorted eigenvalues of T',(v(i),i=1,nv)
-          endif
+          end if
           nv0=nv
           f0=f
-        endif
+        end if
         ig=ig1
-      endif
+      end if
 
 60    continue
-      if(alpha.gt.0.D0)then
+      if (alpha>0.D0) then
 !  update x
-        if(plus)then
+        if (plus) then
           call mysaxpy(alpha,ws(na1),x,n)
         else
           call mysaxpy(-alpha,ws(na1),x,n)
-        endif
+        end if
 !  update r for inactive c/s
         iter=iter+1
-        if(ninf.gt.0)then
+        if (ninf>0) then
           n_inf=0
           ff=f
           f=0.D0
           do 61 j=n1,lp(1)
             i=abs(ls(j))
-            if(w(i).eq.0.D0)then
-              if(r(i).ge.0.D0) goto 61
+            if (w(i)==0.D0) then
+              if (r(i)>=0.D0) goto 61
               n_inf=n_inf+1
               f=f-r(i)
                goto 61
-            endif
+            end if
             ri=r(i)-alpha*w(i)
-            if(abs(ri).le.tol)ri=0.D0
-            if(r(i).lt.0.D0)then
-              if(ri.ge.0.D0)then
+            if (abs(ri)<=tol)ri=0.D0
+            if (r(i)<0.D0) then
+              if (ri>=0.D0) then
 !  remove contribution to gradient
-                if(i.gt.n)then
+                if (i>n) then
                   call saipy(sign(1.D0,dble(ls(j))),a,la,i-n,g,n)
                 else
                   g(i)=0.D0
-                endif
+                end if
               else
                 n_inf=n_inf+1
                 f=f-ri
-              endif
-            endif
-            if(w(i).lt.0.D0)then
+              end if
+            end if
+            if (w(i)<0.D0) then
               ro=(bu(i)-bl(i))-ri
-              if(abs(ro).le.tol)ro=0.D0
-              if(ro.lt.ri)then
+              if (abs(ro)<=tol)ro=0.D0
+              if (ro<ri) then
                 ri=ro
                 ls(j)=-ls(j)
-              endif
-            endif
-            if(ri.eq.0.D0.and.i.le.n)then
-              if(ls(j).ge.0)then
+              end if
+            end if
+            if (ri==0.D0 .and. i<=n) then
+              if (ls(j)>=0) then
                 x(i)=bl(i)
               else
                 x(i)=bu(i)
-              endif
-            endif
+              end if
+            end if
             r(i)=ri
 61        continue
-          if(n_inf.ne.ninf)then
+          if (n_inf/=ninf) then
             call iexch(ninf,n_inf)
             call newg
-!         elseif(f.ge.ff)then
-          elseif(f.ge.eps*ff+ff)then
+!         else if (f>=ff) then
+          else if (f>=eps*ff+ff) then
              goto 98
-          endif
+          end if
         else
           n_inf=0
           do 62 j=n1,lp(1)
             i=abs(ls(j))
-            if(w(i).eq.0.D0) goto 62
+            if (w(i)==0.D0) goto 62
             ri=r(i)-alpha*w(i)
-            if(w(i).lt.0.D0)then
+            if (w(i)<0.D0) then
               ro=(bu(i)-bl(i))-ri
-              if(ro.lt.ri)then
+              if (ro<ri) then
                 ri=max(ro,0.D0)
                 w(i)=-w(i)
                 ls(j)=-ls(j)
-              endif
-            endif
-            if(ri.le.tol)then
+              end if
+            end if
+            if (ri<=tol) then
               ri=0.D0
-              if(i.le.n)then
-                if(ls(j).ge.0)then
+              if (i<=n) then
+                if (ls(j)>=0) then
                   x(i)=bl(i)
                 else
                   x(i)=bu(i)
-                endif
-              endif
-            endif
+                end if
+              end if
+            end if
             r(i)=ri
 62        continue
-        endif
-      endif
+        end if
+      end if
 
-      if(alpha.lt.amax)then
-        if(ig.gt.0)then
+      if (alpha<amax) then
+        if (ig>0) then
 !  continue limited memory SD iterations
-          if(iprint.ge.1)write(nout,'(''pivots ='',I5, &
+          if (iprint>=1) write(nout,'(''pivots ='',I5, &
             ''  level = 1    df ='',E16.8,''   rg ='',E12.4, &
             ''  k ='',I4)')npv,f,rgnorm,k
-          if(alpha.gt.0.D0) goto 20
-          print *,'alpha.le.0'
+          if (alpha>0.D0) goto 20
+          print *,'alpha<=0'
            goto 98
-        endif
+        end if
 !  Cauchy step with SE iteration
         k=k+1
-        if(p.le.n)then
+        if (p<=n) then
           ls(pj)=p
            goto 15
-        endif
+        end if
 !  case p>n: find best inactive simple bound to replace p in ls(pj)
         t=0.D0
         do j=n1,lp(1)
           i=abs(ls(j))
-          if(i.le.n)then
+          if (i<=n) then
             ti=abs(ws(na+i))
-            if(ti.gt.t)then
+            if (ti>t) then
               t=ti
               qj=j
-            endif
-          endif
-        enddo
-        if(t.le.snorm*tol)then
+            end if
+          end if
+        end do
+        if (t<=snorm*tol) then
           print *,'no suitable simple bound available'
            goto 98
-        endif
+        end if
         q=abs(ls(qj))
         ls(qj)=q
-        if(iprint.ge.2)write(nout,1)'New free variable',q
+        if (iprint>=2) write(nout,1)'New free variable',q
          goto 70
-      endif
+      end if
 
 65    continue
-      if(iprint.ge.2) &
+      if (iprint>=2) &
         write(nout,*)'New active c/s:  alpha =',alpha,'   q =',q
-      if(ig.gt.0)then
+      if (ig>0) then
 !  case alpha=amax and SD step: find best free variable to relax
         k=k-1
-        if(qj.le.n)then
+        if (qj<=n) then
 !  case: q is a free variable
-          if(ws(na+q).gt.0.D0)ls(qj)=-q
+          if (ws(na+q)>0.D0)ls(qj)=-q
           call iexch(ls(qj),ls(n-k))
           ig=0
-          if(n_inf.gt.0.and.ninf.eq.0) goto 10
+          if (n_inf>0 .and. ninf==0) goto 10
            goto 15
-        endif
+        end if
         call fbsub(n,n-k,n,a,la,q,w,w,ls,ws(lu1),lws(ll1),.false.)
 !       print 4,'w(n-k:n) =',(w(ls(j)),j=n-k,n)
         t=0.D0
         do j=n-k,n
           i=ls(j)
           ti=abs(w(i))/e(i)
-          if(ti.gt.t)then
+          if (ti>t) then
             t=ti
             pj=j
-          endif
-        enddo
-        if(t.le.tol)then
+          end if
+        end do
+        if (t<=tol) then
           print *,'no suitable free variable to relax'
            goto 98
-        endif
+        end if
         p=ls(pj)
         call iexch(ls(pj),ls(n-k))
         pj=n-k
-        if(iprint.ge.2)write(nout,*)'relax free variable',p
-      endif
+        if (iprint>=2) write(nout,*)'relax free variable',p
+      end if
 
 !  return from degeneracy with an equality c/s
 70    continue
-      if(qj.ne.pj)then
+      if (qj/=pj) then
 !  pivot interchange
-        if(iprint.ge.2)write(nout,*)'replace',p,' by',q
-        if(p.eq.0)print *,'p.eq.0'
-        if(p.eq.0) goto 98
+        if (iprint>=2) write(nout,*)'replace',p,' by',q
+        if (p==0) print *,'p==0'
+        if (p==0) goto 98
         call pivot(p,q,n,nmi,a,la,e,ws(lu1),lws(ll1),ifail,npv)
-        if(ifail.ge.1)then
-          if(ifail.ge.2)then
+        if (ifail>=1) then
+          if (ifail>=2) then
             ifail=11
             return
-          endif
-          if(iprint.ge.1)write(nout,*)'failure detected in pivot (1)'
+          end if
+          if (iprint>=1) write(nout,*)'failure detected in pivot (1)'
           print *,'r(q),w(q),q',r(q),w(q),q
            goto 98
-        endif
-        if(rp.gt.0.D0)then
+        end if
+        if (rp>0.D0) then
           call iexch(ls(pj),ls(qj))
           call iexch(ls(lp(1)),ls(qj))
           lp(1)=lp(1)-1
-          if(ninf.gt.0) goto 15
+          if (ninf>0) goto 15
            goto 9
-        endif
-        if(ig.gt.0)then
+        end if
+        if (ig>0) then
           ri=x(p)-bl(p)
           ro=bu(p)-x(p)
-          if(ro.lt.ri)then
+          if (ro<ri) then
             ri=ro
             ls(pj)=-p
-          endif
-          if(ri.le.tol)ri=0.D0
+          end if
+          if (ri<=tol)ri=0.D0
           r(p)=ri
           ig=0
         else
           rpu=max(bu(p)-bl(p)-alpha,0.D0)
-          if(alpha.le.rpu)then
+          if (alpha<=rpu) then
             rpu=alpha
           else
             ls(pj)=-ls(pj)
-          endif
-          if(abs(rpu).le.tol)rpu=0.D0
+          end if
+          if (abs(rpu)<=tol)rpu=0.D0
           r(p)=rpu
-        endif
+        end if
 !       print 2,'r(p)',r(p)
         call iexch(ls(pj),ls(qj))
-        if(phase.gt.0.and.bu(q).eq.bl(q))then
+        if (phase>0 .and. bu(q)==bl(q)) then
           peq=peq+1
           call iexch(ls(pj),ls(peq))
-        endif
-        if(ninf.eq.0)then
-          if(phase.eq.0) goto 9
-          if(phase.eq.1) goto 10
-        endif
+        end if
+        if (ninf==0) then
+          if (phase==0) goto 9
+          if (phase==1) goto 10
+        end if
          goto 15
-      endif
+      end if
 !  opposite bound comes active
-      if(ninf.eq.0)then
-        if(iprint.ge.1)write(nout,'(''pivots ='',I5, &
+      if (ninf==0) then
+        if (iprint>=1) write(nout,'(''pivots ='',I5, &
           ''  level = 1    f ='',E16.8)')npv,fbase+f
-      elseif(phase.eq.0)then
-        if(iprint.ge.1)write(nout,'(''pivots ='',I5, &
+      else if (phase==0) then
+        if (iprint>=1) write(nout,'(''pivots ='',I5, &
           ''  level = 1    f ='',E16.8,''   ninfb ='',I4)') &
           npv,f,ninf
       else
-        if(iprint.ge.1)write(nout,'(''pivots ='',I5, &
+        if (iprint>=1) write(nout,'(''pivots ='',I5, &
           ''  level = 1    f ='',E16.8,''   ninf ='',I4)') &
           npv,f,ninf
-      endif
+      end if
       ls(pj)=-ls(pj)
-      if(ninf.eq.0.and..not.linear) goto 16
-      if(ninf.gt.0.and.ninf.ne.n_inf) goto 16
+      if (ninf==0 .and. .not.linear) goto 16
+      if (ninf>0 .and. ninf/=n_inf) goto 16
       r(p)=-rp
        goto 20
 
 !  unbounded solution case
 75    continue
       irep=irep+1
-      if(irep.le.nrep.and.iter.gt.mpiv)then
+      if (irep<=nrep .and. iter>mpiv) then
         mode=4
-        if(iprint.ge.1)write(nout,1) &
+        if (iprint>=1) write(nout,1) &
           'unbounded solution identified: refinement step #',irep
          goto 8
-      endif
+      end if
       ifail=1
 !  tidy up x
       do i=1,n
         x(i)=max(min(x(i),bu(i)),bl(i))
-      enddo
+      end do
       do j=n1,nm
         i=abs(ls(j))
-        if(r(i).eq.0.D0.and.i.le.n)then
-          if(ls(j).ge.0)then
+        if (r(i)==0.D0 .and. i<=n) then
+          if (ls(j)>=0) then
             x(i)=bl(i)
           else
             x(i)=bu(i)
-          endif
-        endif
-      enddo
+          end if
+        end if
+      end do
       nv=nv0
       f=fbase+f
       return
@@ -1132,32 +1132,32 @@
       call signst(n,r,w,ls)
 !  reset multiplier loop
 82    continue
-      if(iprint.ge.3)then
+      if (iprint>=3) then
         write(nout,1001)'costs vector and indices', &
           (ls(j),r(abs(ls(j))),j=1,n)
 !       write(nout,1000)'steepest edge coefficients',
 !    *    (e(abs(ls(j))),j=1,n)
-        if(peq.gt.0.or.k.gt.0)write(nout,1) &
+        if (peq>0 .or. k>0) write(nout,1) &
           '# active equality c/s and free variables = ',peq,k
-      endif
+      end if
 
 84    continue
       call optest(peq+1,n-k,r,e,ls,rp,pj)
 
-      if(-rp.le.gtol)then
-        if(iprint.ge.2)write(nout,*)'return to level 1'
+      if (-rp<=gtol) then
+        if (iprint>=2) write(nout,*)'return to level 1'
         lev=1
         f=alp(1)
         do j=n1,lp(2)
           r(abs(ls(j)))=0.D0
-        enddo
+        end do
         lev=1
-        if(rp.eq.0.D0.and.phase.gt.0) goto 25
+        if (rp==0.D0 .and. phase>0) goto 25
          goto 20
-      endif
+      end if
       call iexch(ls(pj),ls(n-k))
       pj=n-k
-      plus=ls(pj).ge.0
+      plus=ls(pj)>=0
       p=abs(ls(pj))
       rp=r(p)
 !  compute search direction s in an(.)
@@ -1165,26 +1165,26 @@
         e(p),.true.)
 
         rp=scpr(0.D0,ws(na1),g,n)
-        if(ls(pj).lt.0)rp=-rp
-        if(rp*r(p).le.0.D0)then
+        if (ls(pj)<0)rp=-rp
+        if (rp*r(p)<=0.D0) then
           r(p)=0.D0
            goto 84
-        endif
-        if(abs(rp-r(p)).gt.5.D-1*max(abs(rp),abs(r(p))))then
-!       if(abs(rp-r(p)).gt.1.D-1*gnorm)then
+        end if
+        if (abs(rp-r(p))>5.D-1*max(abs(rp),abs(r(p)))) then
+!       if (abs(rp-r(p))>1.D-1*gnorm) then
           print 2,'2rp,r(p),rp-r(p)',rp,r(p),rp-r(p)
            goto 98
-        endif
+        end if
 
       snorm=e(p)
 !  form At.s and denominators
       call form_Ats(n1,lp(lev),n,plus,a,la,ws(na1),w,ls,snorm*tol)
 86    continue
-      if(iprint.ge.3)then
+      if (iprint>=3) then
         write(nout,1001)'residual vector and indices', &
           (ls(j),r(abs(ls(j))),j=n1,lp(lev))
         write(nout,1000)'denominators',(w(abs(ls(j))),j=n1,lp(lev))
-      endif
+      end if
 88    continue
 !  ratio test at higher levels
       alpha=ainfty
@@ -1192,131 +1192,131 @@
       do 90 j=n1,lp(lev)
         i=abs(ls(j))
         wi=w(i)
-        if(wi.le.0.D0) goto 90
-        if(r(i).lt.0.D0) goto 90
+        if (wi<=0.D0) goto 90
+        if (r(i)<0.D0) goto 90
         z=(r(i)+tol)/wi
-        if(z.ge.alpha) goto 90
+        if (z>=alpha) goto 90
         alpha=z
         qj=j
 90    continue
-      if(qj.eq.0)then
+      if (qj==0) then
         do j=n1,lp(lev)
           i=abs(ls(j))
           w(i)=min(w(i),0.D0)
           r(i)=0.D0
-        enddo
+        end do
         call form_Ats(lp(lev)+1,lp(lev-1),n,plus,a,la,ws(na1), &
           w,ls,snorm*tol)
         lev=lev-1
         f=alp(lev)
-        if(iprint.ge.2)write(nout,*)'UNBOUNDED:   p =',p, &
+        if (iprint>=2) write(nout,*)'UNBOUNDED:   p =',p, &
           '   return to level',lev
-        if(lev.gt.1) goto 86
-        if(iprint.ge.3)then
+        if (lev>1) goto 86
+        if (iprint>=3) then
           write(nout,1001)'costs vector and indices', &
             (ls(j),r(abs(ls(j))),j=1,n)
-          if(peq.gt.0.or.k.gt.0)print 1, &
+          if (peq>0 .or. k>0) print 1, &
             '# active equality c/s and free variables = ',peq,k
-        endif
+        end if
 !       call checkq(n,lp(1),nmi,kmax,g,a,la,x,bl,bu,r,ls,ws(nb1),
 !         f,ws,lws,ninf,peq,k,1,p,rp,linear)
          goto 30
-      endif
+      end if
       q=abs(ls(qj))
       alpha=r(q)/w(q)
       ff=f+alpha*rp
-      if(iprint.ge.2)then
+      if (iprint>=2) then
         write(nout,*)'alpha =',alpha,'   p =',p,'   q =',q
         write(nout,2)'r(p),r(q),w(q) =',r(p),r(q),w(q)
-      endif
+      end if
 !  test for equality c/s
-      if(bu(q).eq.bl(q))then
+      if (bu(q)==bl(q)) then
         do j=n1,lp(2)
           r(abs(ls(j)))=0.D0
-        enddo
+        end do
         lev=1
         f=alp(1)
         alpha=0.D0
-        if(iprint.ge.2)write(nout,*)'EQTY:   p =',p,'   q =',q, &
+        if (iprint>=2) write(nout,*)'EQTY:   p =',p,'   q =',q, &
           '   return to level 1'
          goto 70
-      endif
-      if(alpha.eq.0.D0)then
+      end if
+      if (alpha==0.D0) then
 !  potential degeneracy block at level lev
-        if(lev+2.gt.mlp)then
+        if (lev+2>mlp) then
           ifail=8
           return
-        endif
+        end if
         r(q)=0.D0
         plev=n
         do j=n1,lp(lev)
           i=abs(ls(j))
-          if(r(i).eq.0.D0)then
+          if (r(i)==0.D0) then
             plev=plev+1
             call iexch(ls(j),ls(plev))
-            if(bu(i).gt.bl(i))r(i)=1.D0
-          endif
-        enddo
-        if(plev.gt.n1)then
+            if (bu(i)>bl(i))r(i)=1.D0
+          end if
+        end do
+        if (plev>n1) then
           lev=lev+1
           lp(lev)=plev
           alp(lev)=f
           f=0.D0
-          if(iprint.ge.2)write(nout,*) &
+          if (iprint>=2) write(nout,*) &
             'degeneracy: increase level to ',lev
-          if(iprint.ge.1)write(nout,'(''pivots ='',I5,A,''level ='',I2, &
+          if (iprint>=1) write(nout,'(''pivots ='',I5,A,''level ='',I2, &
             ''    f ='',E16.8)')npv,spaces(:3*lev-1),lev,f
            goto 86
-        endif
+        end if
         qj=n1
-      endif
+      end if
       iter=iter+1
-      if(iprint.ge.2)write(nout,*)'replace',p,' by',q
+      if (iprint>=2) write(nout,*)'replace',p,' by',q
       call pivot(p,q,n,nmi,a,la,e,ws(lu1),lws(ll1),ifail,npv)
-      if(ifail.ge.1)then
-        if(ifail.ge.2)then
+      if (ifail>=1) then
+        if (ifail>=2) then
           ifail=11
           return
-        endif
+        end if
 !       call iexch(ls(pj),ls(qj))
-        if(iprint.ge.1)write(nout,*)'failure detected in pivot (4)'
+        if (iprint>=1) write(nout,*)'failure detected in pivot (4)'
 !       print *,'r(q),w(q),q',r(q),w(q),q
          goto 98
-      endif
+      end if
 !  update r and f
       do j=n1,lp(lev)
         i=abs(ls(j))
         ri=r(i)-alpha*w(i)
-        if(abs(ri).le.tol)ri=0.D0
+        if (abs(ri)<=tol)ri=0.D0
         r(i)=ri
-      enddo
+      end do
       f=ff
 !  exchange a constraint
       r(p)=alpha
-      if(r(p).le.tol)r(p)=0.D0
+      if (r(p)<=tol)r(p)=0.D0
       call iexch(ls(pj),ls(qj))
-      if(iprint.ge.1)write(nout,'(''pivots ='',I5,A,''level ='',I2, &
+      if (iprint>=1) write(nout,'(''pivots ='',I5,A,''level ='',I2, &
         ''    f ='',E16.8)')npv,spaces(:3*lev-1),lev,f
        goto 80
 !  restart sequence
 98    continue
       do i=1,n
         x(i)=min(bu(i),max(bl(i),x(i)))
-      enddo
+      end do
       nk=peq
       do j=peq+1,n-k
         i=abs(ls(j))
-        if(i.gt.n)then
+        if (i>n) then
           nk=nk+1
           ls(nk)=ls(j)
-        endif
-      enddo
+        end if
+      end do
       k=n-nk
       mode=2
       ires=ires+1
-      if(iprint.ge.1)write(nout,*)'major restart #',ires
+      if (iprint>=1) write(nout,*)'major restart #',ires
       tol=1.D1*tol
-      if(ires.le.nres) goto 7
+      if (ires<=nres) goto 7
       ifail=10
       return
 1000  format(a/(e16.5,4e16.5))
@@ -1372,17 +1372,17 @@
       logical linear
       dimension a(*),la(*),x(*),g(*),ws(*),lws(*)
       common/noutc/nout
-      if(linear)then
+      if (linear) then
         do i=1,n
           g(i)=0.D0
-        enddo
+        end do
         call saipy(1.D0,a,la,0,g,n)
         f=scpr(0.D0,x,g,n)
       else
         call gdotx(n,x,ws,lws,g)
         call saipy(1.D0,a,la,0,g,n)
         f=5.D-1*scpr(aiscpr(n,a,la,0,x,0.D0),g,x,n)
-      endif
+      end if
 1     format(A,15I4)
 2     format(A,5E15.7)
 3     format(A/(20I4))
@@ -1398,137 +1398,137 @@
       common/noutc/nout
       common/epsc/eps,tol,emin
       logical linear
-!     if(lev.eq.2)then
+!     if (lev==2) then
 !       do i=1,n
 !         an(i)=g(i)
-!       enddo
+!       end do
 !       e=alp2*sign(1.D0,dble(p))
 !       i=abs(p)
-!       if(i.le.n)then
+!       if (i<=n) then
 !         an(i)=an(i)-e
 !       else
 !         call saipy(-e,a,la,i-n,an,n)
-!       endif
+!       end if
 !        goto 10
-!     endif
+!     end if
       j=nmi*(nmi+1)/2
       do i=1,nmi
         j=j-abs(ls(i))
-      enddo
-      if(j.ne.0)write(nout,*)'indexing error'
-      if(j.ne.0)stop
+      end do
+      if (j/=0) write(nout,*)'indexing error'
+      if (j/=0) stop
       do j=1,peq
         i=abs(ls(j))
-        if(bu(i).gt.bl(i))then
+        if (bu(i)>bl(i)) then
           write(nout,*)'non-equality constraint i =',i
           write(nout,*)'j,peq =',j,peq
           stop
-        endif
-      enddo
+        end if
+      end do
       do j=n-k+1,n
         i=ls(j)
-        if(i.le.0.or.i.gt.n)then
+        if (i<=0 .or. i>n) then
           write(nout,*)'faulty free variable: i, j =',i,j
           stop
-        endif
-      enddo
+        end if
+      end do
       e=0.D0
       do j=n+1,nm
         i=abs(ls(j))
-        if(i.le.n)then
+        if (i<=n) then
           s=x(i)
         else
           s=aiscpr(n,a,la,i-n,x,0.D0)
-        endif
-        if(ls(j).gt.0)then
+        end if
+        if (ls(j)>0) then
 !         print *,'i,s,r(i),bl(i)',i,s,r(i),bl(i)
           s=r(i)-s+bl(i)
         else
           s=r(i)+s-bu(i)
-        endif
-        if(abs(s).le.tol*max(1.D0,abs(r(i))))s=0.D0
-        if(abs(s).gt.e)then
+        end if
+        if (abs(s)<=tol*max(1.D0,abs(r(i))))s=0.D0
+        if (abs(s)>e) then
           e=abs(s)
           ie=i
-        endif
-      enddo
-      if(e.gt.tol)write(nout,*)'residual error at level 1 = ',e,ie
-!     if(e.gt.tol)stop
-      if(ninf.eq.0)then
+        end if
+      end do
+      if (e>tol) write(nout,*)'residual error at level 1 = ',e,ie
+!     if (e>tol) stop
+      if (ninf==0) then
         call setfg2(n,linear,a,la,x,ff,an,ws,lws)
       else
         do i=1,n
           an(i)=0.D0
-        enddo
+        end do
         ff=0.D0
         do j=n+1,nm
           i=abs(ls(j))
-          if(r(i).lt.0.D0)then
+          if (r(i)<0.D0) then
             ff=ff-r(i)
-            if(i.gt.n)then
+            if (i>n) then
               call saipy(-sign(1.D0,dble(ls(j))),a,la,i-n,an,n)
             else
               an(i)=an(i)-sign(1.D0,dble(ls(j)))
-            endif
-          endif
-        enddo
-      endif
+            end if
+          end if
+        end do
+      end if
       gnm=sqrt(scpr(0.D0,an,an,n))
-      if(lev.eq.1.and.max(abs(f),abs(ff)).lt.1.D20)then
+      if (lev==1 .and. max(abs(f),abs(ff))<1.D20) then
         e=abs(ff-f)
-        if(e.gt.tol*max(1.D0,abs(f)))write(nout,*)'function error = ',e, &
+        if (e>tol*max(1.D0,abs(f))) write(nout,*)'function error = ',e, &
           '   f(x) =',ff
-!     if(e.gt.tol)stop
-        if(e.gt.tol*max(1.D0,abs(f)))print 4,'x =',(x(j),j=1,n)
-        if(e.gt.tol*max(1.D0,abs(f)))stop
-      endif
+!     if (e>tol) stop
+        if (e>tol*max(1.D0,abs(f))) print 4,'x =',(x(j),j=1,n)
+        if (e>tol*max(1.D0,abs(f))) stop
+      end if
 10    continue
       e=0.D0
       do j=1,n
 !       write(nout,*)'an =',(an(i),i=1,n)
         i=abs(ls(j))
         s=sign(1.D0,dble(ls(j)))
-        if(i.le.n)then
+        if (i<=n) then
 !         print *,'i,s,r(i)',i,s,r(i)
           an(i)=an(i)-s*r(i)
-          if(j.gt.n-k)then
+          if (j>n-k) then
             s=max(0.D0,bl(i)-x(i),x(i)-bu(i))
-          elseif(ls(j).gt.0)then
+          else if (ls(j)>0) then
             s=x(i)-bl(i)
           else
             s=bu(i)-x(i)
-          endif
+          end if
         else
 !         print *,'i,s,r(i)',i,s,r(i)
           call saipy(-s*r(i),a,la,i-n,an,n)
-          if(ls(j).gt.0)then
+          if (ls(j)>0) then
             s=aiscpr(n,a,la,i-n,x,-bl(i))
           else
             s=-aiscpr(n,a,la,i-n,x,-bu(i))
-          endif
-        endif
-        if(abs(s).gt.e)then
+          end if
+        end if
+        if (abs(s)>e) then
           e=abs(s)
           ie=i
-        endif
-      enddo
-      if(e.gt.tol)write(nout,*)'residual error at level 2 = ',e,ie
-!     if(e.gt.tol)stop
-!     if(e.gt.1.D-6)print 4,'x =',(x(i),i=1,n)
-      if(e.gt.1.D-6)stop
+        end if
+      end do
+      if (e>tol) write(nout,*)'residual error at level 2 = ',e,ie
+!     if (e>tol) stop
+!     if (e>1.D-6) print 4,'x =',(x(i),i=1,n)
+      if (e>1.D-6) stop
       e=0.D0
       do j=1,n
-        if(abs(an(j)).gt.e)then
+        if (abs(an(j))>e) then
           e=abs(an(j))
           ie=ls(j)
           je=j
-        endif
-      enddo
+        end if
+      end do
 !     write(nout,*)'KT condition error = ',e,je,ie,gnm
-      if(e.gt.gnm*tol)write(nout,*)'KT condition error = ',e,je,ie,gnm
-!     if(e.gt.gnm*tol)write(nout,4)'KT cond_n errors = ',(an(i),i=1,n)
-      if(e.gt.gnm*tol)stop
-!     if(e.gt.1.D-4)stop
+      if (e>gnm*tol) write(nout,*)'KT condition error = ',e,je,ie,gnm
+!     if (e>gnm*tol) write(nout,4)'KT cond_n errors = ',(an(i),i=1,n)
+      if (e>gnm*tol) stop
+!     if (e>1.D-4) stop
 1     format(A,15I4)
 2     format(A,5E15.7)
 3     format(A/(20I4))

@@ -234,13 +234,13 @@
       ll=ilp1+mlp-1
 
       do i=1,n
-        if(bl(i).gt.bu(i))then
-          if(iprint.gt.1)write(nout,*)'simple bounds infeasible'
+        if (bl(i)>bu(i)) then
+          if (iprint>1) write(nout,*)'simple bounds infeasible'
           ifail=2
           return
-        endif
+        end if
         ws(nx+i)=min(max(bl(i),x(i)),bu(i))
-      enddo
+      end do
 
 !  note x and al are just used as workspace: the true values are those in ws
 
@@ -250,27 +250,27 @@
         ws(ialp1),lws(ilp1),ws(ifilh1),ws(ifilf1),rho,htol,rgtol, &
         maxit,iprint,nout,ifail)
 
-      if(ifail.ge.7)return
+      if (ifail>=7) return
 !  scatter ws(nx.. and ws(nal.. and bound multipliers into x and al
       do i=1,n
         al(i)=0.D0
-      enddo
+      end do
       do i=1,m
         al(n+i)=ws(nal+i)
-      enddo
+      end do
       do j=1,n
         i=abs(lws(ils+j))
-        if(i.le.n)then
-          if(ws(nx+i).eq.bl(i))then
+        if (i<=n) then
+          if (ws(nx+i)==bl(i)) then
             al(i)=x(i)
-          elseif(ws(nx+i).eq.bu(i))then
+          else if (ws(nx+i)==bu(i)) then
             al(i)=-x(i)
-          endif
-        endif
-      enddo
+          end if
+        end if
+      end do
       do i=1,n
         x(i)=ws(nx+i)
-      enddo
+      end do
 
       return
 1     format(A,15I5)
@@ -329,21 +329,21 @@
       do i=1,m
         ci=ws(ncx+i)
         h=h+max(0.D0,bl(n+i)-ci,ci-bu(n+i))
-      enddo
-      if(h.gt.ubd)then
-        if(iprint.gt.1)write(nout,2)'h.gt.ubd: h =',h
+      end do
+      if (h>ubd) then
+        if (iprint>1) write(nout,2)'h>ubd: h =',h
         ifail=4
         return
-      endif
-      if(iprint.ge.1) &
+      end if
+      if (iprint>=1) &
         write(nout,*)' itn     h/hJt          f/hJ      ', &
         '           rgnorm       dnorm        rho'
 10    continue
-      if(rho.lt.htol)then
-        if(iprint.gt.1)write(nout,2)'rho less than htol: rho =',rho
+      if (rho<htol) then
+        if (iprint>1) write(nout,2)'rho less than htol: rho =',rho
         ifail=6
         return
-      endif
+      end if
 !     print 4,'x =',(ws(nx+i),i=1,n)
 !     print 4,'c =',(ws(ncx+i),i=1,m)
 !  set up LP subproblem
@@ -351,32 +351,32 @@
         dl(i)=max(-rho,bl(i)-ws(nx+i))
         du(i)=min(rho,bu(i)-ws(nx+i))
         d(i)=0.D0
-      enddo
-      if(abs(iph).eq.1)then
+      end do
+      if (abs(iph)==1) then
         do j=1,n
           i=abs(ls(j))-n
-          if(i.gt.0)then
-            if(cstype(i).eq.'A')then
+          if (i>0) then
+            if (cstype(i)=='A') then
               ls(j)=n+i
-            elseif(cstype(i).eq.'Z')then
+            else if (cstype(i)=='Z') then
               ls(j)=-n-i
-            endif
-          endif
-        enddo
-      endif
+            end if
+          end if
+        end do
+      end if
       do i=1,m
         ci=ws(ncx+i)
         dl(n+i)=bl(n+i)-ci
         du(n+i)=bu(n+i)-ci
         ws(nal+i)=0.D0
         cstype(i)='N'
-      enddo
+      end do
       iph_=iph
       iph=0
       k=0
 !     print *,'solve LP subproblem',itn
       iii=0
-!     if(itn.eq.14)iii=1
+!     if (itn==14)iii=1
       call glcpd(n,m,k,kmax,maxg,ws(last1),lws(nla1),d,dl,du,phi, &
         -ainfty,g,r,w,e,ls,alp,lp,mlp,ipeq,ws,lws,cstype,v,nv,rgtol, &
         mode,ifail,infty,iii,0)
@@ -386,53 +386,53 @@
 !     print 1,'ipeq,k,ifail',ipeq,k,ifail
       mode=2
       iph=iph_
-      if(ifail.eq.0.or.ifail.eq.4)then
-        if(iprint.ge.1)write(nout,2000)itn,h,f,rho
-        if(abs(iph).eq.1)nfil=nfil1-1
+      if (ifail==0 .or. ifail==4) then
+        if (iprint>=1) write(nout,2000)itn,h,f,rho
+        if (abs(iph)==1)nfil=nfil1-1
         iph=2
          goto 50
-      elseif(ifail.ne.3)then
+      else if (ifail/=3) then
 !       print 1,'itn =',itn
-        if(iprint.gt.1)write(nout,*)'unexpected fail in LP subproblem'
+        if (iprint>1) write(nout,*)'unexpected fail in LP subproblem'
          goto 99
-      endif
+      end if
 15    continue
-      if(h.le.htol)then
-        if(iprint.gt.1)write(nout,*)'htol-feasible but LP is infeasible'
+      if (h<=htol) then
+        if (iprint>1) write(nout,*)'htol-feasible but LP is infeasible'
         ifail=0
         return
-      endif
+      end if
 !  infeasibility: enter feasibility restoration
 !     print *,'LP is infeasible: solve l1 subproblem',itn
       iii=0
-!     if(itn.eq.9)iii=2
+!     if (itn==9)iii=2
       call l1sold(n,m,k,kmax,maxg,ws(last1),lws(nla1),d,dl,du,phi, &
         g,r,w,e,ls,alp,lp,mlp,ipeq,ws,lws,cstype,v,nv,rgtol,ifail,iii,0)
 !     print 4,'d1 =',(d(i),i=1,n)
 !     print 4,'r =',(r(i),i=1,nm)
 !     print 3,'ls =',(ls(i),i=1,nm)
-      if(ifail.ne.0)then
-        if(print.gt.1)print *,'unexpected fail in l1 subproblem'
+      if (ifail/=0) then
+        if (print>1) print *,'unexpected fail in l1 subproblem'
          goto 99
-      endif
-      if(abs(iph).eq.2)then
+      end if
+      if (abs(iph)==2) then
         call addfil(h,f,filh,filf,1,nfil,mxf,ifail)
-        if(ifail.gt.0)return
+        if (ifail>0) return
         nfil1=nfil+1
-      endif
+      end if
 !  relax infeasible c/s
       hJ=0.D0
       hJt=0.D0
       do j=1,n
         i=abs(ls(j))
-        if(i.gt.n)hJt=hJt+max(0.D0,dl(i),-du(i))
-      enddo
+        if (i>n)hJt=hJt+max(0.D0,dl(i),-du(i))
+      end do
       do j=n1,nm
         i=abs(ls(j))
-        if(i.gt.n)then
-          if(r(i).lt.0.D0)then
+        if (i>n) then
+          if (r(i)<0.D0) then
             hJ=hJ+max(0.D0,dl(i),-du(i))
-            if(ls(j).ge.0)then
+            if (ls(j)>=0) then
               du(i)=dl(i)
               dl(i)=-ainfty
               cstype(i-n)='A'
@@ -440,56 +440,56 @@
               dl(i)=du(i)
               du(i)=ainfty
               cstype(i-n)='Z'
-            endif
+            end if
           else
             hJt=hJt+max(0.D0,dl(i),-du(i))
-          endif
-        endif
-      enddo
+          end if
+        end if
+      end do
 !     print *,'phase 1 filter entries followed by (hJt,hJ)'
 !     do i=nfil1,nfil
 !       print 5,filh(i),filf(i)
-!     enddo
+!     end do
 !     print 5,hJt,hJ
 !     print *,'cstype = ',(cstype(i),i=1,m)
 !     print 2,'hJt,hJ',hJt,hJ
-      if(iprint.ge.1)write(nout,1000)itn,hJt,hJ,rho
-!     if(hJt.gt.tol)then
+      if (iprint>=1) write(nout,1000)itn,hJt,hJ,rho
+!     if (hJt>tol) then
 !       call addfil(hJt,hJ,filh,filf,nfil1,nfil,mxf,ifail)
-!       if(ifail.gt.0)return
+!       if (ifail>0) return
         call testfil(hJt,hJ,filh,filf,nfil1,nfil,ifail)
-        if(ifail.eq.1)then
-          if(iprint.gt.1)write(nout,*)'l1 solution not acceptable'
+        if (ifail==1) then
+          if (iprint>1) write(nout,*)'l1 solution not acceptable'
           dnorm=0.D0
           do i=1,n
             dnorm=max(dnorm,abs(d(i)))
-          enddo
+          end do
           rho=5.D-1*dnorm
            goto 10
-        endif
-!     endif
+        end if
+!     end if
 !  collect multipliers from l1 subproblem
       do j=1,n
         i=abs(ls(j))
-        if(i.gt.n)then
-          if(ls(j).gt.0)then
+        if (i>n) then
+          if (ls(j)>0) then
             ws(nal+i-n)=r(i)
           else
             ws(nal+i-n)=-r(i)
-          endif
-        endif
+          end if
+        end if
         ws(naal+j)=0.D0
-      enddo
+      end do
 !     print 4,'al =',(ws(i),i=nal1,nal+m)
       do i=1,m
         call saipy(ws(nal+i),ws(last1),lws(nla1),i,ws(naal1),n)
-      enddo
+      end do
 20    continue
-      if(itn.eq.maxit)then
-        if(iprint.gt.1)write(nout,*)'itn.ge.maxit'
+      if (itn==maxit) then
+        if (iprint>1) write(nout,*)'itn>=maxit'
         ifail=5
         return
-      endif
+      end if
       iph=1
 !     mode=2
       k=0
@@ -501,11 +501,11 @@
         dl(i)=max(-rho,bl(i)-ws(nx+i))
         du(i)=min(rho,bu(i)-ws(nx+i))
         d(i)=0.D0
-      enddo
+      end do
       alc=scpr(0.D0,ws(nal1),ws(ncx1),m)
 !     print *,'solve phase 1 LCP subproblem',itn
       iii=0
-!     if(itn.eq.11)iii=2
+!     if (itn==11)iii=2
       call glcpd(n,m,k,kmax,maxg,ws(last1),lws(nla1),d,dl,du,phi, &
         fmin,g,r,w,e,ls,alp,lp,mlp,ipeq,ws,lws,cstype,v,nv,rgtol, &
         mode,ifail,mxgr,iii,0)
@@ -520,68 +520,68 @@
       dnorm=0.D0
       do i=1,n
         dnorm=max(dnorm,abs(d(i)))
-      enddo
+      end do
 !     print 2,'dnorm,rho',dnorm,rho
-      if(ifail.eq.3)then
-        if(iprint.gt.1) &
+      if (ifail==3) then
+        if (iprint>1) &
           write(nout,*)'phase 1 LCP problem is infeasible'
-        if(dnorm.le.htol) goto 10
+        if (dnorm<=htol) goto 10
         rho=5.D-1*dnorm
          goto 10
-      elseif(ifail.eq.1)then
-        if(iprint.gt.1) &
+      else if (ifail==1) then
+        if (iprint>1) &
           write(nout,*)'phase 1 LCP subproblem is unbounded'
          goto 99
-      elseif(ifail.gt.5)then
-        if(iprint.gt.1) &
+      else if (ifail>5) then
+        if (iprint>1) &
           write(nout,*)'malfunction in phase 1 LCP subproblem'
          goto 99
-      endif
+      end if
       hxdJt=0.D0
       hxdJ=0.D0
       do i=1,m
         ci=ws(ncxd+i)
-        if(cstype(i).eq.'N')then
+        if (cstype(i)=='N') then
           hxdJt=hxdJt+max(0.D0,bl(n+i)-ci,ci-bu(n+i))
         else
           hxdJ=hxdJ+max(0.D0,bl(n+i)-ci,ci-bu(n+i))
-        endif
-      enddo
-      if(iprint.ge.1)write(nout,1001)itn,hxdJt,hxdJ,rgnorm,dnorm,rho
+        end if
+      end do
+      if (iprint>=1) write(nout,1001)itn,hxdJt,hxdJ,rgnorm,dnorm,rho
 !     print 4,'x+d =',(ws(nxd+i),i=1,n)
 !     print 4,'c at x+d =',(ws(ncxd+i),i=1,m)
-      if(hxdJt.le.htol.and.dnorm.le.htol) goto 40
+      if (hxdJt<=htol .and. dnorm<=htol) goto 40
 !     print *,'phase 1 filter entries followed by (hJt,hJ)'
 !     do i=nfil1,nfil
 !       print 5,filh(i),filf(i)
-!     enddo
+!     end do
 !     print 5,hJt,hJ
       hxd=hxdJt+hxdJ
-      if(hxd.ge.ubd)then
-        if(iprint.gt.1)write(nout,*)'upper bound on h exceeded (1)'
+      if (hxd>=ubd) then
+        if (iprint>1) write(nout,*)'upper bound on h exceeded (1)'
         rho=max(1.D-1,5.D-1*h/hxd)*dnorm
          goto 10
-      endif
+      end if
       dq=hJ-phi
       df=hJ-hxdJ
 !     print 2,'dq,df',dq,df
 !  filter test for LCP solution
       call testfil(hxdJt,hxdJ,filh,filf,nfil1,nfil,ifail)
-      if(ifail.eq.0)call testfil(hxdJt,hxdJ,hJt,hJ,1,1,ifail)
+      if (ifail==0) call testfil(hxdJt,hxdJ,hJt,hJ,1,1,ifail)
 !     print 6,'hxdJt,hxdJ,ifail',hxdJt,hxdJ,ifail
-      if(ifail.eq.1.or.(dq.ge.tol.and.df.lt.sigma*dq))then
-        if(hxdJt.eq.0.D0.or.dq.lt.tol)then
-          if(iprint.gt.1)write(nout,*)'hxdJt.eq.0.D0.or.dq.lt.tol'
+      if (ifail==1 .or. (dq>=tol .and. df<sigma*dq)) then
+        if (hxdJt==0.D0 .or. dq<tol) then
+          if (iprint>1) write(nout,*)'hxdJt==0.D0 .or. dq<tol'
           rho=max(1.D-1,min(5.D-1*h/hxd,5.D-1))*dnorm
            goto 10
-        endif
+        end if
 !  projection step
         nv=1
         v(1)=1.D0
         iph=-1
         do i=1,n
           ws(naal+i)=ws(nx+i)
-        enddo
+        end do
 30      continue
         hxJt=hxdJt
         hxJ=hxdJ
@@ -592,26 +592,26 @@
 !         dl(i)=bl(i)-ws(nx+i)
 !         du(i)=bu(i)-ws(nx+i)
           d(i)=0.D0
-        enddo
+        end do
         do i=1,m
           ci=ws(ncxd+i)
-          if(cstype(i).eq.'A')then
+          if (cstype(i)=='A') then
             dl(n+i)=-ainfty
             du(n+i)=bl(n+i)-ci
-          elseif(cstype(i).eq.'Z')then
+          else if (cstype(i)=='Z') then
             dl(n+i)=bu(n+i)-ci
             du(n+i)=ainfty
           else
             dl(n+i)=bl(n+i)-ci
             du(n+i)=bu(n+i)-ci
-          endif
-        enddo
+          end if
+        end do
 !       mode=2
         k=0
 !  solve projection subproblem
 !       print *,'solve phase 1 projection subproblem',itn
         iii=0
-!       if(itn.eq.68)iii=1
+!       if (itn==68)iii=1
         call glcpd(n,m,k,kmax,maxg,ws(next1),lws(nla1),d,dl,du,phi,0.D0, &
           g,r,w,e,ls,alp,lp,mlp,ipeq,ws,lws,cstype,v,nv,rgtol, &
           mode,ifail,mxgr,iii,0)
@@ -619,136 +619,136 @@
 !       print 4,'r =',(r(i),i=1,nm)
 !       print 3,'ls =',(ls(i),i=1,nm)
 !       print 1,'ipeq,k,ifail =',ipeq,k,ifail
-        if(ifail.eq.3)then
-          if(iprint.gt.1) &
+        if (ifail==3) then
+          if (iprint>1) &
             write(nout,*)'phase 1 projection problem is infeasible'
           do i=1,n
             ws(nx+i)=ws(naal+i)
-          enddo
+          end do
           rho=max(1.D-1,min(5.D-1*h/hxd,5.D-1))*dnorm
            goto 10
-        elseif(ifail.gt.5)then
-          if(iprint.gt.1) &
+        else if (ifail>5) then
+          if (iprint>1) &
             write(nout,*)'malfunction in phase 1 projection subproblem'
            goto 99
-        endif
+        end if
         do i=1,n
           ws(nxd+i)=ws(nx+i)+d(i)
-        enddo
+        end do
         call functions(n,m,ws(nxd1),fxd,ws(ncxd1),ws,lws)
         call gradients(n,m,ws(nxd1),ws(next1),ws,lws)
         hxdJt=0.D0
         hxdJ=0.D0
         do i=1,m
-          if(cstype(i).eq.'N')then
+          if (cstype(i)=='N') then
             hxdJt=hxdJt+max(0.D0,bl(n+i)-ws(ncxd+i),ws(ncxd+i)-bu(n+i))
           else
             hxdJ=hxdJ+max(0.D0,bl(n+i)-ws(ncxd+i),ws(ncxd+i)-bu(n+i))
-          endif
-        enddo
-        if(iprint.ge.1)write(nout,1002)itn,hxdJt,hxdJ
+          end if
+        end do
+        if (iprint>=1) write(nout,1002)itn,hxdJt,hxdJ
 !       print 4,'c at x+d =',(ws(ncxd+i),i=1,m)
 !  filter test for projection solution
         hxd=hxdJt+hxdJ
-        if(hxd.ge.ubd)then
-          if(iprint.gt.1)write(nout,*)'upper bound on h exceeded (2)'
+        if (hxd>=ubd) then
+          if (iprint>1) write(nout,*)'upper bound on h exceeded (2)'
           rho=max(1.D-1,5.D-1*h/hxd)*dnorm
            goto 10
-        endif
+        end if
         df=hJ-hxdJ
 !       print 2,'dq,df',dq,df
         call testfil(hxdJt,hxdJ,filh,filf,nfil1,nfil,ifail)
-        if(ifail.eq.0)call testfil(hxdJt,hxdJ,hJt,hJ,1,1,ifail)
-!       if(ifail.eq.1)print 2,'hxdJt/hxJt =',hxdJt/hxJt
+        if (ifail==0) call testfil(hxdJt,hxdJ,hJt,hJ,1,1,ifail)
+!       if (ifail==1) print 2,'hxdJt/hxJt =',hxdJt/hxJt
 !       print 6,'project: hxdJt,hxdJ,ifail',hxdJt,hxdJ,ifail
-        if(ifail.eq.1.or.df.lt.sigma*dq)then
-          if(hxdJt.le.8.D-1*hxJt)then
+        if (ifail==1 .or. df<sigma*dq) then
+          if (hxdJt<=8.D-1*hxJt) then
             df=hJ-(hxJt*hxdJ-hxdJt*hxJ)/(hxJt-hxdJt)
-            if(df.ge.sigma*dq) goto 30
-          endif
+            if (df>=sigma*dq) goto 30
+          end if
           do i=1,n
             ws(nx+i)=ws(naal+i)
-          enddo
+          end do
           rho=max(1.D-1,min(5.D-1*h/hxd,5.D-1))*dnorm
-          if(iprint.gt.1)write(nout,*)'phase 1 projection step fails'
+          if (iprint>1) write(nout,*)'phase 1 projection step fails'
            goto 10
-        endif
+        end if
 !       print *,'accept projection step (1)'
         do i=1,n
           ws(nx+i)=ws(naal+i)
-        enddo
-      endif
+        end do
+      end if
 40    continue
 !  accept LCP (iph=1) or projection (iph=-1) solution
-      if(dq.lt.tol)then
+      if (dq<tol) then
         call addfil(hJt,hJ,filh,filf,nfil1,nfil,mxf,ifail)
-        if(ifail.gt.0)return
-      endif
+        if (ifail>0) return
+      end if
       do i=1,n
         ws(nx+i)=ws(nxd+i)
         ws(naal+i)=0.D0
-      enddo
+      end do
       do i=1,m
         ws(ncx+i)=ws(ncxd+i)
-      enddo
+      end do
       call iexch(last1,next1)
       h=hxdJt+hxdJ
       f=fxd
-      if(dnorm.eq.rho)rho=2.D0*rho
-      if(h.le.htol) goto 10
+      if (dnorm==rho)rho=2.D0*rho
+      if (h<=htol) goto 10
 !  check for situations where the l1 partition needs recalculating ...
 !  if there are any active relaxed c/s
       do j=1,n
         i=abs(ls(j))-n
-!       if(i.gt.0.and.cstype(i).ne.'N')print 1,'active relaxed c/s',i
-        if(i.gt.0.and.cstype(i).ne.'N') goto 10
-      enddo
+!       if (i>0 .and. cstype(i)/='N') print 1,'active relaxed c/s',i
+        if (i>0 .and. cstype(i)/='N') goto 10
+      end do
 !  or any infeasible relaxed c/s
       do i=1,m
-!       if((cstype(i).eq.'A'.and.ws(ncx+i).ge.bl(n+i)).or.
-!    *    (cstype(i).eq.'Z'.and.ws(ncx+i).le.bu(n+i)))
+!       if ((cstype(i)=='A' .and. ws(ncx+i)>=bl(n+i)) .or.
+!    *    (cstype(i)=='Z' .and. ws(ncx+i)<=bu(n+i)))
 !    *    print 1,'infeasible relaxed c/s',i
-        if((cstype(i).eq.'A'.and.ws(ncx+i).ge.bl(n+i)).or. &
-          (cstype(i).eq.'Z'.and.ws(ncx+i).le.bu(n+i))) goto 10
-      enddo
+        if ((cstype(i)=='A' .and. ws(ncx+i)>=bl(n+i)) .or.  &
+          (cstype(i)=='Z' .and. ws(ncx+i)<=bu(n+i))) goto 10
+      end do
       hJt=hxdJt
       hJ=hxdJ
-      if(iph.eq.-1) goto 10
-      if(hxdJt.le.htol.and.dnorm.le.htol)then
-        if(iprint.gt.1)write(nout,*)'locally infeasible problem'
-!       print 2,'hxdJt.le.htol.and.dnorm.le.htol'
+      if (iph==-1) goto 10
+      if (hxdJt<=htol .and. dnorm<=htol) then
+        if (iprint>1) write(nout,*)'locally infeasible problem'
+!       print 2,'hxdJt<=htol .and. dnorm<=htol'
         ifail=3
         return
-      endif
+      end if
 !  collect LCP multipliers
       do i=1,m
         ws(nal+i)=0.D0
-      enddo
+      end do
       do j=1,n
         i=abs(ls(j))
-        if(i.gt.n)then
-          if(ls(j).gt.0)then
+        if (i>n) then
+          if (ls(j)>0) then
             ws(nal+i-n)=r(i)
           else
             ws(nal+i-n)=-r(i)
-          endif
-        endif
-      enddo
+          end if
+        end if
+      end do
 !     print 4,'al =',(ws(i),i=nal1,nal+m)
       do i=1,m
         ci=ws(ncx+i)
-        if(cstype(i).eq.'A')then
+        if (cstype(i)=='A') then
           dl(n+i)=-ainfty
           du(n+i)=bl(n+i)-ci
-        elseif(cstype(i).eq.'Z')then
+        else if (cstype(i)=='Z') then
           dl(n+i)=bu(n+i)-ci
           du(n+i)=ainfty
         else
           dl(n+i)=bl(n+i)-ci
           du(n+i)=bu(n+i)-ci
-        endif
+        end if
         call saipy(ws(nal+i),ws(last1),lws(nla1),i,ws(naal1),n)
-      enddo
+      end do
        goto 20
 
 50    continue
@@ -756,24 +756,24 @@
 !  collect multipliers from LP subproblem
       do j=1,n
         i=abs(ls(j))
-        if(i.gt.n)then
-          if(ls(j).gt.0)then
+        if (i>n) then
+          if (ls(j)>0) then
             ws(nal+i-n)=r(i)
           else
             ws(nal+i-n)=-r(i)
-          endif
-        endif
+          end if
+        end if
         ws(naal+j)=0.D0
-      enddo
+      end do
       do i=1,m
         call saipy(ws(nal+i),ws(last1),lws(nla1),i,ws(naal1),n)
-      enddo
+      end do
 60    continue
-      if(itn.eq.maxit)then
-        if(iprint.gt.1)write(nout,*)'itn.ge.maxit'
+      if (itn==maxit) then
+        if (iprint>1) write(nout,*)'itn>=maxit'
         ifail=5
         return
-      endif
+      end if
 !     print 2,'h,f =',h,f
       iph=2
       k=0
@@ -786,11 +786,11 @@
         dl(i)=max(-rho,bl(i)-ws(nx+i))
         du(i)=min(rho,bu(i)-ws(nx+i))
         d(i)=0.D0
-      enddo
+      end do
       alc=scpr(0.D0,ws(nal1),ws(ncx1),m)
 !     print *,'solve phase 2 LCP subproblem',itn
       iii=0
-!     if(itn.eq.164)iii=1
+!     if (itn==164)iii=1
       call glcpd(n,m,k,kmax,maxg,ws(last1),lws(nla1),d,dl,du,phi,fmin, &
         g,r,w,e,ls,alp,lp,mlp,ipeq,ws,lws,cstype,v,nv,rgtol, &
         mode,ifail,mxgr,iii,0)
@@ -805,64 +805,64 @@
       dnorm=0.D0
       do i=1,n
         dnorm=max(dnorm,abs(d(i)))
-      enddo
+      end do
 !     print 2,'dnorm,rho',dnorm,rho
-      if(ifail.eq.3)then
-        if(iprint.gt.1) &
+      if (ifail==3) then
+        if (iprint>1) &
           write(nout,*)'phase 2 LCP problem is infeasible'
 !       mode=2
          goto 15
-!       if(dnorm.le.htol) goto 10
+!       if (dnorm<=htol) goto 10
 !       rho=5.D-1*dnorm
 !        goto 10
-      elseif(ifail.eq.1)then
-        if(iprint.gt.1) &
+      else if (ifail==1) then
+        if (iprint>1) &
           write(nout,*)'phase 2 LCP subproblem is unbounded'
          goto 99
-      elseif(ifail.gt.5)then
-        if(iprint.gt.1) &
+      else if (ifail>5) then
+        if (iprint>1) &
           write(nout,*)'malfunction in phase 2 LCP subproblem'
          goto 99
-      endif
+      end if
       hxd=0.D0
       do i=1,m
         ci=ws(ncxd+i)
         hxd=hxd+max(0.D0,bl(n+i)-ci,ci-bu(n+i))
-      enddo
-      if(iprint.ge.1)write(nout,2001)itn,hxd,fxd,rgnorm,dnorm,rho
+      end do
+      if (iprint>=1) write(nout,2001)itn,hxd,fxd,rgnorm,dnorm,rho
 !     print 4,'c at x+d =',(ws(ncxd+i),i=1,m)
-      if(hxd.le.htol.and.(fxd.le.fmin.or.dnorm.le.htol)) goto 80
+      if (hxd<=htol .and. (fxd<=fmin .or. dnorm<=htol)) goto 80
 !     print *,'phase 2 filter entries followed by (h,f)'
 !     do i=1,nfil
 !       print 5,filh(i),filf(i)
-!     enddo
+!     end do
 !     print 5,h,f
 !  filter test for LCP solution
-      if(hxd.ge.ubd)then
-        if(iprint.gt.1)write(nout,*)'upper bound on h exceeded (3)'
+      if (hxd>=ubd) then
+        if (iprint>1) write(nout,*)'upper bound on h exceeded (3)'
         rho=max(1.D-1,5.D-1*h/hxd)*dnorm
          goto 10
-      endif
+      end if
       dq=f-phi
       df=f-fxd
 !     print 2,'dq,df',dq,df
       call testfil(hxd,fxd,filh,filf,1,nfil,ifail)
-      if(ifail.eq.0)call testfil(hxd,fxd,h,f,1,1,ifail)
+      if (ifail==0) call testfil(hxd,fxd,h,f,1,1,ifail)
 !     print 6,'hxd,fxd,ifail',hxd,fxd,ifail
-      if(ifail.eq.1.or.(dq.ge.tol.and.df.lt.sigma*dq))then
-        if(hxd.eq.0.D0.or.dq.lt.tol)then
+      if (ifail==1 .or. (dq>=tol .and. df<sigma*dq)) then
+        if (hxd==0.D0 .or. dq<tol) then
           rho=5.D-1*dnorm
-          if(iprint.gt.1)write(nout,*)'hxd.eq.0.D0.or.dq.lt.tol'
+          if (iprint>1) write(nout,*)'hxd==0.D0 .or. dq<tol'
           rho=max(1.D-1,min(5.D-1*h/hxd,5.D-1))*dnorm
            goto 10
-        endif
+        end if
 !  projection step
         nv=1
         v(1)=1.D0
         iph=-2
         do i=1,n
           ws(naal+i)=ws(nx+i)
-        enddo
+        end do
 70      continue
         hx=hxd
         fx=fxd
@@ -873,12 +873,12 @@
 !         dl(i)=bl(i)-ws(nx+i)
 !         du(i)=bu(i)-ws(nx+i)
           d(i)=0.D0
-        enddo
+        end do
         do i=1,m
           ci=ws(ncxd+i)
           dl(n+i)=bl(n+i)-ci
           du(n+i)=bu(n+i)-ci
-        enddo
+        end do
 !       mode=2
         k=0
 !       print 4,'x =',(ws(nx+i),i=1,n)
@@ -886,7 +886,7 @@
 !  solve projection subproblem
 !       print *,'solve phase 2 projection subproblem'
         iii=0
-!       if(itn.eq.9)iii=3
+!       if (itn==9)iii=3
         call glcpd(n,m,k,kmax,maxg,ws(next1),lws(nla1),d,dl,du,phi,0.D0, &
           g,r,w,e,ls,alp,lp,mlp,ipeq,ws,lws,cstype,v,nv,rgtol, &
           mode,ifail,mxgr,iii,0)
@@ -894,22 +894,22 @@
 !       print 4,'r =',(r(i),i=1,nm)
 !       print 3,'ls =',(ls(i),i=1,nm)
 !       print 1,'ipeq,k,ifail =',ipeq,k,ifail
-        if(ifail.eq.3)then
-          if(iprint.gt.1) &
+        if (ifail==3) then
+          if (iprint>1) &
             write(nout,*)'phase 2 projection problem is infeasible'
           do i=1,n
             ws(nx+i)=ws(naal+i)
-          enddo
+          end do
           rho=5.D-1*dnorm
            goto 10
-        elseif(ifail.gt.5)then
-          if(iprint.gt.1) &
+        else if (ifail>5) then
+          if (iprint>1) &
            write(nout,*),'malfunction in phase 2 projection subproblem'
            goto 99
-        endif
+        end if
         do i=1,n
           ws(nxd+i)=ws(nx+i)+d(i)
-        enddo
+        end do
 !       print 4,'xd =',(ws(nxd+i),i=1,n)
         call functions(n,m,ws(nxd1),fxd,ws(ncxd1),ws,lws)
         call gradients(n,m,ws(nxd1),ws(next1),ws,lws)
@@ -917,94 +917,94 @@
         do i=1,m
           ci=ws(ncxd+i)
           hxd=hxd+max(0.D0,bl(n+i)-ci,ci-bu(n+i))
-        enddo
-        if(iprint.ge.1)write(nout,2002)itn,hxd,fxd
+        end do
+        if (iprint>=1) write(nout,2002)itn,hxd,fxd
 !       print 4,'x+d =',(ws(nxd+i),i=1,n)
 !       print 4,'c at x+d =',(ws(ncxd+i),i=1,m)
 !  filter test for projection solution
-        if(hxd.ge.ubd)then
-          if(iprint.gt.1)write(nout,*)'upper bound on h exceeded (4)'
+        if (hxd>=ubd) then
+          if (iprint>1) write(nout,*)'upper bound on h exceeded (4)'
           rho=max(1.D-1,5.D-1*h/hxd)*dnorm
            goto 10
-        endif
+        end if
         df=f-fxd
         call testfil(hxd,fxd,filh,filf,1,nfil,ifail)
-        if(ifail.eq.0)call testfil(hxd,fxd,h,f,1,1,ifail)
-!       if(ifail.eq.1)print 2,'hxd/hx =',hxd/hx
+        if (ifail==0) call testfil(hxd,fxd,h,f,1,1,ifail)
+!       if (ifail==1) print 2,'hxd/hx =',hxd/hx
 !       print 6,'hxd,fxd,ifail',hxd,fxd,ifail
-        if(ifail.eq.1.or.df.lt.sigma*dq)then
-          if(hxd.le.8.D-1*hx)then
+        if (ifail==1 .or. df<sigma*dq) then
+          if (hxd<=8.D-1*hx) then
             df=f-(hx*fxd-hxd*fx)/(hx-hxd)
-            if(df.ge.sigma*dq) goto 70
-          endif
+            if (df>=sigma*dq) goto 70
+          end if
           do i=1,n
             ws(nx+i)=ws(naal+i)
-          enddo
+          end do
           rho=5.D-1*dnorm
-          if(iprint.gt.1)write(nout,*)'phase 2 projection step fails'
+          if (iprint>1) write(nout,*)'phase 2 projection step fails'
            goto 10
-        endif
+        end if
 !       print *,'accept phase 2 projection step'
         do i=1,n
           ws(nx+i)=ws(naal+i)
-        enddo
-      endif
+        end do
+      end if
 80    continue
 !  accept LCP (iph=2) or projection (iph=-2) solution
-      if(dq.lt.tol)then
+      if (dq<tol) then
         call addfil(h,f,filh,filf,1,nfil,mxf,ifail)
-        if(ifail.gt.0)return
-      endif
+        if (ifail>0) return
+      end if
       h=hxd
       f=fxd
-      if(dnorm.eq.rho)rho=2.D0*rho
+      if (dnorm==rho)rho=2.D0*rho
       do i=1,n
         ws(nx+i)=ws(nxd+i)
         ws(naal+i)=0.D0
-      enddo
+      end do
       do i=1,m
         ws(ncx+i)=ws(ncxd+i)
-      enddo
+      end do
       call iexch(last1,next1)
-      if(iph.eq.-2) goto 10
-      if(h.le.htol)then
-        if(f.le.fmin)then
-          if(iprint.gt.1) &
+      if (iph==-2) goto 10
+      if (h<=htol) then
+        if (f<=fmin) then
+          if (iprint>1) &
             write(nout,*)'phase 2 LCP unbounded'
           ifail=1
           return
-        elseif(dnorm.le.htol)then
-          if(iprint.gt.1)write(nout,*)'local NLP solution found'
-!         print 2,'h.le.htol.and.dnorm.le.htol'
+        else if (dnorm<=htol) then
+          if (iprint>1) write(nout,*)'local NLP solution found'
+!         print 2,'h<=htol .and. dnorm<=htol'
           ifail=0
           return
-        endif
-      endif
+        end if
+      end if
 !  collect LCP multipliers
       do i=1,m
         ws(nal+i)=0.D0
-      enddo
+      end do
       do j=1,n
         i=abs(ls(j))
-        if(i.gt.n)then
-          if(ls(j).gt.0)then
+        if (i>n) then
+          if (ls(j)>0) then
             ws(nal+i-n)=r(i)
           else
             ws(nal+i-n)=-r(i)
-          endif
-        endif
-      enddo
+          end if
+        end if
+      end do
 !     print 4,'al =',(ws(i),i=nal1,nal+m)
       do i=1,m
         ci=ws(ncx+i)
         dl(n+i)=bl(n+i)-ci
         du(n+i)=bu(n+i)-ci
         call saipy(ws(nal+i),ws(last1),lws(nla1),i,ws(naal1),n)
-      enddo
+      end do
 !     iph=2
        goto 60
 99    continue
-      if(ifail.eq.7)return
+      if (ifail==7) return
       ifail=ifail+10
       return
       end
@@ -1022,16 +1022,16 @@
       dimension filh(*),filf(*)
       parameter (beta=99999.D-5,gamma=1.D-5)
       ifail=0
-!     if(h.eq.0.D0)return
+!     if (h==0.D0) return
       hd=h/beta
       fp=f+gamma*h
       do i=nfil1,nfil
-        if(hd.ge.filh(i).and.fp.gt.filf(i))then
-!       if(hd.gt.filh(i).and.fp.gt.filf(i))then
+        if (hd>=filh(i) .and. fp>filf(i)) then
+!       if (hd>filh(i) .and. fp>filf(i)) then
           ifail=1
           return
-        endif
-      enddo
+        end if
+      end do
       return
       end
 
@@ -1039,16 +1039,16 @@
       implicit double precision (a-h,o-z)
       dimension filh(*),filf(*)
       do i=nfil,nfil1,-1
-        if(h.le.filh(i).and.f.le.filf(i))then
+        if (h<=filh(i) .and. f<=filf(i)) then
           filh(i)=filh(nfil)
           filf(i)=filf(nfil)
           nfil=nfil-1
-        endif
-      enddo
-      if(nfil.ge.mxf)then
+        end if
+      end do
+      if (nfil>=mxf) then
         ifail=8
         return
-      endif
+      end if
       nfil=nfil+1
       filh(nfil)=h
       filf(nfil)=f
@@ -1065,18 +1065,18 @@
         nal,nal1,naal,naal1,nxd,nxd1,ncx,ncx1,ncxd,ncxd1,nla1
 2     format(A,6E15.7)
 4     format(A/(5E15.7))
-      if(iph.lt.0)then
+      if (iph<0) then
 !  projection subproblem
         phi=5.D-1*scpr(0.D0,d,d,n)
         return
-      elseif(iph.eq.0)then
+      else if (iph==0) then
 !  LP subproblem
         phi=aiscpr(n,ws(last1),lws(nla1),0,d,0.D0)
         return
-      endif
+      end if
       do i=1,n
         ws(nxd+i)=ws(nx+i)+d(i)
-      enddo
+      end do
 !     print 4,'$x =',(ws(nx+i),i=1,n)
 !     print 4,'$d =',(d(i),i=1,n)
 !     print 4,'$x+d =',(ws(nxd+i),i=1,n)
@@ -1086,18 +1086,18 @@
 !     print 4,'$A.al =',(ws(naal+i),i=1,n)
 !     print 4,'$cxd =',(ws(ncxd+i),i=1,m)
 !     print *,'$cstype =',(cstype(i),i=1,m)
-      if(iph.eq.2)then
+      if (iph==2) then
         phi=scpr(-scpr(-fxd-alc,ws(nal1),ws(ncxd1),m),ws(naal1),d,n)
       else
         phi=scpr(-scpr(-alc,ws(nal1),ws(ncxd1),m),ws(naal1),d,n)
         do i=1,m
-          if(cstype(i).eq.'A')then
+          if (cstype(i)=='A') then
             phi=phi-ws(ncxd+i)
-          elseif(cstype(i).eq.'Z')then
+          else if (cstype(i)=='Z') then
             phi=phi+ws(ncxd+i)
-          endif
-        enddo
-      endif
+          end if
+        end do
+      end if
 !     print 2,'$fxd,cxd,phi =',fxd,ws(ncxd1),phi
 !     print 2,'$phi =',phi
       return
@@ -1111,40 +1111,40 @@
       common/functc/fxd,alc,m,iph,last1,next1,nx,nx1, &
         nal,nal1,naal,naal1,nxd,nxd1,ncx,ncx1,ncxd,ncxd1,nla1
       common/maxac/maxa
-      if(iph.lt.0)then
+      if (iph<0) then
         do i=1,n
           g(i)=d(i)
-        enddo
+        end do
         return
-      elseif(iph.eq.0)then
+      else if (iph==0) then
         do i=1,n
           g(i)=0.D0
-        enddo
+        end do
         call saipy(1.D0,ws(last1),lws(nla1),0,g,n)
         return
-      endif
+      end if
 !     print 4,'£x+d =',(ws(nxd+i),i=1,n)
       call gradients(n,m,ws(nxd1),ws(next1),ws,lws)
 !     print 4,'£a =',(ws(next1+i),i=0,maxa-1)
 !     print 4,'£al =',(ws(nal+i),i=1,m)
       do i=1,n
         g(i)=ws(naal+i)
-      enddo
+      end do
 !     print 4,'£Ak.al =',(g(i),i=1,n)
       do i=1,m
         call saipy(-ws(nal+i),ws(next1),lws(nla1),i,g,n)
-      enddo
-      if(iph.eq.2)then
+      end do
+      if (iph==2) then
         call saipy(1.D0,ws(next1),lws(nla1),0,g,n)
       else
         do i=1,m
-          if(cstype(i).eq.'A')then
+          if (cstype(i)=='A') then
             call saipy(-1.D0,ws(next1),lws(nla1),i,g,n)
-          elseif(cstype(i).eq.'Z')then
+          else if (cstype(i)=='Z') then
             call saipy(1.D0,ws(next1),lws(nla1),i,g,n)
-          endif
-        enddo
-      endif
+          end if
+        end do
+      end if
 !     print 4,'£g =',(g(i),i=1,n)
 1     format(A,15I5)
 3     format(A/(15I5))

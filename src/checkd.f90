@@ -61,10 +61,10 @@
       ncxd1=ncxd0+1
 !  total length of ws used is
       kk=ncxd0+m
-      if(kk.gt.mxws)then
+      if (kk>mxws) then
         print 1,'ws not large enough: kk, mxws =',kk,mxws
         stop
-      endif
+      end if
 
 !  set integer storage map for lws
 !  first maxiu locations are user storage for functions and gradients
@@ -72,10 +72,10 @@
       nla1=maxiu+1
 !  total storage needed is
       ll=nla1+maxla-1
-      if(ll.gt.mxlws)then
+      if (ll>mxlws) then
         print 1,'lws not large enough: ll, mxlws =',ll,mxlws
         stop
-      endif
+      end if
 
 
       call functions(n,m,x,ws(ncx0),ws(ncx1),ws,lws)
@@ -90,8 +90,8 @@
           dfi=(ws(ncxd0+j)-ws(ncx0+j))/al(i)
           a_ij=aij(i,j,ws(last1),lws(nla1))
           ah_ij=aij(i,j,ws(next1),lws(nla1))
-          if((dfi.ge.a_ij-tol.and.dfi.le.ah_ij+tol).or. &
-            (dfi.ge.ah_ij-tol.and.dfi.le.a_ij+tol)) goto 10
+          if ((dfi>=a_ij-tol .and. dfi<=ah_ij+tol) .or.  &
+            (dfi>=ah_ij-tol .and. dfi<=a_ij+tol)) goto 10
           print 1,'derivative inconsistency in constraint/variable',j,i
           print *,'deriv at x, diff quotient, deriv at x+h =', &
               a_ij,dfi,ah_ij
@@ -103,7 +103,7 @@
           return
 10      continue
         x(i)=xi
-      enddo
+      end do
       print *,'exiting checkd'
 1     format(A,15I5)
 2     format(A,6E15.7)
