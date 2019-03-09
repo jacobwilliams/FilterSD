@@ -1,6 +1,6 @@
 
-c  this file contains subordinate routines shared by glcpd.f, qlcpd.f and
-c  ql1lcpd.f
+!  this file contains subordinate routines shared by glcpd.f, qlcpd.f and
+!  ql1lcpd.f
 
       block data defaults
       implicit double precision (a-h,o-z)
@@ -8,8 +8,8 @@ c  ql1lcpd.f
       common/repc/sgnf,nrep,npiv,nres
       common/refactorc/mc,mxmc
       common/wsc/kk,ll,kkk,lll,mxws,mxlws
-      data  eps,    tol,   emin, sgnf, nrep, npiv, nres, mxmc, kk, ll
-     * /1111.D-19, 1.D-12, 0.D0, 1.D-8,  2,    3,   2,   500,   0,  0/
+      data  eps,    tol,   emin, sgnf, nrep, npiv, nres, mxmc, kk, ll &
+       /1111.D-19, 1.D-12, 0.D0, 1.D-8,  2,    3,   2,   500,   0,  0/
       end
 
       subroutine optest(jmin,jmax,r,e,ls,rp,pj)
@@ -20,23 +20,23 @@ c  ql1lcpd.f
         i=abs(ls(j))
         if(e(i).eq.0.D0)print *,'e(i).eq.0.D0: i =',i
         ri=r(i)/e(i)
-        if(ri.ge.rp)goto1
-c       if((i/2)*2.eq.i)then
-c         ic=i-1
-c  this change is needed when nm is odd
-c         ic=i+1
-c       else
-c         ic=i+1
-c         ic=i-1
-c       endif
-c       do jj=jmin,jmax
-c         if(ls(jj).eq.ic)goto2
-c       enddo
-c       goto1
-c   2   continue
+        if(ri.ge.rp) goto 1
+!       if((i/2)*2.eq.i)then
+!         ic=i-1
+!  this change is needed when nm is odd
+!         ic=i+1
+!       else
+!         ic=i+1
+!         ic=i-1
+!       endif
+!       do jj=jmin,jmax
+!         if(ls(jj).eq.ic) goto 2
+!       enddo
+!        goto 1
+!   2   continue
         rp=ri
         pj=j
-    1 continue
+1     continue
       return
       end
 
@@ -44,7 +44,7 @@ c   2   continue
       implicit double precision (a-h,r-z), integer (i-q)
       dimension a(*),la(*),an(*),w(*),ls(*)
       logical plus
-c  form At.s and denominators
+!  form At.s and denominators
       if(plus)then
         do j=jmin,jmax
           i=abs(ls(j))
@@ -100,7 +100,7 @@ c  form At.s and denominators
       subroutine signst(n,r,w,ls)
       implicit double precision (a-h,o-z)
       dimension r(*),w(*),ls(*)
-c  transfer with sign change as necessary
+!  transfer with sign change as necessary
         do j=1,n
           i=abs(ls(j))
           if(ls(j).ge.0)then
@@ -114,8 +114,8 @@ c  transfer with sign change as necessary
 
       subroutine warm_start(n,nm,a,la,x,bl,bu,b,ls,aa,ll,an,vstep)
       implicit double precision (a-h,o-z)
-      dimension a(*),la(*),x(*),bl(*),bu(*),b(*),ls(*),
-     *  aa(*),ll(*),an(*)
+      dimension a(*),la(*),x(*),bl(*),bu(*),b(*),ls(*), &
+        aa(*),ll(*),an(*)
       DOUBLE PRECISION daiscpr
       common/epsc/eps,tol,emin
       common/noutc/nout
@@ -132,16 +132,16 @@ c  transfer with sign change as necessary
           endif
         endif
       enddo
-c     print 3,'ls =',(ls(i),i=1,n)
-    3 format(A/(15I5))
-c     write(nout,1000)'x =',(x(i),i=1,n)
-c     write(nout,1000)'b =',(b(i),i=1,nm)
-c     write(nout,1000)'r =',(b(abs(ls(j))),j=1,n)
+!     print 3,'ls =',(ls(i),i=1,n)
+3     format(A/(15I5))
+!     write(nout,1000)'x =',(x(i),i=1,n)
+!     write(nout,1000)'b =',(b(i),i=1,nm)
+!     write(nout,1000)'r =',(b(abs(ls(j))),j=1,n)
       call tfbsub(n,a,la,0,b,an,aa,ll,ep,.false.)
-c     write(nout,1000)'d =',(an(i),i=1,n)
+!     write(nout,1000)'d =',(an(i),i=1,n)
       call linf(n,an,vstep,i)
-      if(iprint.ge.1)
-     *  write(nout,*)'infinity norm of vertical step =',vstep
+      if(iprint.ge.1) &
+        write(nout,*)'infinity norm of vertical step =',vstep
       do i=1,n
         x(i)=x(i)-an(i)
       enddo
@@ -157,9 +157,9 @@ c     write(nout,1000)'d =',(an(i),i=1,n)
           endif
         endif
       enddo
-c     write(nout,*)'x =',(x(i),i=1,n)
- 1000 format(a/(e16.5,4e16.5))
-c1001 format(a/(i4,1x,e11.5,4(i4,1x,e11.5)))
+!     write(nout,*)'x =',(x(i),i=1,n)
+1000  format(a/(e16.5,4e16.5))
+!1001 format(a/(i4,1x,e11.5,4(i4,1x,e11.5)))
       return
       end
 
@@ -216,22 +216,22 @@ c1001 format(a/(i4,1x,e11.5,4(i4,1x,e11.5)))
       subroutine trid(d,e,n)
       implicit double precision (a-h,o-z)
       dimension d(*),e(*)
-c  QL method for eigenvalues of a tridiagonal matrix.  d(i) i=1,..,n
-c  is diagonal and e(i) i=1,..,n-1 is subdiagonal (storage for dummy e(n)
-c  must be available). Eigenvalues returned in d
-c  This routine is adapted from the EISPAK subroutine imtq11.
+!  QL method for eigenvalues of a tridiagonal matrix.  d(i) i=1,..,n
+!  is diagonal and e(i) i=1,..,n-1 is subdiagonal (storage for dummy e(n)
+!  must be available). Eigenvalues returned in d
+!  This routine is adapted from the EISPAK subroutine imtq11.
       if(n.eq.1)return
       e(n)=0.D0
       do 15 l=1,n
       iter=0
-    1 continue
+1     continue
       do 12 m=l,n-1
       dd=abs(d(m))+abs(d(m+1))
-      if(abs(e(m))+dd.eq.dd)goto2
-   12 continue
+      if(abs(e(m))+dd.eq.dd) goto 2
+12    continue
       m=n
-    2 continue
-      if(m.eq.l.or.iter.eq.30)goto15
+2     continue
+      if(m.eq.l.or.iter.eq.30) goto 15
       iter=iter+1
       g=(d(l+1)-d(l))*5.D-1/e(l)
       r=sqrt(g**2+1.D0)
@@ -260,26 +260,26 @@ c  This routine is adapted from the EISPAK subroutine imtq11.
       p=s*r
       d(i+1)=g+p
       g=c*r-b
-   14 continue
+14    continue
       d(l)=d(l)-p
       e(l)=g
       e(m)=0.D0
-      goto1
-   15 continue
+       goto 1
+15    continue
       return
       end
 
       subroutine formR(nv,k,ig,maxg,a,b,c,d,e,G,R)
       implicit double precision (a-h,o-z)
       dimension a(*),b(*),c(*),d(*),e(*),G(k,*),R(*)
-c     print *,'G and ig',ig
-c     do i=1,k
-c       print 5,(G(i,j),j=1,6)
-c     enddo
-c     print 4,'a =',(a(i),i=1,6)
-c     print 4,'b =',(b(i),i=1,6)
-c     print 4,'c =',(c(i),i=1,6)
-   10 ii=ig-nv
+!     print *,'G and ig',ig
+!     do i=1,k
+!       print 5,(G(i,j),j=1,6)
+!     enddo
+!     print 4,'a =',(a(i),i=1,6)
+!     print 4,'b =',(b(i),i=1,6)
+!     print 4,'c =',(c(i),i=1,6)
+10    ii=ig-nv
       if(ii.lt.0)ii=ii+maxg
       do i=1,nv
         ii=ii+1
@@ -302,33 +302,33 @@ c     print 4,'c =',(c(i),i=1,6)
           ij=ij+maxg-j
         enddo
         if(d(1).le.0.D0)then
-c         print *,'R is singular'
+!         print *,'R is singular'
           nv=i-1
-          goto10
+           goto 10
         endif
         t=sqrt(d(1))
         R(ij)=t
         do j=1,nvi
           R(ij+j)=d(j+1)/t
         enddo
-c       print 4,'row of R =',(R(ij+j),j=0,nvi)
+!       print 4,'row of R =',(R(ij+j),j=0,nvi)
       enddo
-c     print 4,'R matrix',(R(j),j=1,nv+1)
-c     ii=maxg
-c     do i=1,nv-1
-c       print 5,(0.D0,j=1,i),(R(ii+j),j=1,nv-i+1)
-c       ii=ii+maxg-i
-c     enddo
+!     print 4,'R matrix',(R(j),j=1,nv+1)
+!     ii=maxg
+!     do i=1,nv-1
+!       print 5,(0.D0,j=1,i),(R(ii+j),j=1,nv-i+1)
+!       ii=ii+maxg-i
+!     enddo
       return
-    2 format(A,5E13.5)
-    4 format(A/(6E13.5))
-    5 format((6E13.5))
+2     format(A,5E13.5)
+4     format(A/(6E13.5))
+5     format((6E13.5))
       end
 
       subroutine formT(n,nmax,R,d,e)
       implicit double precision (a-h,o-z)
       dimension R(*),d(*),e(*)
-c  forms the tridiagonal matrix  T = [R | Qt.gp].S.R^(-1) in d and e
+!  forms the tridiagonal matrix  T = [R | Qt.gp].S.R^(-1) in d and e
       t=e(1)*R(2)/R(1)
       d(1)=e(1)-t
       ir=1
@@ -348,7 +348,7 @@ c  forms the tridiagonal matrix  T = [R | Qt.gp].S.R^(-1) in d and e
       subroutine insort(nv,v)
       implicit double precision (a-h,o-z)
       dimension v(*)
-c  insertion sort into ascending order
+!  insertion sort into ascending order
       do i=2,nv
         t=v(i)
         do j=i-1,1,-1
@@ -356,11 +356,11 @@ c  insertion sort into ascending order
             v(j+1)=v(j)
           else
             v(j+1)=t
-            goto10
+             goto 10
           endif
         enddo
         v(1)=t
-   10   continue
+10      continue
       enddo
       return
       end
@@ -384,21 +384,21 @@ c  insertion sort into ascending order
         enddo
         ii=ii+nmax-i
       enddo
-c     print 4,'R matrix'
-c     do i=1,n
-c       print 5,(T(i,j),j=1,n+1)
-c     enddo
-c     print 2,'a =',(a(i),i=1,n)
+!     print 4,'R matrix'
+!     do i=1,n
+!       print 5,(T(i,j),j=1,n+1)
+!     enddo
+!     print 2,'a =',(a(i),i=1,n)
       do i=1,n
         call mysaxpy(-1.D0,T(1,i+1),T(1,i),n)
         do j=1,n
           T(j,i)=T(j,i)*a(i)
         enddo
       enddo
-c     print 4,'R*J matrix'
-c     do i=1,n
-c       print 5,(T(i,j),j=1,n)
-c     enddo
+!     print 4,'R*J matrix'
+!     do i=1,n
+!       print 5,(T(i,j),j=1,n)
+!     enddo
       print 4,'T matrix'
       do i=1,n
         do j=1,n
@@ -408,7 +408,7 @@ c     enddo
         print 5,(d(j),j=1,n)
       enddo
       return
-    2 format(A,6E15.7)
-    4 format(A/(5E15.7))
-    5 format((5E15.7))
+2     format(A,6E15.7)
+4     format(A/(5E15.7))
+5     format((5E15.7))
       end

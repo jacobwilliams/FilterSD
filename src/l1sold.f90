@@ -1,32 +1,32 @@
 
-christen this file l1sold.f
-cut here >>>>>>>>>>>>>>>>>>
+!Christen this file l1sold.f
+!ut here >>>>>>>>>>>>>>>>>>
 
-c  Copyright (C) 2010 Roger Fletcher
+!  Copyright (C) 2010 Roger Fletcher
 
-      subroutine l1sold(n,m,k,kmax,maxg,a,la,x,bl,bu,f,g,r,w,e,ls,
-     * alp,lp,mlp,peq,ws,lws,cws,v,nv,rgtol,ifail,iprint,nout)
+      subroutine l1sold(n,m,k,kmax,maxg,a,la,x,bl,bu,f,g,r,w,e,ls, &
+       alp,lp,mlp,peq,ws,lws,cws,v,nv,rgtol,ifail,iprint,nout)
       implicit double precision (a-h,r-z), integer (i-q)
 
-c  This routine is a post-processor for qlcpd and glcpd. In the case that the
-c  constraint set is infeasible (ifail=3), l1sold finds a best l1 solution of
-c  the general constraints, subject to the simple bounds being satisfied.
+!  This routine is a post-processor for qlcpd and glcpd. In the case that the
+!  constraint set is infeasible (ifail=3), l1sold finds a best l1 solution of
+!  the general constraints, subject to the simple bounds being satisfied.
 
-c  Parameters are a subset of those for glcpd and must be passed through
-c  unchanged. For qlcpd a dummy parameter cws must be included.
+!  Parameters are a subset of those for glcpd and must be passed through
+!  unchanged. For qlcpd a dummy parameter cws must be included.
 
-c  A modified form of Wolfe's method is used to resolve degeneracy.
-c  If the solution is degenerate, there may be inactive constraints with
-c  zero residual and multiplier 1. Such constraints are marked on exit by
-c  setting their residual value (in r(*)) to -eps, (see common/epsc for eps)
+!  A modified form of Wolfe's method is used to resolve degeneracy.
+!  If the solution is degenerate, there may be inactive constraints with
+!  zero residual and multiplier 1. Such constraints are marked on exit by
+!  setting their residual value (in r(*)) to -eps, (see common/epsc for eps)
 
       parameter (ainfty=1.D100)
-      dimension a(*),la(*),x(*),bl(*),bu(*),g(*),r(*),w(*),e(*),ls(*),
-     *  alp(*),lp(*),ws(*),lws(*),v(*)
+      dimension a(*),la(*),x(*),bl(*),bu(*),g(*),r(*),w(*),e(*),ls(*), &
+        alp(*),lp(*),ws(*),lws(*),v(*)
       character cws(*)
       character*32 spaces
-      common/lcpdc/na,na1,nb,nb1,krg,krg1,kr,kr1,
-     *  ka,ka1,kb,kb1,kc,kc1,kd,kd1,ke,ke1,lu1,ll1
+      common/lcpdc/na,na1,nb,nb1,krg,krg1,kr,kr1, &
+        ka,ka1,kb,kb1,kc,kc1,kd,kd1,ke,ke1,lu1,ll1
       common/epsc/eps,tol,emin
       common/infoc/vstep,iter,npv,nfn,ngr
       common/repc/sgnf,nrep,npiv,nres
@@ -35,20 +35,20 @@ c  setting their residual value (in r(*)) to -eps, (see common/epsc for eps)
       common/alphac/alpha,rp,pj,qqj,qqj1
       logical plus
 
-    1 format(A,15I5)
-    2 format(A,6E15.7)
-    3 format(A/(15I5))
-    4 format(A/(5E15.7))
-    5 format((6E15.7))
+1     format(A,15I5)
+2     format(A,6E15.7)
+3     format(A/(15I5))
+4     format(A/(5E15.7))
+5     format((6E15.7))
 
-c     if(iprint.eq.3)print 4,'a =',(a(i),i=1,110)
+!     if(iprint.eq.3)print 4,'a =',(a(i),i=1,110)
       spaces='         '
       n1=n+1
       nm=n+m
       lp(1)=nm
       lev=1
       npv=0
-c  collect simple bound equations
+!  collect simple bound equations
       peq=0
       do j=peq+1,n-k
         i=abs(ls(j))
@@ -60,43 +60,43 @@ c  collect simple bound equations
       gnorm=sqrt(scpr(0.D0,g,g,n))
       gtol=sgnf*gnorm
       rgtol=max(rgt0l,gtol)
-      if(iprint.ge.1)write(nout,'(''pivots ='',I5,
-     *    ''  level = 1    f ='',E16.8)')npv,f
-c     print 4,'gradient =',(g(i),i=1,n)
-      goto20
-c  start of major iteration
-   10 continue
-      if(iprint.ge.1)write(nout,'(''pivots ='',I5,
-     *    ''  level = 1    f ='',E16.8)')npv,f
-c  calculate multipliers
-c     print 4,'gradient =',(g(i),i=1,n)
+      if(iprint.ge.1)write(nout,'(''pivots ='',I5, &
+          ''  level = 1    f ='',E16.8)')npv,f
+!     print 4,'gradient =',(g(i),i=1,n)
+       goto 20
+!  start of major iteration
+10    continue
+      if(iprint.ge.1)write(nout,'(''pivots ='',I5, &
+          ''  level = 1    f ='',E16.8)')npv,f
+!  calculate multipliers
+!     print 4,'gradient =',(g(i),i=1,n)
       do i=1,nm
         w(i)=0.D0
       enddo
       call fbsub(n,1,n,a,la,0,g,w,ls,ws(lu1),lws(ll1),.true.)
       call signst(n,r,w,ls)
 
-   20 continue
+20    continue
       if(iprint.ge.3)then
-        write(nout,1001)'costs vector and indices',
-     *    (ls(j),r(abs(ls(j))),j=1,n)
-c       write(nout,1000)'steepest edge coefficients',
-c    *    (e(abs(ls(j))),j=1,n)
+        write(nout,1001)'costs vector and indices', &
+          (ls(j),r(abs(ls(j))),j=1,n)
+!       write(nout,1000)'steepest edge coefficients',
+!    *    (e(abs(ls(j))),j=1,n)
         write(nout,1)'# of bound equations and free variables = ',peq,k
       endif
-c     if(iprint.eq.3)print 4,'gradient =',(g(i),i=1,n)
-c     if(iprint.eq.3)write(nout,1001)'residual vector and indices',
-c    *    (ls(j),r(abs(ls(j))),j=n1,lp(1))
-c     call check1(n,lp(1),nm,k,kmax,g,a,la,x,bl,bu,r,ls,lp,ws(nb1),f,
-c    *  ws,lws,cws,1,p,rp)
+!     if(iprint.eq.3)print 4,'gradient =',(g(i),i=1,n)
+!     if(iprint.eq.3)write(nout,1001)'residual vector and indices',
+!    *    (ls(j),r(abs(ls(j))),j=n1,lp(1))
+!     call check1(n,lp(1),nm,k,kmax,g,a,la,x,bl,bu,r,ls,lp,ws(nb1),f,
+!    *  ws,lws,cws,1,p,rp)
 
-   21 continue
-c  l1 optimality test
+21    continue
+!  l1 optimality test
       call optest1(peq,k,n,bl,bu,r,e,ls,rp,pj)
 
-   22 continue
+22    continue
       if(rp.le.gtol)then
-c  allow for changes to norm(g)
+!  allow for changes to norm(g)
         gnorm=sqrt(scpr(0.D0,g,g,n))
         gtol=sgnf*gnorm
       endif
@@ -125,7 +125,7 @@ c  allow for changes to norm(g)
             endif
           endif
         enddo
-c       write(nout,1)'# of simple bound equations = ',peq
+!       write(nout,1)'# of simple bound equations = ',peq
         do j=peq+1,n-k
           i=abs(ls(j))
           if(bl(i).eq.bu(i))then
@@ -133,15 +133,15 @@ c       write(nout,1)'# of simple bound equations = ',peq
             call iexch(ls(j),ls(peq))
           endif
         enddo
-c       write(nout,1001)'costs vector and indices',
-c    *    (ls(j),r(abs(ls(j))),j=1,n)
-c       write(nout,1)'# of active equations and free variables = ',peq,k
+!       write(nout,1001)'costs vector and indices',
+!    *    (ls(j),r(abs(ls(j))),j=1,n)
+!       write(nout,1)'# of active equations and free variables = ',peq,k
         if(iprint.ge.2)then
           write(nout,*)'OPTIMAL l1 solution'
           if(iprint.ge.3)then
-c           write(nout,1000)'x variables',(x(i),i=1,n)
-            write(nout,1001)'residual vector and indices',
-     *        (ls(j),r(abs(ls(j))),j=n1,nm)
+!           write(nout,1000)'x variables',(x(i),i=1,n)
+            write(nout,1001)'residual vector and indices', &
+              (ls(j),r(abs(ls(j))),j=n1,nm)
           endif
         endif
         ifail=0
@@ -150,16 +150,16 @@ c           write(nout,1000)'x variables',(x(i),i=1,n)
 
       p=abs(ls(pj))
       if(iprint.ge.2)write(nout,*)'CHOOSE p,pj =',ls(pj),pj,r(p)
-c  compute +/- Steepest Edge search direction s in an(.)
-      call tfbsub(n,a,la,p,ws(na1),ws(na1),ws(lu1),lws(ll1),
-     *  e(p),.true.)
+!  compute +/- Steepest Edge search direction s in an(.)
+      call tfbsub(n,a,la,p,ws(na1),ws(na1),ws(lu1),lws(ll1), &
+        e(p),.true.)
 
         rp=scpr(0.D0,ws(na1),g,n)
         if(ls(pj).lt.0)rp=-rp
         if(rp*r(p).le.0.D0)then
           print 2,'3rp,r(p),rp-r(p)',rp,r(p),rp-r(p)
           r(p)=0.D0
-          goto98
+           goto 98
         endif
 
       if(pj.gt.n-k)then
@@ -173,32 +173,32 @@ c  compute +/- Steepest Edge search direction s in an(.)
         plus=ls(pj).ge.0
       endif
       snorm=e(p)
-c     print 4,'s (or -s if .not.plus) =',(ws(i),i=na1,na+n)
+!     print 4,'s (or -s if .not.plus) =',(ws(i),i=na1,na+n)
 
-c  form At.s and denominators
+!  form At.s and denominators
       call form_Ats(n1,lp(1),n,plus,a,la,ws(na1),w,ls,snorm*tol)
 
-c  return from degeneracy code
-   30 continue
+!  return from degeneracy code
+30    continue
       if(iprint.ge.3)then
-c       write(nout,1000)'x variables',(x(i),i=1,n)
-        write(nout,1001)'residual vector and indices',
-     *    (ls(j),r(abs(ls(j))),j=n1,lp(1))
+!       write(nout,1000)'x variables',(x(i),i=1,n)
+        write(nout,1001)'residual vector and indices', &
+          (ls(j),r(abs(ls(j))),j=n1,lp(1))
         write(nout,1000)'denominators',(w(abs(ls(j))),j=n1,lp(1))
       endif
-c     print 2,'slope for r(169) =',aiscpr(n,a,la,169-n,ws(na1),0.D0)
-c     print 2,'slope for r(217) =',aiscpr(n,a,la,217-n,ws(na1),0.D0)
-c     print *,'plus =',plus
+!     print 2,'slope for r(169) =',aiscpr(n,a,la,169-n,ws(na1),0.D0)
+!     print 2,'slope for r(217) =',aiscpr(n,a,la,217-n,ws(na1),0.D0)
+!     print *,'plus =',plus
 
-   40 continue
-c  level 1 ratio tests
+40    continue
+!  level 1 ratio tests
       amax=ainfty
       qj=0
       do 41 j=n-k+1,n
         i=ls(j)
         si=ws(na+i)
         t=abs(si)
-        if(t.le.tol)goto41
+        if(t.le.tol) goto 41
         if(si.gt.0.D0.eqv.plus)then
           z=bu(i)-x(i)
           if(abs(z).lt.tol)then
@@ -216,10 +216,10 @@ c  level 1 ratio tests
             z=z/t
           endif
         endif
-        if(z.gt.amax)goto41
+        if(z.gt.amax) goto 41
         amax=z
         qj=j
-   41 continue
+41    continue
       if(pj.le.n-k.and.r(p).lt.0.D0.and.bu(p)-bl(p).lt.amax)then
         amax=bu(p)-bl(p)
         qj=pj
@@ -228,28 +228,28 @@ c  level 1 ratio tests
       do 44 j=n1,lp(1)
         i=abs(ls(j))
         wi=w(i)
-        if(wi.eq.0.D0)goto44
+        if(wi.eq.0.D0) goto 44
         ri=r(i)
         if(ri.eq.-eps)then
           if(bl(i).eq.bu(i).and.wi.lt.0.D0)then
             alpha=0.D0
             q=i
             qj=j
-            goto45
+             goto 45
           endif
-          goto44
+           goto 44
         elseif(ri.lt.0.D0)then
-          if(wi.gt.0.D0)goto44
+          if(wi.gt.0.D0) goto 44
           z=(ri-tol)/wi
         elseif(wi.gt.0.D0)then
           z=(ri+tol)/wi
         else
           z=(bl(i)-bu(i)+ri-tol)/wi
         endif
-        if(z.ge.alpha)goto44
+        if(z.ge.alpha) goto 44
         alpha=z
         qj=j
-   44 continue
+44    continue
       q=abs(ls(qj))
       if(qj.gt.n)then
         if(r(q).lt.0.D0.eqv.w(q).lt.0.D0)then
@@ -258,15 +258,15 @@ c  level 1 ratio tests
           alpha=(bl(q)-bu(q)+r(q))/w(q)
         endif
       endif
-   45 continue
+45    continue
       if(iprint.ge.2)then
         write(nout,2)'r(q),w(q) =',r(q),w(q)
         write(nout,*)'alpha =',alpha,'   q =',q
       endif
 
       if(alpha.eq.0.D0.and.pj.le.n-k)then
-        if(iprint.ge.2)
-     *    write(nout,*)'degeneracy block at level 1'
+        if(iprint.ge.2) &
+          write(nout,*)'degeneracy block at level 1'
         if(w(q).lt.0.D0.and.r(q).ne.-eps)then
           w(q)=-w(q)
           ls(qj)=-ls(qj)
@@ -287,12 +287,12 @@ c  level 1 ratio tests
         enddo
         lp(2)=plev
         lev=2
-c       write(nout,1001)'costs vector and indices',
-c    *    (ls(j),r(abs(ls(j))),j=1,n)
-c       write(nout,1)'# of bound equations and free variables = ',peq,k
-        if(iprint.ge.1)write(nout,'(''pivots ='',I5,''     level = 2'',
-     *    ''    f ='',E16.8)')npv,f
-        goto86
+!       write(nout,1001)'costs vector and indices',
+!    *    (ls(j),r(abs(ls(j))),j=1,n)
+!       write(nout,1)'# of bound equations and free variables = ',peq,k
+        if(iprint.ge.1)write(nout,'(''pivots ='',I5,''     level = 2'', &
+          ''    f ='',E16.8)')npv,f
+         goto 86
       endif
 
       if(alpha.gt.0.D0)then
@@ -304,21 +304,21 @@ c       write(nout,1)'# of bound equations and free variables = ',peq,k
           else
             r(p)=1.D0
           endif
-          goto20
+           goto 20
         endif
         if(plus)then
           call mysaxpy(alpha,ws(na1),x,n)
         else
           call mysaxpy(-alpha,ws(na1),x,n)
         endif
-c  update r for inactive c/s
+!  update r for inactive c/s
         do 61 j=n1,lp(1)
           i=abs(ls(j))
-          if(w(i).eq.0.D0)goto61
+          if(w(i).eq.0.D0) goto 61
           ri=r(i)-alpha*w(i)
           if(abs(ri).le.tol)ri=0.D0
           if(r(i).lt.0.D0.and.ri.ge.0.D0)then
-c  remove contribution to gradient
+!  remove contribution to gradient
             call saipy(sign(1.D0,dble(ls(j))),a,la,i-n,g,n)
             call newg
           endif
@@ -327,7 +327,7 @@ c  remove contribution to gradient
             if(abs(ro).le.tol)ro=0.D0
             if(ro.lt.ri)then
               ri=ro
-c             w(i)=-w(i)
+!             w(i)=-w(i)
               ls(j)=-ls(j)
             endif
           endif
@@ -339,17 +339,17 @@ c             w(i)=-w(i)
             endif
           endif
           r(i)=ri
-   61   continue
+61      continue
       endif
 
-   70 continue
+70    continue
       if(qj.ne.pj)then
-c  pivot interchange
+!  pivot interchange
         if(iprint.ge.2)write(nout,*)'replace',p,' by',q
         call pivot(p,q,n,nm,a,la,e,ws(lu1),lws(ll1),ifail,npv)
         if(ifail.ge.1)then
           if(iprint.ge.1)write(nout,*)'near singularity in pivot (1)'
-          goto98
+           goto 98
         endif
         if(pj.gt.n-k)then
           r(p)=x(p)-bl(p)
@@ -385,40 +385,40 @@ c  pivot interchange
           peq=peq+1
           call iexch(ls(pj),ls(peq))
         endif
-        goto10
+         goto 10
       endif
-c  opposite bound comes active
-c     r(p)=-rp
+!  opposite bound comes active
+!     r(p)=-rp
       if(pj.le.n-k)then
         ls(pj)=-ls(pj)
-        goto10
+         goto 10
       endif
-c  free variable reaches its bound
+!  free variable reaches its bound
       if(r(p).lt.0.D0)ls(pj)=-p
       k=k-1
       call iexch(ls(pj),ls(n-k))
-      goto10
+       goto 10
 
-c  recursive code for resolving degeneracy (Wolfe's method)
-   80 continue
-c  calculate multipliers
+!  recursive code for resolving degeneracy (Wolfe's method)
+80    continue
+!  calculate multipliers
       call fbsub(n,1,n,a,la,0,g,w,ls,ws(lu1),lws(ll1),.true.)
       call signst(n,r,w,ls)
-c  reset multiplier loop
-   82 continue
+!  reset multiplier loop
+82    continue
       if(iprint.ge.3)then
-         write(nout,1001)'costs vector and indices',
-     *    (ls(j),r(abs(ls(j))),j=1,n)
-c       write(nout,1000)'steepest edge coefficients',
-c    *    (e(abs(ls(j))),j=1,n)
+         write(nout,1001)'costs vector and indices', &
+          (ls(j),r(abs(ls(j))),j=1,n)
+!       write(nout,1000)'steepest edge coefficients',
+!    *    (e(abs(ls(j))),j=1,n)
         write(nout,1)'# of bound equations and free variables = ',peq,k
       endif
 
-   84 continue
-c     call check1(n,lp(1),nm,k,kmax,g,a,la,x,bl,bu,r,ls,lp,ws(nb1),f,
-c    *  ws,lws,cws,lev,p,rp)
+84    continue
+!     call check1(n,lp(1),nm,k,kmax,g,a,la,x,bl,bu,r,ls,lp,ws(nb1),f,
+!    *  ws,lws,cws,lev,p,rp)
 
-   85 continue
+85    continue
       call optest1(peq,k,n,bl,bu,r,e,ls,rp,pj)
 
       if(rp.le.gtol.or.pj.gt.n-k)then
@@ -433,13 +433,13 @@ c    *  ws,lws,cws,lev,p,rp)
         enddo
         lev=1
         f=alp(1)
-        goto22
+         goto 22
       endif
       p=abs(ls(pj))
       if(iprint.ge.2)write(nout,*)'CHOOSE p,pj =',p,pj
-c  compute +/- Steepest Edge (SE) search direction s in an(.)
-      call tfbsub(n,a,la,p,ws(na1),ws(na1),ws(lu1),lws(ll1),
-     *  e(p),.true.)
+!  compute +/- Steepest Edge (SE) search direction s in an(.)
+      call tfbsub(n,a,la,p,ws(na1),ws(na1),ws(lu1),lws(ll1), &
+        e(p),.true.)
 
         rp=scpr(0.D0,ws(na1),g,n)
         if(ls(pj).lt.0)rp=-rp
@@ -454,7 +454,7 @@ c  compute +/- Steepest Edge (SE) search direction s in an(.)
             endif
           enddo
           f=alp(1)
-          goto98
+           goto 98
         endif
 
       if(r(p).gt.0.D0)then
@@ -465,50 +465,50 @@ c  compute +/- Steepest Edge (SE) search direction s in an(.)
         plus=ls(pj).ge.0
       endif
       snorm=e(p)
-c     print 4,'s (or -s if .not.plus) =',(ws(i),i=na1,na+n)
+!     print 4,'s (or -s if .not.plus) =',(ws(i),i=na1,na+n)
 
-c  form At.s and denominators
+!  form At.s and denominators
       call form_Ats(n1,lp(lev),n,plus,a,la,ws(na1),w,ls,snorm*tol)
-c     print 2,'slope for r(169) =',aiscpr(n,a,la,169-n,ws(na1),0.D0)
-c     print 2,'slope for r(217) =',aiscpr(n,a,la,217-n,ws(na1),0.D0)
-c     print *,'plus =',plus
-   86 continue
+!     print 2,'slope for r(169) =',aiscpr(n,a,la,169-n,ws(na1),0.D0)
+!     print 2,'slope for r(217) =',aiscpr(n,a,la,217-n,ws(na1),0.D0)
+!     print *,'plus =',plus
+86    continue
       if(iprint.ge.3)then
-        write(nout,1001)'residual vector and indices',
-     *    (ls(j),r(abs(ls(j))),j=n1,lp(lev))
+        write(nout,1001)'residual vector and indices', &
+          (ls(j),r(abs(ls(j))),j=n1,lp(lev))
         write(nout,1000)'denominators',(w(abs(ls(j))),j=n1,lp(lev))
       endif
-   88 continue
-c  ratio test at higher levels
+88    continue
+!  ratio test at higher levels
       alpha=ainfty
       qj=0
       do 90 j=n1,lp(lev)
         i=abs(ls(j))
         wi=w(i)
-        if(wi.eq.0.D0)goto90
+        if(wi.eq.0.D0) goto 90
         ri=r(i)
         if(ri.eq.-eps)then
           if(bl(i).eq.bu(i).and.wi.lt.0.D0)then
             alpha=0.D0
             q=i
             qj=j
-            goto91
+             goto 91
           endif
-          goto90
+           goto 90
         elseif(ri.lt.0.D0)then
-          if(wi.gt.0.D0)goto90
+          if(wi.gt.0.D0) goto 90
           z=(ri-tol)/wi
         elseif(wi.gt.0.D0)then
           z=(ri+tol)/wi
         else
-          goto90
-c         if(bl(i).lt.bu(i))goto90
-c         z=(ri-2.D0-tol)/wi
+           goto 90
+!         if(bl(i).lt.bu(i)) goto 90
+!         z=(ri-2.D0-tol)/wi
         endif
-        if(z.ge.alpha)goto90
+        if(z.ge.alpha) goto 90
         alpha=z
         qj=j
-   90 continue
+90    continue
       if(qj.eq.0)then
         do j=n1,lp(lev)
           i=abs(ls(j))
@@ -518,37 +518,37 @@ c         z=(ri-2.D0-tol)/wi
             r(i)=0.D0
           endif
         enddo
-        call form_Ats(lp(lev)+1,lp(lev-1),n,plus,a,la,ws(na1),
-     *    w,ls,snorm*tol)
+        call form_Ats(lp(lev)+1,lp(lev-1),n,plus,a,la,ws(na1), &
+          w,ls,snorm*tol)
         lev=lev-1
         f=alp(lev)
-        if(iprint.ge.2)write(nout,*)'UNBOUNDED:   p =',p,
-     *    '   return to level',lev
-        if(lev.gt.1)goto86
+        if(iprint.ge.2)write(nout,*)'UNBOUNDED:   p =',p, &
+          '   return to level',lev
+        if(lev.gt.1) goto 86
         if(iprint.ge.3)then
-          write(nout,1001)'costs vector and indices',
-     *      (ls(j),r(abs(ls(j))),j=1,n)
+          write(nout,1001)'costs vector and indices', &
+            (ls(j),r(abs(ls(j))),j=1,n)
         write(nout,1)'# of bound equations and free variables = ',peq,k
         endif
-        goto30
+         goto 30
       endif
       q=abs(ls(qj))
       alpha=r(q)/w(q)
-c     if(alpha.lt.0.D0)then
-c       r(q)=r(q)-2.D0
-c       w(q)=-w(q)
-c       ls(qj)=-ls(qj)
-c     endif
-c     print *,'alpha =',alpha
-   91 continue
+!     if(alpha.lt.0.D0)then
+!       r(q)=r(q)-2.D0
+!       w(q)=-w(q)
+!       ls(qj)=-ls(qj)
+!     endif
+!     print *,'alpha =',alpha
+91    continue
       if(iprint.ge.2)then
         write(nout,*)'alpha =',alpha,'   p =',p,'   q =',q
         write(nout,2)'r(p),r(q),w(q) =',r(p),r(q),w(q)
       endif
 
       if(alpha.eq.0.D0)then
-        if(iprint.ge.2)write(nout,1)
-     *    'degeneracy block at level',lev
+        if(iprint.ge.2)write(nout,1) &
+          'degeneracy block at level',lev
         if(lev+2.gt.mlp)then
           ifail=5
           return
@@ -557,8 +557,8 @@ c     print *,'alpha =',alpha
           w(q)=-w(q)
           ls(qj)=-ls(qj)
         endif
-c       r(q)=0.D0
-c       alp(lev)=f
+!       r(q)=0.D0
+!       alp(lev)=f
         plev=n
         do j=n1,lp(lev)
           i=abs(ls(j))
@@ -574,56 +574,56 @@ c       alp(lev)=f
         enddo
         lev=lev+1
         lp(lev)=plev
-        if(iprint.ge.2)write(nout,*)
-     *    'degeneracy: increase level to ',lev       
-        if(iprint.ge.1)write(nout,'(''pivots ='',I5,A,''level ='',I2,
-     *    ''    f ='',E16.8)')npv,spaces(:3*lev-1),lev,f
-          goto86
+        if(iprint.ge.2)write(nout,*) &
+          'degeneracy: increase level to ',lev
+        if(iprint.ge.1)write(nout,'(''pivots ='',I5,A,''level ='',I2, &
+          ''    f ='',E16.8)')npv,spaces(:3*lev-1),lev,f
+           goto 86
       endif
-c  update r and f
+!  update r and f
       if(alpha.gt.0.D0)then
-c       ff=f
-c       f=f+alpha*rp
-c       if(f.ge.ff)then
-c         if(r(p).gt.0.D0)then
-c           r(p)=1.D0
-c         else
-c           r(p)=0.D0
-c         endif
-c         goto85
-c       endif
+!       ff=f
+!       f=f+alpha*rp
+!       if(f.ge.ff)then
+!         if(r(p).gt.0.D0)then
+!           r(p)=1.D0
+!         else
+!           r(p)=0.D0
+!         endif
+!          goto 85
+!       endif
         do 92 j=n1,lp(lev)
           i=abs(ls(j))
-          if(w(i).eq.0.D0)goto92
+          if(w(i).eq.0.D0) goto 92
           ri=r(i)-alpha*w(i)
           if(abs(ri).le.tol)ri=0.D0
           if(r(i).lt.0.D0.and.ri.ge.0.D0)then
-c  remove contribution to gradient
+!  remove contribution to gradient
             call saipy(sign(1.D0,dble(ls(j))),a,la,i-n,g,n)
             call newg
           endif
-c         if(w(i).lt.0.D0.and.bl(i).eq.bu(i))then
-c           ro=2.D0-ri
-c           if(abs(ro).le.tol)ro=0.D0
-c           if(ro.lt.ri)then
-c             ri=ro
-c             w(i)=-w(i)
-c             ls(j)=-ls(j)
-c           endif
-c         endif
+!         if(w(i).lt.0.D0.and.bl(i).eq.bu(i))then
+!           ro=2.D0-ri
+!           if(abs(ro).le.tol)ro=0.D0
+!           if(ro.lt.ri)then
+!             ri=ro
+!             w(i)=-w(i)
+!             ls(j)=-ls(j)
+!           endif
+!         endif
           r(i)=ri
-   92   continue
+92      continue
       endif
       if(iprint.ge.2)write(nout,*)'replace',p,' by',q
       call pivot(p,q,n,nm,a,la,e,ws(lu1),lws(ll1),ifail,npv)
       if(ifail.ge.1)then
         if(ifail.ge.2)return
-c       call iexch(ls(pj),ls(qj))
+!       call iexch(ls(pj),ls(qj))
         if(iprint.ge.1)write(nout,*)'near singularity in pivot (4)'
-        goto98
+         goto 98
       endif
       if(r(p).gt.0.D0)then
-c  add contribution to g from c/s p
+!  add contribution to g from c/s p
         call saipy(-sign(1.D0,dble(ls(pj))),a,la,p-n,g,n)
         call newg
         r(p)=-alpha
@@ -637,22 +637,22 @@ c  add contribution to g from c/s p
         endif
       endif
       if(abs(r(p)).le.tol)r(p)=0.D0
-c  exchange a constraint
+!  exchange a constraint
       call iexch(ls(pj),ls(qj))
       if(q.le.n.and.bl(q).eq.bu(q))then
         peq=peq+1
         call iexch(ls(pj),ls(peq))
       endif
-      if(iprint.ge.1)write(nout,'(''pivots ='',I5,A,''level ='',I2,
-     *  ''    f ='',E16.8)')npv,spaces(:3*lev-1),lev,f
-      goto80
-c  restart sequence
-   98 continue
+      if(iprint.ge.1)write(nout,'(''pivots ='',I5,A,''level ='',I2, &
+        ''    f ='',E16.8)')npv,spaces(:3*lev-1),lev,f
+       goto 80
+!  restart sequence
+98    continue
       return
- 1000 format(a/(e16.5,4e16.5))
- 1001 format(a/(i4,1x,e11.5,4(i4,1x,e11.5)))
-c1000 format(a/(e18.8,3e19.8))
-c1001 format(a/(i3,1x,e14.8,3(i4,1x,e14.8)))
+1000  format(a/(e16.5,4e16.5))
+1001  format(a/(i4,1x,e11.5,4(i4,1x,e11.5)))
+!1000 format(a/(e18.8,3e19.8))
+!1001 format(a/(i3,1x,e14.8,3(i4,1x,e14.8)))
       end
 
       subroutine optest1(peq,k,n,bl,bu,r,e,ls,rp,pj)
@@ -663,24 +663,24 @@ c1001 format(a/(i3,1x,e14.8,3(i4,1x,e14.8)))
         i=abs(ls(j))
         ri=-r(i)/e(i)
         if(i.le.n)then
-          if(ri.le.rp)goto1
+          if(ri.le.rp) goto 1
         elseif(ri.lt.0.D0)then
           ri=(r(i)-1.D0)/e(i)
-          if(ri.le.rp)goto1
+          if(ri.le.rp) goto 1
         elseif(ri.gt.rp)then
           if(bl(i).eq.bu(i))then
             ri=(-r(i)-1.D0)/e(i)
-            if(ri.le.rp)goto1
+            if(ri.le.rp) goto 1
             r(i)=-r(i)
             ls(j)=-ls(j)
           endif
         else
-          goto1
+           goto 1
         endif
         rp=ri
         pj=j
-    1 continue
-c  additional test for free variables
+1     continue
+!  additional test for free variables
       do j=n-k+1,n
         i=abs(ls(j))
         ri=abs(r(i))/e(i)
@@ -692,15 +692,15 @@ c  additional test for free variables
       return
       end
 
-      subroutine check1(n,nm,nmi,k,kmax,g,a,la,x,bl,bu,r,ls,lp,an,f,
-     *  ws,lws,cws,lev,p,alp2)
+      subroutine check1(n,nm,nmi,k,kmax,g,a,la,x,bl,bu,r,ls,lp,an,f, &
+        ws,lws,cws,lev,p,alp2)
       implicit double precision (a-h,r-z), integer (i-q)
-      dimension g(*),a(*),la(*),x(*),bl(*),bu(*),r(*),ls(*),lp(*),
-     *  an(*),ws(*),lws(*)
+      dimension g(*),a(*),la(*),x(*),bl(*),bu(*),r(*),ls(*),lp(*), &
+        an(*),ws(*),lws(*)
       character cws(*)
       common/noutc/nout
       common/epsc/eps,tol,emin
-c     print *,'ENTER check1'
+!     print *,'ENTER check1'
       e=0.D0
       if(lev.eq.1)then
         do j=n+1,nm
@@ -711,7 +711,7 @@ c     print *,'ENTER check1'
             s=aiscpr(n,a,la,i-n,x,0.D0)
           endif
           if(ls(j).gt.0)then
-c           print *,'i,s,r(i),bl(i)',i,s,r(i),bl(i)
+!           print *,'i,s,r(i),bl(i)',i,s,r(i),bl(i)
             s=r(i)-s+bl(i)
           else
             s=r(i)+s-bu(i)
@@ -730,7 +730,7 @@ c           print *,'i,s,r(i),bl(i)',i,s,r(i),bl(i)
           else
             s=aiscpr(n,a,la,i-n,x,0.D0)
           endif
-c         print 2,'s,bl(i),bu(i) =',s,bl(i),bu(i)
+!         print 2,'s,bl(i),bu(i) =',s,bl(i),bu(i)
           if(ls(j).gt.0)then
             s=-s+bl(i)
           else
@@ -744,7 +744,7 @@ c         print 2,'s,bl(i),bu(i) =',s,bl(i),bu(i)
         enddo
       endif
       if(e.gt.tol)write(nout,*)'inactive c/s residual error = ',e,ie
-c     if(e.gt.tol)stop
+!     if(e.gt.tol)stop
       if(e.gt.1.D-6)print 2,'r(ie)',r(ie)
       if(e.gt.1.D-6)stop
       if(lev.eq.1)then
@@ -754,17 +754,17 @@ c     if(e.gt.tol)stop
           if(r(i).lt.0.D0)ff=ff-r(i)
         enddo
         e=abs(ff-f)
-        if(e.gt.tol*max(1.D0,abs(f)))write(nout,*)'function error = ',e,
-     *    '   f(x) =',ff
+        if(e.gt.tol*max(1.D0,abs(f)))write(nout,*)'function error = ',e, &
+          '   f(x) =',ff
         if(e.gt.tol*max(1.D0,abs(f)))stop
-      endif  
-c       print 4,'g =',(g(i),i=1,n)
-c       print 4,'an =',(an(i),i=1,n)
-c       err=0.D0
-c       do i=1,n
-c         err=err+abs(g(i)-an(i))
-c       enddo
-c       print 2,'check err =',err
+      endif
+!       print 4,'g =',(g(i),i=1,n)
+!       print 4,'an =',(an(i),i=1,n)
+!       err=0.D0
+!       do i=1,n
+!         err=err+abs(g(i)-an(i))
+!       enddo
+!       print 2,'check err =',err
       do i=1,n
         an(i)=0.D0
       enddo
@@ -781,7 +781,7 @@ c       print 2,'check err =',err
       gnm=sqrt(scpr(0.D0,an,an,n))
       e=0.D0
       do j=1,n
-c       write(nout,*)'an =',(an(i),i=1,n)
+!       write(nout,*)'an =',(an(i),i=1,n)
         i=abs(ls(j))
         s=sign(1.D0,dble(ls(j)))
         if(i.le.n)then
@@ -807,8 +807,8 @@ c       write(nout,*)'an =',(an(i),i=1,n)
         endif
       enddo
       if(e.gt.tol)write(nout,*)'active c/s residual error = ',e,ie
-c     if(e.gt.tol)stop
-c     if(e.gt.1.D-4)print 4,'x =',(x(i),i=1,n)
+!     if(e.gt.tol)stop
+!     if(e.gt.1.D-4)print 4,'x =',(x(i),i=1,n)
       if(e.gt.1.D-4)stop
       e=0.D0
       do j=1,n
@@ -819,11 +819,11 @@ c     if(e.gt.1.D-4)print 4,'x =',(x(i),i=1,n)
         endif
       enddo
       if(e.gt.gnm*tol)write(nout,*)'KT condition error = ',e,je,ie,gnm
-c     if(e.gt.gnm*tol)write(nout,4)'KT cond_n errors = ',(an(i),i=1,n)
-c     if(e.gt.gnm*tol)stop
+!     if(e.gt.gnm*tol)write(nout,4)'KT cond_n errors = ',(an(i),i=1,n)
+!     if(e.gt.gnm*tol)stop
       if(e.gt.1.D-4)stop
-    1 format(A,10I5)
-    2 format(A,5E15.7)
-    4 format(A/(5E15.6))
+1     format(A,10I5)
+2     format(A,5E15.7)
+4     format(A/(5E15.6))
       return
       end

@@ -1,30 +1,30 @@
-christen this file    denseA.f
+!Christen this file    denseA.f
 
-c  Copyright (C) 1996 Roger Fletcher
+!  Copyright (C) 1996 Roger Fletcher
 
-c  Current version dated 21 May 1998
+!  Current version dated 21 May 1998
 
-c  ******************************************
-c  Specification of A in dense matrix format
-c  ******************************************
+!  ******************************************
+!  Specification of A in dense matrix format
+!  ******************************************
 
-c  The matrix A contains gradients of the linear terms in the objective
-c  function (column 0) and the general constraints (columns 1:m).
-c  No explicit reference to simple bound constraints is required in A.
-c  The information is set in the parameters a(*) and la.
+!  The matrix A contains gradients of the linear terms in the objective
+!  function (column 0) and the general constraints (columns 1:m).
+!  No explicit reference to simple bound constraints is required in A.
+!  The information is set in the parameters a(*) and la.
 
-c  In this dense case A is set in standard matrix format as a(la,0:m), where la
-c  is the stride between columns. la is an integer which must be greater or
-c  equal to n.
+!  In this dense case A is set in standard matrix format as a(la,0:m), where la
+!  is the stride between columns. la is an integer which must be greater or
+!  equal to n.
 
-c  In the straightforward case that la=n, columns of A follow successively
-c  in the space occupied by a(.).
+!  In the straightforward case that la=n, columns of A follow successively
+!  in the space occupied by a(.).
 
 
       subroutine saipy(s,a,la,i,y,n)
       implicit double precision (a-h,r-z), integer (i-q)
       dimension a(la,0:*),y(*)
-c  saxpy with column i of A
+!  saxpy with column i of A
       call mysaxpy(s,a(1,i),y,n)
       return
       end
@@ -32,7 +32,7 @@ c  saxpy with column i of A
       subroutine isaipy(s,a,la,i,y,n,lr,li)
       implicit double precision (a-h,r-z), integer (i-q)
       dimension a(la,0:*),y(*),lr(*),li(*)
-c  indirectly addressed saxpy with column i of A
+!  indirectly addressed saxpy with column i of A
       call isaxpy(s,a(1,i),lr,y,n)
       return
       end
@@ -40,41 +40,41 @@ c  indirectly addressed saxpy with column i of A
       subroutine isaipy1(s,a,la,i,y,n,lr,li,m1)
       implicit double precision (a-h,r-z), integer (i-q)
       dimension a(la,0:*),y(*),lr(*),li(*)
-c  indirectly addressed saxpy with column i of A_1
+!  indirectly addressed saxpy with column i of A_1
       call isaxpy(s,a(1,i),lr,y,m1)
       return
       end
 
-c     subroutine isaipy2(s,a,la,i,y,n,lr,li,m1)
-c     implicit double precision (a-h,r-z), integer (i-q)
-c     dimension a(la,0:*),y(*),lr(*),li(*)
-c  indirectly addressed saxpy with column i of A_2
-c     call isaxpy(s,a(1,i),lr(m1+1),y(m1+1),n-m1)
-c     return
-c     end
+!     subroutine isaipy2(s,a,la,i,y,n,lr,li,m1)
+!     implicit double precision (a-h,r-z), integer (i-q)
+!     dimension a(la,0:*),y(*),lr(*),li(*)
+!  indirectly addressed saxpy with column i of A_2
+!     call isaxpy(s,a(1,i),lr(m1+1),y(m1+1),n-m1)
+!     return
+!     end
 
-c     subroutine ssaipy(s,a,la,i,y,n)
-c     implicit double precision (a-h,r-z), integer (i-q)
-c     dimension a(la,0:*),y(*)
-c  ssaxpy with column i of A
-c     call ssaxpy(s,a(1,i),y,n)
-c     return
-c     end
+!     subroutine ssaipy(s,a,la,i,y,n)
+!     implicit double precision (a-h,r-z), integer (i-q)
+!     dimension a(la,0:*),y(*)
+!  ssaxpy with column i of A
+!     call ssaxpy(s,a(1,i),y,n)
+!     return
+!     end
 
-c     subroutine ssaxpy(a,x,y,n)
-c     implicit double precision (a-h,r-z), integer (i-q)
-c     dimension x(*),y(*)
-c  saxpy with squares of x
-c     do i=1,n
-c       y(i)=y(i)+a*x(i)**2
-c     enddo
-c     return
-c     end
+!     subroutine ssaxpy(a,x,y,n)
+!     implicit double precision (a-h,r-z), integer (i-q)
+!     dimension x(*),y(*)
+!  saxpy with squares of x
+!     do i=1,n
+!       y(i)=y(i)+a*x(i)**2
+!     enddo
+!     return
+!     end
 
       function aiscpr(n,a,la,i,x,b)
       implicit double precision (a-h,r-z), integer (i-q)
       dimension a(la,0:*),x(*)
-c  scalar product with column i of A
+!  scalar product with column i of A
       aiscpr=scpr(b,a(1,i),x,n)
       return
       end
@@ -90,7 +90,7 @@ c  scalar product with column i of A
       function aiscpri(n,a,la,i,x,b,lr,li)
       implicit double precision (a-h,r-z), integer (i-q)
       dimension a(la,0:*),x(*),lr(*),li(*)
-c  indirectly addressed scalar product with column i of A
+!  indirectly addressed scalar product with column i of A
       aiscpri=scpri(b,a(1,i),lr,x,n)
       return
       end
@@ -106,7 +106,7 @@ c  indirectly addressed scalar product with column i of A
       function aiscpri1(n,a,la,i,x,b,lr,li,m1)
       implicit double precision (a-h,r-z), integer (i-q)
       dimension a(la,0:*),x(*),lr(*),li(*)
-c  indirectly addressed scalar product with column i of A_1
+!  indirectly addressed scalar product with column i of A_1
       aiscpri1=scpri(b,a(1,i),lr,x,m1)
       return
       end
@@ -114,7 +114,7 @@ c  indirectly addressed scalar product with column i of A_1
       function aiscpri2(n,a,la,i,x,b,lr,li,m1)
       implicit double precision (a-h,r-z), integer (i-q)
       dimension a(la,0:*),x(*),lr(*),li(*)
-c  indirectly addressed scalar product with column i of A_2
+!  indirectly addressed scalar product with column i of A_2
       aiscpri2=scpri(b,a(1,i),lr(m1+1),x(m1+1),n-m1)
       return
       end
@@ -122,7 +122,7 @@ c  indirectly addressed scalar product with column i of A_2
       function ailen(n,a,la,i)
       implicit double precision (a-h,r-z), integer (i-q)
       dimension a(la,0:*)
-c  L2 length of column i of A
+!  L2 length of column i of A
       ailen=scpr(0.D0,a(1,i),a(1,i),n)
       ailen=sqrt(ailen)
       return
@@ -131,7 +131,7 @@ c  L2 length of column i of A
       subroutine iscatter(a,la,i,li,an,n)
       implicit double precision (a-h,r-z), integer (i-q)
       dimension a(la,0:*),li(*),an(*)
-c  indirect scatter into vector an
+!  indirect scatter into vector an
       do j=1,n
         an(li(j))=a(j,i)
       enddo
@@ -141,14 +141,14 @@ c  indirect scatter into vector an
       subroutine iunscatter(a,la,i,li,an,n)
       implicit double precision (a-h,r-z), integer (i-q)
       dimension a(la,0:*),li(*),an(*)
-c  included for compatibility with sparseA.f
+!  included for compatibility with sparseA.f
       return
       end
 
       function aij(i,j,a,la)
       implicit double precision (a-h,r-z), integer (i-q)
       dimension a(la,0:*)
-c  get element A(i,j)
+!  get element A(i,j)
       aij=a(i,j)
       return
       end
@@ -156,14 +156,14 @@ c  get element A(i,j)
       subroutine setaij(aij,i,j,a,la)
       implicit double precision (a-h,o-z)
       dimension a(la,0:*)
-c  set element A(i,j)
+!  set element A(i,j)
       aij=a(i,j)
       end
 
       subroutine isaxpy(a,x,lr,y,n)
       implicit double precision (a-h,r-z), integer (i-q)
       dimension x(*),lr(*),y(*)
-c  saxpy with x indirectly addressed
+!  saxpy with x indirectly addressed
       if(a.eq.0.D0)return
       do i=1,n
         y(i)=y(i)+a*x(lr(i))
@@ -185,7 +185,7 @@ c  saxpy with x indirectly addressed
       function scpri(a,x,lr,y,n)
       implicit double precision (a-h,r-z), integer (i-q)
       dimension x(*),lr(*),y(*)
-c  scpr with x indirectly addressed
+!  scpr with x indirectly addressed
       scpri=a
       do i=1,n
         scpri=scpri+x(lr(i))*y(i)
@@ -208,40 +208,40 @@ c  scpr with x indirectly addressed
       implicit double precision (a-h,r-z), integer (i-q)
       dimension a(la,0:*),x(*),bl(*),bu(*),s(*)
 
-c     Constraint scaling procedure for use prior to calling bqpd when using
-c     denseA.f
+!     Constraint scaling procedure for use prior to calling bqpd when using
+!     denseA.f
 
-c     The user must set the parameter menu to control how the
-c     x-variables are scaled (or equivalently how constraints i = 1:n
-c     are scaled), as follows
+!     The user must set the parameter menu to control how the
+!     x-variables are scaled (or equivalently how constraints i = 1:n
+!     are scaled), as follows
 
-c     menu = 1 indicates that a unit scaling applies to the x-variables
+!     menu = 1 indicates that a unit scaling applies to the x-variables
 
-c     menu = 2 the user provides estimates s(i)>0 of the magnitude of
-c              x(i) for i = 1:n. In this case the elements  x(i), bl(i), bu(i)
-c              are divided by s(i) for i = 1:n.
+!     menu = 2 the user provides estimates s(i)>0 of the magnitude of
+!              x(i) for i = 1:n. In this case the elements  x(i), bl(i), bu(i)
+!              are divided by s(i) for i = 1:n.
 
-c     In all cases, cscale goes on to scale the general constraints, in
-c     such a way that the normal vector of each nontrivial constraint in
-c     the scaled problem has an l_2 norm of unity. This scaling is also
-c     applied to the right hand sides  bl(i), bu(i) for i = n+1:n+m.
-c     The scaled data overwrites the original data.
+!     In all cases, cscale goes on to scale the general constraints, in
+!     such a way that the normal vector of each nontrivial constraint in
+!     the scaled problem has an l_2 norm of unity. This scaling is also
+!     applied to the right hand sides  bl(i), bu(i) for i = n+1:n+m.
+!     The scaled data overwrites the original data.
 
-c     cscale also scales the constant vector of the quadratic function,
-c     which is found in a(1:n). However if a non-unit x-variable scaling
-c     is used, it is necessary for the user to scale the Hessian matrix
-c     G appropriately. This can be done by passing the x-variable scale
-c     factors s(i) i = 1:n into the subroutine gdotx using the
-c     parameter ws, and multiplying G(i,j) by s(i)*s(j) (possibly
-c     implicitly).
+!     cscale also scales the constant vector of the quadratic function,
+!     which is found in a(1:n). However if a non-unit x-variable scaling
+!     is used, it is necessary for the user to scale the Hessian matrix
+!     G appropriately. This can be done by passing the x-variable scale
+!     factors s(i) i = 1:n into the subroutine gdotx using the
+!     parameter ws, and multiplying G(i,j) by s(i)*s(j) (possibly
+!     implicitly).
 
-c     cscale sets ifail = 1 to indicate that some s(i)< = 0,
-c             and ifail = 2 to indicate an incorrect setting of menu.
-c       Otherwise ifail = 0.
+!     cscale sets ifail = 1 to indicate that some s(i)< = 0,
+!             and ifail = 2 to indicate an incorrect setting of menu.
+!       Otherwise ifail = 0.
 
       ifail=2
       if(menu.lt.1.or.menu.gt.2)return
-c     z=1.D0/log(2.D0)
+!     z=1.D0/log(2.D0)
       if(menu.eq.1)then
         do j=1,n
           s(j)=1.D0
@@ -251,11 +251,11 @@ c     z=1.D0/log(2.D0)
         do j=1,n
           if(s(j).le.0.D0)return
         enddo
-c       if(menu.eq.2)then
-c         do j=1,n
-c           s(j)=2.D0**nint(log(s(j))*z)
-c         enddo
-c       endif
+!       if(menu.eq.2)then
+!         do j=1,n
+!           s(j)=2.D0**nint(log(s(j))*z)
+!         enddo
+!       endif
         do j=1,n
           if(s(j).ne.1.D0)then
             x(j)=x(j)/s(j)
@@ -275,10 +275,10 @@ c       endif
         if(t.eq.0.D0)then
           s(n+i)=1.D0
         else
-c         t=2.D0**nint(log(t)*z)
+!         t=2.D0**nint(log(t)*z)
           s(n+i)=t
           do j=1,n
-            a(j,i)=a(j,i)/t 
+            a(j,i)=a(j,i)/t
           enddo
           bl(n+i)=bl(n+i)/t
           bu(n+i)=bu(n+i)/t

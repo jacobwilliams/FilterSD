@@ -1,62 +1,62 @@
-christen this file denseL.f
+!Christen this file denseL.f
 
-c  Copyright (C) 1996 Roger Fletcher
+!  Copyright (C) 1996 Roger Fletcher
 
-c  Current version dated 4 October 2011
+!  Current version dated 4 October 2011
 
-c  THE ACCOMPANYING PROGRAM IS PROVIDED UNDER THE TERMS OF THE ECLIPSE PUBLIC
-c  LICENSE ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THE PROGRAM
-c  CONSTITUTES RECIPIENT'S ACCEPTANCE OF THIS AGREEMENT
+!  THE ACCOMPANYING PROGRAM IS PROVIDED UNDER THE TERMS OF THE ECLIPSE PUBLIC
+!  LICENSE ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THE PROGRAM
+!  CONSTITUTES RECIPIENT'S ACCEPTANCE OF THIS AGREEMENT
 
-c***************** dense matrix routines for manipulating L ********************
+!***************** dense matrix routines for manipulating L ********************
 
-c  ***************************************************************
-c  Basis matrix routines for bqpd with dense matrices (block form)
-c  ***************************************************************
+!  ***************************************************************
+!  Basis matrix routines for bqpd with dense matrices (block form)
+!  ***************************************************************
 
-c  These routines form and update L-Implicit-U factors LPB=U of a matrix B
-c  whose columns are the normal vectors of the active constraints. In this
-c  method only the unit lower triangular matrix L and the diagonal of U (in
-c  addition to the row permutation P) is stored. B is represented in block form
+!  These routines form and update L-Implicit-U factors LPB=U of a matrix B
+!  whose columns are the normal vectors of the active constraints. In this
+!  method only the unit lower triangular matrix L and the diagonal of U (in
+!  addition to the row permutation P) is stored. B is represented in block form
 
-c    | A_1  0 |    where the first m1 columns (A_1 and A_2) come from the
-c    | A_2  I |    general constraint normals (columns of the matrix A in bqpd)
+!    | A_1  0 |    where the first m1 columns (A_1 and A_2) come from the
+!    | A_2  I |    general constraint normals (columns of the matrix A in bqpd)
 
-c  and the remaining unit columns come from simple bounds. The matrix A may be
-c  specified in either dense or sparse format and the user is referred to the
-c  files  denseA.f  or  sparseA.f. About m1*m1/2 locations are required to store
-c  L-Implicit-U factors of B. The user MUST supply an upper bound on m1 by
-c  setting mxm1 in the labelled common block
+!  and the remaining unit columns come from simple bounds. The matrix A may be
+!  specified in either dense or sparse format and the user is referred to the
+!  files  denseA.f  or  sparseA.f. About m1*m1/2 locations are required to store
+!  L-Implicit-U factors of B. The user MUST supply an upper bound on m1 by
+!  setting mxm1 in the labelled common block
 
-c     common/mxm1c/mxm1
+!     common/mxm1c/mxm1
 
-c  Setting  mxm1=min(m+1,n)  is always sufficient.
+!  Setting  mxm1=min(m+1,n)  is always sufficient.
 
-c  Workspace
-c  *********
-c  denseL.f requires
-c     mxm1*(mxm1+1)/2+3*n+mxm1   locations of real workspace, and
-c     n+mxm1+n+m                 locations of integer workspace
-c  These are stored at the end of the workspace arrays ws and lws in bqpd.
-c  The user MUST set the lengths of these arrays in mxws and mxlws in
-c     common/wsc/kk,ll,kkk,lll,mxws,mxlws
-c  along with the values kk and ll of space to be used by gdotx.
+!  Workspace
+!  *********
+!  denseL.f requires
+!     mxm1*(mxm1+1)/2+3*n+mxm1   locations of real workspace, and
+!     n+mxm1+n+m                 locations of integer workspace
+!  These are stored at the end of the workspace arrays ws and lws in bqpd.
+!  The user MUST set the lengths of these arrays in mxws and mxlws in
+!     common/wsc/kk,ll,kkk,lll,mxws,mxlws
+!  along with the values kk and ll of space to be used by gdotx.
 
-c  Other information
-c  *****************
+!  Other information
+!  *****************
 
-c  L-Implicit-U factors are updated by a variant of the Fletcher-Matthews
-c  method, which has proved very reliable in practice. The method is described
-c  in the reference
-c    Fletcher R., Dense Factors of Sparse Matrices, in "Approximation Theory
-c    and Optimization. Tributes to M.J.D. Powell", (M.D. Buhmann and A. Iserles,
-c    eds), Cambridge University Press (1997), pp. 145-166.
+!  L-Implicit-U factors are updated by a variant of the Fletcher-Matthews
+!  method, which has proved very reliable in practice. The method is described
+!  in the reference
+!    Fletcher R., Dense Factors of Sparse Matrices, in "Approximation Theory
+!    and Optimization. Tributes to M.J.D. Powell", (M.D. Buhmann and A. Iserles,
+!    eds), Cambridge University Press (1997), pp. 145-166.
 
-c  Steepest edge coefficients e(i) are also updated in these routines
+!  Steepest edge coefficients e(i) are also updated in these routines
 
-c  The file contains routines for solving systems with B or its transpose
-c  which might be of use in association with bqpd. These routines are
-c  documented below.
+!  The file contains routines for solving systems with B or its transpose
+!  which might be of use in association with bqpd. These routines are
+!  documented below.
 
       subroutine start_up(n,nm,nmi,a,la,nk,e,ls,aa,ll,mode,ifail)
       implicit double precision (a-h,r-z), integer (i-q)
@@ -85,7 +85,7 @@ c  documented below.
       nup=0
       small=max(1.D1*tol,sqrt(eps))
       smallish=max(eps/tol,1.D1*small)
-c  set storage map for dense factors
+!  set storage map for dense factors
       ns=mxm1*(mxm1+1)/2
       ns1=ns+1
       nt=ns+n
@@ -97,17 +97,17 @@ c  set storage map for dense factors
       lc1=lc+1
       li=lc+mxm1
       li1=li+1
-c     write(nout,*)'ls',(ls(ij),ij=1,nk)
-c     write(nout,*)'ls',(ls(ij),ij=nm+1,nmi)
+!     write(nout,*)'ls',(ls(ij),ij=1,nk)
+!     write(nout,*)'ls',(ls(ij),ij=nm+1,nmi)
       if(mode.ge.3)then
         call re_factor(n,nm,a,la,aa,aa(ns1),aa(nt1),ll,ll(lc1),ll(li1))
         call check_L(n,aa,ifail)
         if(ifail.eq.1)then
           mode=2
-          goto1
+           goto 1
         endif
         if(nk.eq.n)return
-c  reset ls from e
+!  reset ls from e
         do j=1,nk
           i=-ls(j)
           if(i.gt.0)e(i)=-e(i)
@@ -135,9 +135,9 @@ c  reset ls from e
         ifail=0
         return
       endif
-    1 continue
+1     continue
       if(emin.eq.0.D0)then
-c  set a lower bound on e(i)
+!  set a lower bound on e(i)
         emin=1.D0
         do i=1,nmi-n
           emin=max(emin,ailen(n,a,la,i))
@@ -152,13 +152,13 @@ c  set a lower bound on e(i)
         e(i)=0.D0
         ll(li+i)=0
       enddo
-c  shift designated bounds to end
+!  shift designated bounds to end
       nn=n
       do j=nk,1,-1
         i=abs(ls(j))
         if(i.eq.0.or.i.gt.nmi)then
-          write(nout,*)
-     *      'ls(j) is zero, or greater in modulus than n+m, for j =',j
+          write(nout,*) &
+            'ls(j) is zero, or greater in modulus than n+m, for j =',j
           ifail=4
           return
         endif
@@ -177,21 +177,21 @@ c  shift designated bounds to end
       m1=0
       mm=mm0
       j=1
-    2 continue
-        if(j.gt.nk)goto3
+2     continue
+        if(j.gt.nk) goto 3
         q=abs(ls(j))
-c  extend factors
+!  extend factors
         call aqsol(n,a,la,q,aa,aa(nt1),aa(mx1),aa,ll,ll(lc1),ll(li1))
         m1p=m1+1
         call linf(nn-m1,aa(nt+m1p),z,iz)
         iz=iz+m1
         if(z.le.tol)then
-c         write(nout,*)'reject c/s',q
+!         write(nout,*)'reject c/s',q
           nk=nk-1
           do ij=j,nk
             ls(ij)=ls(ij+1)
           enddo
-          goto2
+           goto 2
         endif
         if(m1p.gt.mxm1)then
           write(nout,*)'mxm1 =',mxm1,'  is insufficient'
@@ -199,7 +199,7 @@ c         write(nout,*)'reject c/s',q
           return
         endif
         if(iz.gt.m1p)then
-c  pivot interchange
+!  pivot interchange
           ll(li+ll(m1p))=iz
           call iexch(ll(m1p),ll(iz))
           call rexch(aa(nt+m1p),aa(nt+iz))
@@ -209,9 +209,9 @@ c  pivot interchange
         tp=aa(nt+m1p)
         call eptsol(n,a,la,p,a,aa,aa(ns1),aa(nt1),ll,ll(lc1),ll(li1))
         aa(ns+m1p)=1.D0
-c  update steepest edge coefficients
+!  update steepest edge coefficients
         ep=e(p)
-c       eq=ep/tp
+!       eq=ep/tp
         eq=abs(ep/tp)
         tp_=tp/ep
         tpsq=tp_**2
@@ -227,14 +227,14 @@ c       eq=ep/tp
           if(e(i).gt.0.D0)then
             ij=ll(li+i)
             ei=e(i)
-c           ti=aa(nt+ij)*eq/ei
-c           e(i)=max(emin,ei*sqrt(max(1.D0-ti*(2.D0*aa(nu+ij)/ei-ti),0.D0)))
+!           ti=aa(nt+ij)*eq/ei
+!           e(i)=max(emin,ei*sqrt(max(1.D0-ti*(2.D0*aa(nu+ij)/ei-ti),0.D0)))
             ti=aa(nt+j)/ei
-            e(i)=max(emin,
-     *        ei*sqrt(max(tpsq-ti*(2.D0*tp*aa(nu+j)/ei-ti),0.D0))*eq)
+            e(i)=max(emin, &
+              ei*sqrt(max(tpsq-ti*(2.D0*tp*aa(nu+j)/ei-ti),0.D0))*eq)
           endif
         enddo
-c       e(q)=max(emin,abs(eq))
+!       e(q)=max(emin,abs(eq))
         e(q)=max(emin,eq)
         m1=m1p
         mm=mm+m0
@@ -246,9 +246,9 @@ c       e(q)=max(emin,abs(eq))
         mm=mm+m1
         aa(mm)=tp
         j=j+1
-        goto2
-    3 continue
-c  complete the vector ls
+         goto 2
+3     continue
+!  complete the vector ls
       do i=nn+1,n
         nk=nk+1
         ls(nk)=ll(i)
@@ -282,19 +282,19 @@ c  complete the vector ls
           e(i)=0.D0
         enddo
       endif
-c     write(nout,*)'e =',(e(ij),ij=1,nmi)
-c     write(nout,*)'PAQ factors'
-c     ij=mm0+m0
-c     do ii=1,m1
-c       write(nout,*)(aa(ij+j),j=1,ii)
-c       ij=ij+m0+ii
-c     enddo
-c     write(nout,*)'m0,mm0,m1,mm',m0,mm0,m1,mm
-c     write(nout,*)'ls',(ls(ij),ij=1,nmi)
-c     write(nout,*)'row perm',(ll(ij),ij=1,n)
-c     write(nout,*)'column perm',(ll(lc+ij),ij=1,m1)
-c     write(nout,*)'inverse perm',(ll(li+ij),ij=1,nmi)
-c     call checkout(n,a,la,aa,ll,ll(lc1),ll(li1))
+!     write(nout,*)'e =',(e(ij),ij=1,nmi)
+!     write(nout,*)'PAQ factors'
+!     ij=mm0+m0
+!     do ii=1,m1
+!       write(nout,*)(aa(ij+j),j=1,ii)
+!       ij=ij+m0+ii
+!     enddo
+!     write(nout,*)'m0,mm0,m1,mm',m0,mm0,m1,mm
+!     write(nout,*)'ls',(ls(ij),ij=1,nmi)
+!     write(nout,*)'row perm',(ll(ij),ij=1,n)
+!     write(nout,*)'column perm',(ll(lc+ij),ij=1,m1)
+!     write(nout,*)'inverse perm',(ll(li+ij),ij=1,nmi)
+!     call checkout(n,a,la,aa,ll,ll(lc1),ll(li1))
       mp=-1
       mq=-1
       ifail=0
@@ -306,7 +306,7 @@ c     call checkout(n,a,la,aa,ll,ll(lc1),ll(li1))
       dimension a(*),la(*),aa(*),ll(*)
       common/densec/ns,ns1,nt,nt1,nu,nu1,mx1,lc,lc1,li,li1
       common/factorc/m0,m1,mm0,mm,mp,mq
-c     write(nout,*)'refactor'
+!     write(nout,*)'refactor'
       call re_factor(n,nm,a,la,aa,aa(ns1),aa(nt1),ll,ll(lc1),ll(li1))
       call check_L(n,aa,ifail)
       return
@@ -322,7 +322,7 @@ c     write(nout,*)'refactor'
       common/mxm1c/mxm1
       common/refactorc/nup,nfreq
       common/epsc/eps,tol,emin
-c     write(nout,*)'pivot: p,q =',p,q
+!     write(nout,*)'pivot: p,q =',p,q
       ifail=0
       if(p.ne.mp)then
         call eptsol(n,a,la,p,a,aa,aa(ns1),aa(nt1),ll,ll(lc1),ll(li1))
@@ -333,11 +333,11 @@ c     write(nout,*)'pivot: p,q =',p,q
         call aqsol(n,a,la,q,a,aa(nt1),aa(mx1),aa,ll,ll(lc1),ll(li1))
         mq=q
       endif
-c  update steepest edge coefficients
+!  update steepest edge coefficients
       tp=aa(nt+ll(li+p))
       if(tp.eq.0.D0)tp=eps
       ep=e(p)
-c     eq=ep/tp
+!     eq=ep/tp
       eq=abs(ep/tp)
       tp=tp/ep
       tpsq=tp**2
@@ -348,28 +348,28 @@ c     eq=ep/tp
         aa(nu+i)=0.D0
       enddo
       call aqsol(n,a,la,-1,a,aa(nu1),aa(mx1),aa,ll,ll(lc1),ll(li1))
-c     write(nout,*)'row perm',(ll(ij),ij=1,n)
-c     write(nout,*)'column perm',(ll(lc+ij),ij=1,m1)
-c     write(nout,*)'s =',(aa(ns+ij),ij=1,n)
-c     write(nout,*)'t =',(aa(nt+ij),ij=1,n)
-c     write(nout,*)'u =',(aa(nu+ij),ij=1,n)
+!     write(nout,*)'row perm',(ll(ij),ij=1,n)
+!     write(nout,*)'column perm',(ll(lc+ij),ij=1,m1)
+!     write(nout,*)'s =',(aa(ns+ij),ij=1,n)
+!     write(nout,*)'t =',(aa(nt+ij),ij=1,n)
+!     write(nout,*)'u =',(aa(nu+ij),ij=1,n)
       e(p)=0.D0
       do i=1,nm
         if(e(i).gt.0.D0)then
           j=ll(li+i)
           ei=e(i)
-c         ti=aa(nt+j)*eq/ei
-c         e(i)=max(emin,ei*sqrt(max(1.D0-ti*(2.D0*aa(nu+j)/ei-ti),0.D0)))
+!         ti=aa(nt+j)*eq/ei
+!         e(i)=max(emin,ei*sqrt(max(1.D0-ti*(2.D0*aa(nu+j)/ei-ti),0.D0)))
           ti=aa(nt+j)/ei
-          e(i)=max(emin,
-     *      ei*sqrt(max(tpsq-ti*(2.D0*tp*aa(nu+j)/ei-ti),0.D0))*eq)
+          e(i)=max(emin, &
+            ei*sqrt(max(tpsq-ti*(2.D0*tp*aa(nu+j)/ei-ti),0.D0))*eq)
         endif
       enddo
-c     e(q)=max(emin,abs(eq))
+!     e(q)=max(emin,abs(eq))
       e(q)=max(emin,eq)
       info(1)=info(1)+1
       if(nup.ge.nfreq)then
-c  refactorize L
+!  refactorize L
         ip=ll(li+p)
         if(p.gt.n)then
           qq=ll(lc+m1)
@@ -402,7 +402,7 @@ c  refactorize L
         endif
         call re_factor(n,nm,a,la,aa,aa(ns1),aa(nt1),ll,ll(lc1),ll(li1))
       else
-c  update L
+!  update L
         nup=nup+1
         if(p.le.n)then
           if(m1.eq.mxm1)then
@@ -412,7 +412,7 @@ c  update L
           call linf(m1,aa(ns1),z,iz)
           if(z.le.4.D0)then
             if(m0+m1.eq.mxm1)then
-c             write(nout,*)'m0 + m1 = mxm1:  re-centre triangle'
+!             write(nout,*)'m0 + m1 = mxm1:  re-centre triangle'
               ii=mm0
               mo=m0
               m0=m0/2
@@ -429,11 +429,11 @@ c             write(nout,*)'m0 + m1 = mxm1:  re-centre triangle'
             do i=1,m1
               aa(mm+m0+i)=aa(ns+i)
             enddo
-            goto1
+             goto 1
           endif
         endif
         call c_flma(n,a,la,p,aa,ll,ll(lc1),ll(li1))
-    1   continue
+1       continue
         if(q.le.n)then
           call r_flma(n,a,la,q,aa,ll,ll(lc1),ll(li1))
         else
@@ -449,28 +449,28 @@ c             write(nout,*)'m0 + m1 = mxm1:  re-centre triangle'
         mq=-1
       endif
       call check_L(n,aa,ifail)
-c     write(nout,*)'PAQ factors'
-c     ij=m0+mm0
-c     do ii=1,m1
-c       write(nout,*)(aa(ij+j),j=1,ii)
-c       ij=ij+m0+ii
-c     enddo
-c     write(nout,*)'m0,mm0,m1,mm',m0,mm0,m1,mm
-c     write(nout,*)'row perm',(ll(ij),ij=1,n)
-c     write(nout,*)'column perm',(ll(lc+ij),ij=1,m1)
-c     write(nout,*)'inverse perm',(ll(li+ij),ij=1,nm)
-c     call checkout(n,a,la,aa,ll,ll(lc1),ll(li1))
-c     write(nout,*)'steepest edge coefficients',(e(ij),ij=1,nm)
-c     emax=0.D0
-c     do i=1,nm
-c       if(e(i).gt.0.D0)then
-c         call eptsol(n,a,la,i,a,aa,aa(ns1),aa(nt1),ll,ll(lc1),ll(li1))
-c         ei=sqrt(scpr(0.D0,aa(ns1),aa(ns1),n))
-c         emax=max(emax,abs(ei-e(i)))
-c       endif
-c     enddo
-c     if(emax.ge.tol)
-c    *  write(nout,*)'error in steepest edge coefficients =',emax
+!     write(nout,*)'PAQ factors'
+!     ij=m0+mm0
+!     do ii=1,m1
+!       write(nout,*)(aa(ij+j),j=1,ii)
+!       ij=ij+m0+ii
+!     enddo
+!     write(nout,*)'m0,mm0,m1,mm',m0,mm0,m1,mm
+!     write(nout,*)'row perm',(ll(ij),ij=1,n)
+!     write(nout,*)'column perm',(ll(lc+ij),ij=1,m1)
+!     write(nout,*)'inverse perm',(ll(li+ij),ij=1,nm)
+!     call checkout(n,a,la,aa,ll,ll(lc1),ll(li1))
+!     write(nout,*)'steepest edge coefficients',(e(ij),ij=1,nm)
+!     emax=0.D0
+!     do i=1,nm
+!       if(e(i).gt.0.D0)then
+!         call eptsol(n,a,la,i,a,aa,aa(ns1),aa(nt1),ll,ll(lc1),ll(li1))
+!         ei=sqrt(scpr(0.D0,aa(ns1),aa(ns1),n))
+!         emax=max(emax,abs(ei-e(i)))
+!       endif
+!     enddo
+!     if(emax.ge.tol)
+!    *  write(nout,*)'error in steepest edge coefficients =',emax
       return
       end
 
@@ -479,37 +479,37 @@ c    *  write(nout,*)'error in steepest edge coefficients =',emax
       logical save
       dimension a(*),la(*),b(*),x(*),ls(*),aa(*),ll(*)
 
-c  solves a system  B.x=b
+!  solves a system  B.x=b
 
-c  Parameter list
-c  **************
-c   n   number of variables (as for bqpd)
-c   a,la   specification of QP problem data (as for bqpd)
-c   jmin,jmax  (see description of ls below)
-c   q   an integer which, if in the range 1:n+m, specifies that the rhs vector
-c       b is to be column q of the matrix A of general constraint normals.
-c       In this case the parameter b is not referenced by fbsub.
-c       If q=0 then b is taken as the vector given in the parameter b.
-c   b(n)  must be set to the r.h.s. vector b (but only if q=0)
-c   x(n+m)  contains the required part of the solution x, set according to the
-c       index number of that component (in the range 1:n for a simple bound and
-c       n+1:n+m for a general constraint)
-c   ls(*)  an index vector, listing the components of x that are required.
-c       Only the absolute value of the elements of ls are used (this allows
-c       the possibility of using of the contents of the ls parameter of bqpd).
-c       Elements of x in the range abs(ls(j)), j=jmin:jmax are set by fbsub.
-c       These contortions allow bqpd to be independent of the basis matrix code.
-c   aa(*)  real storage used by the basis matrix code (supply the vector
-c       ws(lu1) with ws as in the call of bqpd and lu1 as in common/bqpdc/...)
-c   ll(*)  integer storage used by the basis matrix code (supply the vector
-c       lws(ll1) with lws as in the call of bqpd and ll1 as in common/bqpdc/...)
-c   save   indicates if fbsub is to save its copy of the solution for possible
-c       future use. We suggest that the user only sets save = .false.
+!  Parameter list
+!  **************
+!   n   number of variables (as for bqpd)
+!   a,la   specification of QP problem data (as for bqpd)
+!   jmin,jmax  (see description of ls below)
+!   q   an integer which, if in the range 1:n+m, specifies that the rhs vector
+!       b is to be column q of the matrix A of general constraint normals.
+!       In this case the parameter b is not referenced by fbsub.
+!       If q=0 then b is taken as the vector given in the parameter b.
+!   b(n)  must be set to the r.h.s. vector b (but only if q=0)
+!   x(n+m)  contains the required part of the solution x, set according to the
+!       index number of that component (in the range 1:n for a simple bound and
+!       n+1:n+m for a general constraint)
+!   ls(*)  an index vector, listing the components of x that are required.
+!       Only the absolute value of the elements of ls are used (this allows
+!       the possibility of using of the contents of the ls parameter of bqpd).
+!       Elements of x in the range abs(ls(j)), j=jmin:jmax are set by fbsub.
+!       These contortions allow bqpd to be independent of the basis matrix code.
+!   aa(*)  real storage used by the basis matrix code (supply the vector
+!       ws(lu1) with ws as in the call of bqpd and lu1 as in common/bqpdc/...)
+!   ll(*)  integer storage used by the basis matrix code (supply the vector
+!       lws(ll1) with lws as in the call of bqpd and ll1 as in common/bqpdc/...)
+!   save   indicates if fbsub is to save its copy of the solution for possible
+!       future use. We suggest that the user only sets save = .false.
 
       common/noutc/nout
       common/densec/ns,ns1,nt,nt1,nu,nu1,mx1,lc,lc1,li,li1
       common/factorc/m0,m1,mm0,mm,mp,mq
-c     write(nout,*)'fbsub  q =',q
+!     write(nout,*)'fbsub  q =',q
       if(save)then
         if(q.ne.mq)then
           call aqsol(n,a,la,q,b,aa(nt1),aa(mx1),aa,ll,ll(lc1),ll(li1))
@@ -534,31 +534,31 @@ c     write(nout,*)'fbsub  q =',q
       logical save
       dimension a(*),la(*),b(*),x(*),aa(*),ll(*)
 
-c  solves a system  Bt.x=b
+!  solves a system  Bt.x=b
 
-c  Parameter list
-c  **************
-c   n   number of variables (as for bqpd)
-c   a,la   specification of QP problem data (as for bqpd)
-c   p    an integer which, if in the range 1:n+m, specifies that the rhs vector
-c        b is a unit vector appropriate to the position of p in the current
-c        ordering. In this case b is not referenced by tfbsub.
-c   b(n+m)  If p=0, this must be set to the r.h.s. vector b. Only the components
-c        of b need be set, according to the index number of each component (in
-c        the range 1:n for a simple bound and n+1:n+m for a general constraint)
-c   x(n)  contains the solution x (in natural ordering)
-c   aa(*)  real storage used by the basis matrix code (supply the vector
-c       ws(lu1) with ws as in the call of bqpd and lu1 as in common/bqpdc/...)
-c   ll(*)  integer storage used by the basis matrix code (supply the vector
-c       lws(ll1) with lws as in the call of bqpd and ll1 as in common/bqpdc/...)
-c   ep  if p.ne.0 and save is true, ep contains the l_2 length of x on exit
-c   save  indicates if tfbsub is to save its copy of the solution for possible
-c       future use. We suggest that the user only sets save = .false.
+!  Parameter list
+!  **************
+!   n   number of variables (as for bqpd)
+!   a,la   specification of QP problem data (as for bqpd)
+!   p    an integer which, if in the range 1:n+m, specifies that the rhs vector
+!        b is a unit vector appropriate to the position of p in the current
+!        ordering. In this case b is not referenced by tfbsub.
+!   b(n+m)  If p=0, this must be set to the r.h.s. vector b. Only the components
+!        of b need be set, according to the index number of each component (in
+!        the range 1:n for a simple bound and n+1:n+m for a general constraint)
+!   x(n)  contains the solution x (in natural ordering)
+!   aa(*)  real storage used by the basis matrix code (supply the vector
+!       ws(lu1) with ws as in the call of bqpd and lu1 as in common/bqpdc/...)
+!   ll(*)  integer storage used by the basis matrix code (supply the vector
+!       lws(ll1) with lws as in the call of bqpd and ll1 as in common/bqpdc/...)
+!   ep  if p.ne.0 and save is true, ep contains the l_2 length of x on exit
+!   save  indicates if tfbsub is to save its copy of the solution for possible
+!       future use. We suggest that the user only sets save = .false.
 
       common/noutc/nout
       common/densec/ns,ns1,nt,nt1,nu,nu1,mx1,lc,lc1,li,li1
       common/factorc/m0,m1,mm0,mm,mp,mq
-c     write(nout,*)'tfbsub  p =',p
+!     write(nout,*)'tfbsub  p =',p
       if(save)then
         if(p.ne.mp)then
           call eptsol(n,a,la,p,b,aa,aa(ns1),aa(nt1),ll,ll(lc1),ll(li1))
@@ -574,7 +574,7 @@ c     write(nout,*)'tfbsub  p =',p
           x(ll(i))=aa(nu+i)
         enddo
       endif
-c     write(nout,*)'x =',(x(i),i=1,n)
+!     write(nout,*)'x =',(x(i),i=1,n)
       return
       end
 
@@ -584,7 +584,7 @@ c     write(nout,*)'x =',(x(i),i=1,n)
       return
       end
 
-c******** The following routines are internal to denseL.f **************
+!******** The following routines are internal to denseL.f **************
 
       subroutine re_factor(n,nm,a,la,T,sn,tn,lr,lc,li)
       implicit double precision (a-h,r-z), integer (i-q)
@@ -595,13 +595,13 @@ c******** The following routines are internal to denseL.f **************
       common/factorc/m0,m1,mm0,mm,mp,mq
       common/mxm1c/mxm1
       common/epsc/eps,tol,emin
-c     write(nout,*)'re_factor'
+!     write(nout,*)'re_factor'
       nup=0
       if(m1.eq.0)return
       m0=(mxm1-m1)/2
       mm0=m0*(m0+1)/2
-c     write(nout,*)'row perm',(lr(ij),ij=1,n)
-c     write(nout,*)'column perm',(lc(ij),ij=1,m1)
+!     write(nout,*)'row perm',(lr(ij),ij=1,n)
+!     write(nout,*)'column perm',(lc(ij),ij=1,m1)
       do i=1,m1
         sn(i)=0.D0
       enddo
@@ -611,10 +611,10 @@ c     write(nout,*)'column perm',(lc(ij),ij=1,m1)
         im=i-1
         i1=mm-im
         q=lc(i)-n
-        if(q.le.0)goto1
-c  form L.a_q
+        if(q.le.0) goto 1
+!  form L.a_q
         call iscatter(a,la,q,li,sn,n)
-c       write(nout,*)'aq =',(sn(ij),ij=1,m1)
+!       write(nout,*)'aq =',(sn(ij),ij=1,m1)
         jj=mm
         j1=i1
         do j=i,m1
@@ -623,10 +623,10 @@ c       write(nout,*)'aq =',(sn(ij),ij=1,m1)
           jj=j1+j
         enddo
         call iunscatter(a,la,q,li,sn,n)
-c       write(nout,*)'L.aq =',(tn(ij),ij=i,m1)
+!       write(nout,*)'L.aq =',(tn(ij),ij=i,m1)
         call linf(m1-im,tn(i),z,iz)
         if(iz.gt.1)then
-c  pivot interchange
+!  pivot interchange
           iz=iz-1
           call vexch(T(i1),T(i1+iz*(m0+i)+iz*(iz-1)/2),im)
           iz=iz+i
@@ -636,39 +636,39 @@ c  pivot interchange
           li(lr(i))=i
         endif
         if(tn(i).eq.0.D0)tn(i)=eps
-c  update L
+!  update L
         j1=i1+m0+i
         zz=-tn(i)
         do j=i+1,m1
           z=tn(j)/zz
           call mysaxpy(z,T(i1),T(j1),i-1)
           T(j1+im)=z
-c         write(nout,*)'L(j) =',(T(ij),ij=j1,j1+im)
+!         write(nout,*)'L(j) =',(T(ij),ij=j1,j1+im)
           j1=j1+m0+j
         enddo
         T(mm)=-zz
       enddo
       mm=mm+m0+m1
       q=lc(i)-n
-      if(q.le.0)goto1
+      if(q.le.0) goto 1
       call iscatter(a,la,q,li,sn,n)
       T(mm)=scpr(sn(m1),T(mm-m1+1),sn,m1-1)
       if(T(mm).eq.0.D0)T(mm)=eps
-c     write(nout,*)'PAQ factors'
-c     ij=mm0+m0
-c     do ii=1,m1
-c       write(nout,*)(T(ij+j),j=1,ii)
-c       ij=ij+m0+ii
-c     enddo
-c     write(nout,*)'m0,mm0,m1,mm',m0,mm0,m1,mm
-c     write(nout,*)'row perm',(lr(ij),ij=1,n)
-c     write(nout,*)'column perm',(lc(ij),ij=1,m1)
-c     write(nout,*)'inverse perm',(li(ij),ij=1,nm)
-c     call checkout(n,a,la,T,lr,lc1,li)
+!     write(nout,*)'PAQ factors'
+!     ij=mm0+m0
+!     do ii=1,m1
+!       write(nout,*)(T(ij+j),j=1,ii)
+!       ij=ij+m0+ii
+!     enddo
+!     write(nout,*)'m0,mm0,m1,mm',m0,mm0,m1,mm
+!     write(nout,*)'row perm',(lr(ij),ij=1,n)
+!     write(nout,*)'column perm',(lc(ij),ij=1,m1)
+!     write(nout,*)'inverse perm',(li(ij),ij=1,nm)
+!     call checkout(n,a,la,T,lr,lc1,li)
       mp=-1
       mq=-1
       return
-    1 continue
+1     continue
       write(nout,*)'malfunction in re_factor:  i,lc(i) =',i,q+n
       stop
       end
@@ -679,16 +679,16 @@ c     call checkout(n,a,la,T,lr,lc1,li)
       common/noutc/nout
       common/factorc/m0,m1,mm0,mm,mp,mq
       common/epsc/eps,tol,emin
-c     write(nout,*)'check_L'
+!     write(nout,*)'check_L'
       ifail=1
       kk=mm0
-c     dmin=1.D37
+!     dmin=1.D37
       do k=1,m1
         kk=kk+m0+k
-c       dmin=min(dmin,abs(T(kk)))
+!       dmin=min(dmin,abs(T(kk)))
         if(abs(T(kk)).le.tol)return
       enddo
-c     write(nout,*)'dmin =',dmin
+!     write(nout,*)'dmin =',dmin
       ifail=0
       return
       end
@@ -698,7 +698,7 @@ c     write(nout,*)'dmin =',dmin
       dimension a(*),la(*),b(*),tn(*),xm(*),T(*),lr(*),lc(*),li(*)
       common/noutc/nout
       common/factorc/m0,m1,mm0,mm,mp,mq
-c     write(nout,*)'aqsol  q =',q
+!     write(nout,*)'aqsol  q =',q
       if(q.gt.0)then
         do i=1,n
           tn(i)=0.D0
@@ -706,7 +706,7 @@ c     write(nout,*)'aqsol  q =',q
         if(q.le.n)then
           tn(li(q))=1.D0
         else
-c         call isaipy(1.D0,a,la,q-n,tn,n,lr,li)
+!         call isaipy(1.D0,a,la,q-n,tn,n,lr,li)
           call iscatter(a,la,q-n,li,tn,n)
         endif
       elseif(q.eq.0)then
@@ -714,7 +714,7 @@ c         call isaipy(1.D0,a,la,q-n,tn,n,lr,li)
           tn(li(i))=b(i)
         enddo
       endif
-c     write(nout,*)'tn =',(tn(i),i=1,n)
+!     write(nout,*)'tn =',(tn(i),i=1,n)
       ii=mm
       do i=m1,1,-1
         xm(i)=(scpr(tn(i),T(ii-i+1),tn,i-1))/T(ii)
@@ -724,7 +724,7 @@ c     write(nout,*)'tn =',(tn(i),i=1,n)
       do i=1,m1
         tn(i)=xm(i)
       enddo
-c     write(nout,*)'tn =',(tn(i),i=1,n)
+!     write(nout,*)'tn =',(tn(i),i=1,n)
       return
       end
 
@@ -735,17 +735,17 @@ c     write(nout,*)'tn =',(tn(i),i=1,n)
       common/iprintc/iprint
       common/epsc/eps,tol,emin
       common/factorc/m0,m1,mm0,mm,mp,mq
-c     write(nout,*)'eptsol  p =',p
-c     if(p.eq.9)then
-c         write(nout,9)'row perm',(lr(ij),ij=1,n)
-c         write(nout,9)'column perm',(lc(ij),ij=1,m1)
-c         write(nout,9)'inverse perm',(li(ij),ij=1,p)
-c   9     format(A/(15I5))
-c     endif
+!     write(nout,*)'eptsol  p =',p
+!     if(p.eq.9)then
+!         write(nout,9)'row perm',(lr(ij),ij=1,n)
+!         write(nout,9)'column perm',(lc(ij),ij=1,m1)
+!         write(nout,9)'inverse perm',(li(ij),ij=1,p)
+!   9     format(A/(15I5))
+!     endif
       if(p.gt.n)then
         pr=li(p)
         if(pr.le.0)print *,'here1'
-        if(pr.le.0)goto1
+        if(pr.le.0) goto 1
         if(pr.ne.m1)then
           z=tn(pr)
           call r_shift(tn(pr),m1-pr,1)
@@ -758,17 +758,17 @@ c     endif
           T(mm)=1.D0
           T(mm)=aiscpri1(n,a,la,p-n,T(mm-m1+1),0.D0,lr,li,m1)
           if(T(mm).eq.0.D0)T(mm)=eps
-c         write(nout,*)'PAQ factors'
-c         ij=m0+mm0
-c         do ii=1,m1
-c           write(nout,*)(T(ij+j),j=1,ii)
-c           ij=ij+m0+ii
-c         enddo
-c         write(nout,*)'m0,mm0,m1,mm',m0,mm0,m1,mm
-c         write(nout,*)'row perm',(lr(ij),ij=1,n)
-c         write(nout,*)'column perm',(lc(ij),ij=1,m1)
-c         write(nout,*)'inverse perm',(li(ij),ij=1,p)
-c         call checkout(n,a,la,T,lr,lc,li)
+!         write(nout,*)'PAQ factors'
+!         ij=m0+mm0
+!         do ii=1,m1
+!           write(nout,*)(T(ij+j),j=1,ii)
+!           ij=ij+m0+ii
+!         enddo
+!         write(nout,*)'m0,mm0,m1,mm',m0,mm0,m1,mm
+!         write(nout,*)'row perm',(lr(ij),ij=1,n)
+!         write(nout,*)'column perm',(lc(ij),ij=1,m1)
+!         write(nout,*)'inverse perm',(li(ij),ij=1,p)
+!         call checkout(n,a,la,T,lr,lc,li)
         endif
         ii=mm-m1
         z=1.D0/T(mm)
@@ -799,7 +799,7 @@ c         call checkout(n,a,la,T,lr,lc,li)
         else
           pr=li(p)
           if(pr.le.m1)print *,'here2'
-          if(pr.le.m1)goto1
+          if(pr.le.m1) goto 1
           m1p=m1+1
           call iexch(lr(pr),lr(m1p))
           call iexch(li(lr(pr)),li(lr(m1p)))
@@ -817,9 +817,9 @@ c         call checkout(n,a,la,T,lr,lc,li)
           enddo
         endif
       endif
-c     write(nout,*)'sn =',(sn(i),i=1,n)
+!     write(nout,*)'sn =',(sn(i),i=1,n)
       return
-    1 continue
+1     continue
       write(nout,*)'malfunction detected in eptsol: p =',p
       stop
       end
@@ -832,10 +832,10 @@ c     write(nout,*)'sn =',(sn(i),i=1,n)
       common/epsc/eps,tol,emin
       common/factorc/m0,m1,mm0,mm,mp,mq
       double precision l21
-c     write(nout,*)'c_flma: q =',q
+!     write(nout,*)'c_flma: q =',q
       qc=li(q)
       if(q.gt.n)then
-        if(qc.le.0)goto1
+        if(qc.le.0) goto 1
         call ishift(lc(qc),m1-qc,1)
         do j=qc,m1-1
           li(lc(j))=j
@@ -844,7 +844,7 @@ c     write(nout,*)'c_flma: q =',q
         mm=mm-m1-m0
         m1=m1-1
       else
-        if(qc.le.m1)goto1
+        if(qc.le.m1) goto 1
         call iexch(lr(qc),lr(m1+1))
         call iexch(li(lr(qc)),li(lr(m1+1)))
         call ishift(lr(2),m1,-1)
@@ -853,7 +853,7 @@ c     write(nout,*)'c_flma: q =',q
           li(lr(i))=i
         enddo
         if(m0.eq.0)then
-c         write(nout,*)'m0 = 0:  re-centre triangle'
+!         write(nout,*)'m0 = 0:  re-centre triangle'
           m0=(mxm1+1-m1)/2
           mm0=m0*(m0+1)/2
           ii=mm
@@ -885,23 +885,23 @@ c         write(nout,*)'m0 = 0:  re-centre triangle'
         u21=T(iip)
         u11=aiscpri1(n,a,la,lc(i)-n,T(ii1-im),0.D0,lr,li,i)
         ij=ii+im-iswap
-c       write(nout,*)'i,im,ii,iip,iswap,ij',i,im,ii,iip,iswap,ij
+!       write(nout,*)'i,im,ii,iip,iswap,ij',i,im,ii,iip,iswap,ij
         l21=T(ij)
         if(abs(l21).le.eps)l21=0.D0
         if(iswap.gt.0)call r_shift(T(ij),iswap,1)
         del=u21-l21*u11
-c       write(nout,*)'l21,u11,u21,del =',l21,u11,u21,del
-c       write(nout,*)'old row =',(T(j),j=ii1-im,ii)
-c       write(nout,*)'new row =',(T(j),j=ii1,ii+im)
+!       write(nout,*)'l21,u11,u21,del =',l21,u11,u21,del
+!       write(nout,*)'old row =',(T(j),j=ii1-im,ii)
+!       write(nout,*)'new row =',(T(j),j=ii1,ii+im)
         if(abs(del).le.abs(u11)*max(1.D0,abs(l21)))then
-c         if(u11.eq.0.D0)then
-c           r=0.D0
-c         else
+!         if(u11.eq.0.D0)then
+!           r=0.D0
+!         else
             if(u11.eq.0.D0)u11=eps
             r=-u21/u11
             if(abs(r).le.eps)r=0.D0
             call mysaxpy(r,T(ii1-im),T(ii1),i-1)
-c         endif
+!         endif
           T(ii)=u11
           T(ii+im)=l21+r
           if(iswap.gt.0)then
@@ -926,7 +926,7 @@ c         endif
         ii=iip
       enddo
       return
-    1 continue
+1     continue
       write(nout,*)'malfunction detected in c_flma: q =',q
       stop
       end
@@ -938,7 +938,7 @@ c         endif
       common/epsc/eps,tol,emin
       common/factorc/m0,m1,mm0,mm,mp,mq
       double precision l11
-c     write(nout,*)'r_flma: p =',p
+!     write(nout,*)'r_flma: p =',p
       pr=li(p)
       if(pr.gt.m1)then
         if(pr.eq.m1+1)return
@@ -958,9 +958,9 @@ c     write(nout,*)'r_flma: p =',p
         if(abs(l11).le.eps)l11=0.D0
         u12=aiscpri1(n,a,la,lc(i+1)-n,T(ii1-im),0.D0,lr,li,i)
         del=l11*u12+u22
-c       write(nout,*)'l11,u11,u12,u22,del',l11,u11,u12,u22,del
-c       write(nout,*)'old row =',(T(j),j=ii1-im,ii)
-c       write(nout,*)'new row =',(T(j),j=ii1,ii+im)
+!       write(nout,*)'l11,u11,u12,u22,del',l11,u11,u12,u22,del
+!       write(nout,*)'old row =',(T(j),j=ii1-im,ii)
+!       write(nout,*)'new row =',(T(j),j=ii1,ii+im)
         if(abs(del).le.abs(l11)*max(abs(u11),abs(u12)))then
           call saxpyx(l11,T(ii1-im),T(ii1),i)
           u11=l11*u11
@@ -987,7 +987,7 @@ c       write(nout,*)'new row =',(T(j),j=ii1,ii+im)
       do j=pr,m1+1
         li(lr(j))=j
       enddo
-c     if(T(ip).eq.0.D0)T(ip)=eps
+!     if(T(ip).eq.0.D0)T(ip)=eps
       l11=-T(ip+m0+m1)/T(ip)
       call saxpyx(l11,T(mm-m1+1),T(mm+m0+1),m1)
       call r_shift(T(ip),m1-pr,1)
@@ -1052,8 +1052,8 @@ c     if(T(ip).eq.0.D0)T(ip)=eps
         emax=max(emax,abs(e))
         T(ii)=d
       enddo
-c     if(emax.gt.tol.or.gmax.gt.1.D1)
-c    *  write(nout,*)'error in LA=U is ',emax,'  growth in L =',gmax
+!     if(emax.gt.tol.or.gmax.gt.1.D1)
+!    *  write(nout,*)'error in LA=U is ',emax,'  growth in L =',gmax
       write(nout,*)'error in LA=U is ',emax,'  growth in L =',gmax
       return
       end
