@@ -146,7 +146,8 @@
 !  will prompt if larger values are required. As a guide, ws(*) contains
 !  first user workspace, then workspace for filterSD, then workspace for glcpd,
 !  and finally workspace for denseL.f or schurQR.f. lws(*) contains user
-!  workspace, then maxla+n+m+mlp locations for filterSD and additional locationsc  for denseL.f or schurQR.f.
+!  workspace, then maxla+n+m+mlp locations for filterSD and additional locations
+!  for denseL.f or schurQR.f.
 !     common/defaultc/ainfty,ubd,mlp,mxf
 !  Default values of some control parameters are set here. ainfty is used to
 !  represent infinity. ubd provides an upper bound on the allowed constraint
