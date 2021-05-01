@@ -1334,7 +1334,7 @@
       ifail=10
       return
 1000  format(a/(e16.5,4e16.5))
-1001  format(a/(i4,1x,e11.5,4(i4,1x,e11.5)))
+1001  format(a/(i4,1x,e12.5,4(i4,1x,e12.5)))
 !1000 format(a/(e18.8,3e19.8))
 !1001 format(a/(i3,1x,e14.8,3(i4,1x,e14.8)))
       end

@@ -567,7 +567,7 @@
 !     print 2,'dq,df',dq,df
 !  filter test for LCP solution
       call testfil(hxdJt,hxdJ,filh,filf,nfil1,nfil,ifail)
-      if (ifail==0) call testfil(hxdJt,hxdJ,hJt,hJ,1,1,ifail)
+      if (ifail==0) call testfil(hxdJt,hxdJ,[hJt],[hJ],1,1,ifail)
 !     print 6,'hxdJt,hxdJ,ifail',hxdJt,hxdJ,ifail
       if (ifail==1 .or. (dq>=tol .and. df<sigma*dq)) then
         if (hxdJt==0.D0 .or. dq<tol) then
@@ -658,7 +658,7 @@
         df=hJ-hxdJ
 !       print 2,'dq,df',dq,df
         call testfil(hxdJt,hxdJ,filh,filf,nfil1,nfil,ifail)
-        if (ifail==0) call testfil(hxdJt,hxdJ,hJt,hJ,1,1,ifail)
+        if (ifail==0) call testfil(hxdJt,hxdJ,[hJt],[hJ],1,1,ifail)
 !       if (ifail==1) print 2,'hxdJt/hxJt =',hxdJt/hxJt
 !       print 6,'project: hxdJt,hxdJ,ifail',hxdJt,hxdJ,ifail
         if (ifail==1 .or. df<sigma*dq) then
@@ -847,7 +847,7 @@
       df=f-fxd
 !     print 2,'dq,df',dq,df
       call testfil(hxd,fxd,filh,filf,1,nfil,ifail)
-      if (ifail==0) call testfil(hxd,fxd,h,f,1,1,ifail)
+      if (ifail==0) call testfil(hxd,fxd,[h],[f],1,1,ifail)
 !     print 6,'hxd,fxd,ifail',hxd,fxd,ifail
       if (ifail==1 .or. (dq>=tol .and. df<sigma*dq)) then
         if (hxd==0.D0 .or. dq<tol) then
@@ -929,7 +929,7 @@
         end if
         df=f-fxd
         call testfil(hxd,fxd,filh,filf,1,nfil,ifail)
-        if (ifail==0) call testfil(hxd,fxd,h,f,1,1,ifail)
+        if (ifail==0) call testfil(hxd,fxd,[h],[f],1,1,ifail)
 !       if (ifail==1) print 2,'hxd/hx =',hxd/hx
 !       print 6,'hxd,fxd,ifail',hxd,fxd,ifail
         if (ifail==1 .or. df<sigma*dq) then
