@@ -206,7 +206,7 @@
       iter=0
       npv=0
       if (m<0 .or. n<=0 .or. mlp<2 .or. mode<0 .or. mode>4 .or.  &
-        kmax<0 .or. (kmax>0 .and. maxg<=1) .or. tol<=D0) then
+        kmax<0 .or. (kmax>0 .and. maxg<=1) .or. tol<=0.0D0) then
         ifail=6
         return
       end if
