@@ -182,7 +182,7 @@
       parameter (ainfty=1.D100)
       dimension a(*),x(*),bl(*),bu(*),g(*),r(*),w(*),e(*),alp(*),ws(*), &
         la(*),ls(*),lp(*),lws(*),v(*)
-      character*32 spaces
+      character(len=32) spaces
       common/lcpdc/na,na1,nb,nb1,krg,krg1,kr,kr1, &
         ka,ka1,kb,kb1,kc,kc1,kd,kd1,ke,ke1,lu1,ll1
       common/epsc/eps,t0l,emin
@@ -358,8 +358,7 @@
       gtol=sgnf*gnorm
       rgtol=max(rgt0l,gtol)
       ig=0
-      if (iprint>=1) write(nout,'(''pivots ='',I5, &
-        ''  level = 1    f ='',E16.8)')npv,fbase
+      if (iprint>=1) write(nout,'(''pivots ='',I5, ''  level = 1    f ='',E16.8)')npv,fbase
        goto 16
 !  start of major iteration
 15    continue
@@ -368,19 +367,14 @@
           if (k>0) then
 !           write(nout,'(''pivots ='',I5,
 !    *        ''  level = 1    df ='',E16.8,''   k ='',I4)')npv,f,k
-            write(nout,'(''pivots ='',I5, &
-              ''  level = 1    df ='',E16.8,''   rg ='',E12.4, &
-              ''  k ='',I4)')npv,f,rgnorm,k
+            write(nout,'(''pivots ='',I5, ''  level = 1    df ='',E16.8,''   rg ='',E12.4, ''  k ='',I4)')npv,f,rgnorm,k
           else
-            write(nout,'(''pivots ='',I5, &
-              ''  level = 1    f ='',E16.8)')npv,fbase+f
+            write(nout,'(''pivots ='',I5, ''  level = 1    f ='',E16.8)')npv,fbase+f
           end if
         else if (phase==0) then
-          write(nout,'(''pivots ='',I5,''  level = 1    f ='', &
-            E16.8,''   ninfb ='',I4)')npv,f,ninf
+          write(nout,'(''pivots ='',I5,''  level = 1    f ='', E16.8,''   ninfb ='',I4)')npv,f,ninf
         else
-          write(nout,'(''pivots ='',I5,''  level = 1    f ='', &
-            E16.8,''   ninf ='',I4)')npv,f,ninf
+          write(nout,'(''pivots ='',I5,''  level = 1    f ='', E16.8,''   ninf ='',I4)')npv,f,ninf
         end if
       end if
 16    continue
@@ -711,8 +705,7 @@
           f=0.D0
           qj=pj
           q=p
-          if (iprint>=1) write(nout,'(''pivots ='',I5,''     level = 2'', &
-            ''    f ='',E16.8)')npv,f
+          if (iprint>=1) write(nout,'(''pivots ='',I5,''     level = 2'', ''    f ='',E16.8)')npv,f
            goto 86
         end if
         qj=n1
@@ -770,8 +763,7 @@
         if (ff>=f) then
           if (ires<nres) goto 98
           f=fbase+f
-          if (iprint>=1) write(nout,'(''pivots ='',I5, &
-            ''  level = 1    f ='',E16.8)')npv,f
+          if (iprint>=1) write(nout,'(''pivots ='',I5, ''  level = 1    f ='',E16.8)')npv,f
           ifail=4
           return
         end if
@@ -789,8 +781,7 @@
         if (ff>=f) then
           if (ires<nres) goto 98
           f=fbase+f
-          if (iprint>=1) write(nout,'(''pivots ='',I5, &
-            ''  level = 1    f ='',E16.8)')npv,f
+          if (iprint>=1) write(nout,'(''pivots ='',I5, ''  level = 1    f ='',E16.8)')npv,f
           ifail=4
           return
         end if
@@ -952,9 +943,7 @@
       if (alpha<amax) then
         if (ig>0) then
 !  continue limited memory SD iterations
-          if (iprint>=1) write(nout,'(''pivots ='',I5, &
-            ''  level = 1    df ='',E16.8,''   rg ='',E12.4, &
-            ''  k ='',I4)')npv,f,rgnorm,k
+          if (iprint>=1) write(nout,'(''pivots ='',I5, ''  level = 1    df ='',E16.8,''   rg ='',E12.4, ''  k ='',I4)')npv,f,rgnorm,k
           if (alpha>0.D0) goto 20
           print *,'alpha<=0'
            goto 98
@@ -1080,15 +1069,12 @@
       end if
 !  opposite bound comes active
       if (ninf==0) then
-        if (iprint>=1) write(nout,'(''pivots ='',I5, &
-          ''  level = 1    f ='',E16.8)')npv,fbase+f
+        if (iprint>=1) write(nout,'(''pivots ='',I5, ''  level = 1    f ='',E16.8)')npv,fbase+f
       else if (phase==0) then
-        if (iprint>=1) write(nout,'(''pivots ='',I5, &
-          ''  level = 1    f ='',E16.8,''   ninfb ='',I4)') &
+        if (iprint>=1) write(nout,'(''pivots ='',I5, ''  level = 1    f ='',E16.8,''   ninfb ='',I4)') &
           npv,f,ninf
       else
-        if (iprint>=1) write(nout,'(''pivots ='',I5, &
-          ''  level = 1    f ='',E16.8,''   ninf ='',I4)') &
+        if (iprint>=1) write(nout,'(''pivots ='',I5, ''  level = 1    f ='',E16.8,''   ninf ='',I4)') &
           npv,f,ninf
       end if
       ls(pj)=-ls(pj)
@@ -1264,8 +1250,7 @@
           f=0.D0
           if (iprint>=2) write(nout,*) &
             'degeneracy: increase level to ',lev
-          if (iprint>=1) write(nout,'(''pivots ='',I5,A,''level ='',I2, &
-            ''    f ='',E16.8)')npv,spaces(:3*lev-1),lev,f
+          if (iprint>=1) write(nout,'(''pivots ='',I5,A,''level ='',I2, ''    f ='',E16.8)')npv,spaces(:3*lev-1),lev,f
            goto 86
         end if
         qj=n1
@@ -1295,8 +1280,7 @@
       r(p)=alpha
       if (r(p)<=tol)r(p)=0.D0
       call iexch(ls(pj),ls(qj))
-      if (iprint>=1) write(nout,'(''pivots ='',I5,A,''level ='',I2, &
-        ''    f ='',E16.8)')npv,spaces(:3*lev-1),lev,f
+      if (iprint>=1) write(nout,'(''pivots ='',I5,A,''level ='',I2, ''    f ='',E16.8)')npv,spaces(:3*lev-1),lev,f
        goto 80
 !  restart sequence
 98    continue

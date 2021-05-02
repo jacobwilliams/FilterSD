@@ -24,7 +24,7 @@
       dimension a(*),la(*),x(*),bl(*),bu(*),g(*),r(*),w(*),e(*),ls(*), &
         alp(*),lp(*),ws(*),lws(*),v(*)
       character cws(*)
-      character*32 spaces
+      character(len=32) spaces
       common/lcpdc/na,na1,nb,nb1,krg,krg1,kr,kr1, &
         ka,ka1,kb,kb1,kc,kc1,kd,kd1,ke,ke1,lu1,ll1
       common/epsc/eps,tol,emin
@@ -60,14 +60,12 @@
       gnorm=sqrt(scpr(0.D0,g,g,n))
       gtol=sgnf*gnorm
       rgtol=max(rgt0l,gtol)
-      if (iprint>=1) write(nout,'(''pivots ='',I5, &
-          ''  level = 1    f ='',E16.8)')npv,f
+      if (iprint>=1) write(nout,'(''pivots ='',I5, ''  level = 1    f ='',E16.8)')npv,f
 !     print 4,'gradient =',(g(i),i=1,n)
        goto 20
 !  start of major iteration
 10    continue
-      if (iprint>=1) write(nout,'(''pivots ='',I5, &
-          ''  level = 1    f ='',E16.8)')npv,f
+      if (iprint>=1) write(nout,'(''pivots ='',I5, ''  level = 1    f ='',E16.8)')npv,f
 !  calculate multipliers
 !     print 4,'gradient =',(g(i),i=1,n)
       do i=1,nm
@@ -290,8 +288,7 @@
 !       write(nout,1001)'costs vector and indices',
 !    *    (ls(j),r(abs(ls(j))),j=1,n)
 !       write(nout,1)'# of bound equations and free variables = ',peq,k
-        if (iprint>=1) write(nout,'(''pivots ='',I5,''     level = 2'', &
-          ''    f ='',E16.8)')npv,f
+        if (iprint>=1) write(nout,'(''pivots ='',I5,''     level = 2'', ''    f ='',E16.8)')npv,f
          goto 86
       end if
 
@@ -574,10 +571,8 @@
         end do
         lev=lev+1
         lp(lev)=plev
-        if (iprint>=2) write(nout,*) &
-          'degeneracy: increase level to ',lev
-        if (iprint>=1) write(nout,'(''pivots ='',I5,A,''level ='',I2, &
-          ''    f ='',E16.8)')npv,spaces(:3*lev-1),lev,f
+        if (iprint>=2) write(nout,*) 'degeneracy: increase level to ',lev
+        if (iprint>=1) write(nout,'(''pivots ='',I5,A,''level ='',I2, ''    f ='',E16.8)')npv,spaces(:3*lev-1),lev,f
            goto 86
       end if
 !  update r and f
@@ -643,8 +638,7 @@
         peq=peq+1
         call iexch(ls(pj),ls(peq))
       end if
-      if (iprint>=1) write(nout,'(''pivots ='',I5,A,''level ='',I2, &
-        ''    f ='',E16.8)')npv,spaces(:3*lev-1),lev,f
+      if (iprint>=1) write(nout,'(''pivots ='',I5,A,''level ='',I2, ''    f ='',E16.8)')npv,spaces(:3*lev-1),lev,f
        goto 80
 !  restart sequence
 98    continue
