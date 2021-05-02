@@ -4,6 +4,8 @@
 ! program to drive the HS72 test problem, modified to give linear constraints,
 ! using sparse matrix format
 
+! reference: http://apmonitor.com/wiki/uploads/Apps/hs072.apm
+
       implicit double precision (a-h, o-z)
 
       parameter (maxa=8,n=4,m=2,nm=n+m,mlp=n,mxws=30000,mxlws=5000)

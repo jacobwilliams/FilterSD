@@ -1,6 +1,8 @@
 
 !Christen this file hs106.f
 
+! reference: http://apmonitor.com/wiki/uploads/Apps/hs106.apm
+
       program hs106_driver
 
       implicit double precision (a-h, o-z)
