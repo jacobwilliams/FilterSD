@@ -1,25 +1,22 @@
 
-      subroutine filterSD(n,m,x,al,f,fmin,cstype,bl,bu,ws,lws,v,nv, &
-        maxa,maxla,maxu,maxiu,kmax,maxg,rho,htol,rgtol,maxit,iprint, &
-        nout,ifail)
-      implicit double precision (a-h,o-z)
-      dimension x(*),al(*),bl(*),bu(*),ws(*),lws(*),v(*)
-      character cstype(*)
-
+!******************************************************************************************
+!>
 !  Copyright (C) 2010 Roger Fletcher
-
+!
 !  Current version dated 5 October 2011
-
+!
 !  THE ACCOMPANYING PROGRAM IS PROVIDED UNDER THE TERMS OF THE ECLIPSE PUBLIC
 !  LICENSE ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THE PROGRAM
 !  CONSTITUTES RECIPIENT'S ACCEPTANCE OF THIS AGREEMENT
-
+!
 !  Solves an NLP problem of the form: find a local solution x to
 !
-!          minimize    f(x)
-!                            [  x   ]
-!          subject to  bl <= [      ] <= bu
-!                            [ c(x) ]
+!```
+!  minimize    f(x)
+!                    [  x   ]
+!  subject to  bl <= [      ] <= bu
+!                    [ c(x) ]
+!```
 !
 !  where f(x) is a given function of n variables x and c(x) is a vector of m
 !  given constraint functions. f(x) is minimized subject to lower and upper
@@ -32,8 +29,8 @@
 !  is unsuccessful in resolving the situation then the code exits with
 !  ifail=3 and returns a 'locally infeasible point' in x.
 !
-!  Parameter List  (variables in a line starting with C must be set on entry)
-!  ==============
+!### Parameter List  (variables in a line starting with C must be set on entry)
+!  
 !  n     number of variables
 !  m     number of general constraints
 !  x(n+m)  x(1:n) stores the vector of variables. Initially an estimate of the
@@ -88,39 +85,40 @@
 !              7 = not enough workspace in ws or lws (see message)
 !              8 = insufficient space for filter (increase mxf and re-enter)
 !             >9 = unexpected fail in LCP solver (10 has been added to ifail)
-
-!  User Routines
-!  =============
+!
+!### User Routines
+!  
 !  The user must supply two subroutines to calculate f(x), c(x) and their
 !  first derivatives as follows
-!
+!```fortran
 !     subroutine functions(n,m,x,f,c,user,iuser)
 !     implicit double precision (a-h,o-z)
 !     dimension x(*),c(*),user(*),iuser(*)
-!     ...
-!     Statements to calculate f(x) and the m-vector c(x). The user is
-!     responsible for ensuring that any failures such as IEEE errors
-!     (overflow, NaN's etc.) are trapped and not returned to filterSD.
-!     The same holds for gradients.
-!     ...
+!     !...
+!     !Statements to calculate f(x) and the m-vector c(x). The user is
+!     !responsible for ensuring that any failures such as IEEE errors
+!     !(overflow, NaN's etc.) are trapped and not returned to filterSD.
+!     !The same holds for gradients.
+!     !...
 !     return
 !     end
 !
 !     subroutine gradients(n,m,x,a,user,iuser)
 !     implicit double precision(a-h,o-z)
 !     dimension x(*),a(*),user(*),iuser(*)
-!     ...
-!     Statements to calculate gradients of f(x) and c(x) and set in a(*).
-!     The column vector grad(f) must be followed by the column vectors
-!     grad(c_i), i=1,2,...,m, in the one dimensional array a(*). Either a
-!     dense or sparse data structure may be used. If using the sparse data
-!     structure, only stucturally non-zero entries are set. Pointers etc. for
-!     the data structure are set once and for all in lws as described below.
-!     The user may assume that a call of 'gradients' immediately follows one
-!      of 'functions' with the same vector x.)
-!     ...
+!     !...
+!     !Statements to calculate gradients of f(x) and c(x) and set in a(*).
+!     !The column vector grad(f) must be followed by the column vectors
+!     !grad(c_i), i=1,2,...,m, in the one dimensional array a(*). Either a
+!     !dense or sparse data structure may be used. If using the sparse data
+!     !structure, only stucturally non-zero entries are set. Pointers etc. for
+!     !the data structure are set once and for all in lws as described below.
+!     !The user may assume that a call of 'gradients' immediately follows one
+!     ! of 'functions' with the same vector x.)
+!     !...
 !     return
 !     end
+!```
 !
 !  The user must also supply a driver routine which calls filterSD. This must
 !  set parameters and common blocks of filterSD as appropriate.
@@ -136,6 +134,14 @@
 !  However two copies of the gradients are kept by filterSD . These reside in
 !  ws(maxu+1:maxu+maxa) and ws(maxu+maxa+1:maxu+2*maxa). Any constant entries
 !  must be set in both copies.
+
+    subroutine filterSD(n,m,x,al,f,fmin,cstype,bl,bu,ws,lws,v,nv, &
+                        maxa,maxla,maxu,maxiu,kmax,maxg,rho,htol,rgtol,maxit,iprint, &
+                        nout,ifail)
+
+      implicit double precision (a-h,o-z)
+      dimension x(*),al(*),bl(*),bu(*),ws(*),lws(*),v(*)
+      character cstype(*)
 
 !  Common blocks
 !  =============
@@ -274,7 +280,7 @@
 
       return
 1     format(A,15I5)
-      end
+    end subroutine filterSD
 
       subroutine filter_SD(n,f,fmin,cstype,bl,bu,ws,lws,v,nv, &
         maxa,kmax,maxg, &
