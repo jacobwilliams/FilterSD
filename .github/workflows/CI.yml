@@ -50,8 +50,8 @@ jobs:
         mkdir bin
         gfortran -O2 -std=legacy ./src/filterSD.f90 ./src/checkd.f90 ./src/glcpd.f90 ./src/l1sold.f90 ./src/shared.f90 ./src/schurQR.f90 ./src/sparseA.f90 ./src/util.f90 ./src/hs106.f90 -o ./bin/hs106
         gfortran -O2 -std=legacy ./src/filterSD.f90 ./src/checkd.f90 ./src/glcpd.f90 ./src/l1sold.f90 ./src/shared.f90 ./src/denseL.f90 ./src/denseA.f90 ./src/util.f90 ./src/hs106d.f90 -o ./bin/hs106d
-        gfortran -O2 -std=legacy ./src/glcpd.f90 ./src/shared.f90 ./src/util.f90 ./src/checkg.f90 ./src/schurQR.f90 ./src/sparseA.f90 ./src/hs72.f90 -o ./bin/hs72
-        gfortran -O2 -std=legacy ./src/glcpd.f90 ./src/checkg.f90 ./src/shared.f90 ./src/denseL.f90 ./src/denseA.f90 ./src/util.f90 ./src/hs72d.f90 -o ./bin/hs72d
+        gfortran -O2 -std=legacy ./src/glcpd.f90 ./src/checkg.f90 ./src/shared.f90 ./src/util.f90 ./src/schurQR.f90 ./src/sparseA.f90 ./src/hs72.f90 -o ./bin/hs72
+        gfortran -O2 -std=legacy ./src/glcpd.f90 ./src/checkg.f90 ./src/shared.f90 ./src/util.f90 ./src/denseL.f90 ./src/denseA.f90 ./src/hs72d.f90 -o ./bin/hs72d
 
     - name: hs106
       run: ./bin/hs106
