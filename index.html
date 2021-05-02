@@ -124,7 +124,10 @@
         <div class="col-md-8">
 		  
           <h1>filterSD</h1>
-          <p><strong>FilterSD</strong> is a package of Fortran 77 subroutines for solving nonlinear programming problems and linearly constrained problems in continuous optimization.</p>
+          <h2>Notes</h2>
+<p>A work in progress to create a modern Fortran version of the filterSD optimization method.</p>
+<h2>Original Fortran 77 Documentation</h2>
+<p><strong>FilterSD</strong> is a package of Fortran 77 subroutines for solving nonlinear programming problems and linearly constrained problems in continuous optimization.</p>
 <p>Please see the <code>README.pdf</code> file for instructions on compiling the source code.</p>
 <p>This package does not require any Third Party software.</p>
 <h3>README.pdf</h3>
@@ -150,6 +153,8 @@
 
 <p>together with a user supplied driver program.</p>
 <p>Information on how to set up the driver program is contained in the files <code>filterSD.pdf</code> and <code>glcpd.pdf</code>. Examples of driver programs are provided in the files <code>hs106.f</code>, <code>hs106d.f</code>, <code>hs72.f</code> and <code>hs72d.f</code>. To solve a QP or LP, replace <code>glcpd.f</code> by <code>qlcpd.f</code> in the above. Usage of <code>qlcpd.f</code> is described at the head of the file and is similar to that for <code>glcpd.f</code>. To facilitate access to CUTEr NLP test problems, a driver program <code>driver.f</code> and associated subroutines in the file <code>user.f</code> is provided.</p>
+<h2>Documentation</h2>
+<p>The latest API documentation can be found <a href="http://jacobwilliams.github.io/filterSD/">here</a>. This was generated from the source code using <a href="https://github.com/cmacmackin/ford">FORD</a>.</p>
         </div>
 		  
         <div class="col-md-4">
