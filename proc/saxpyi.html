@@ -122,7 +122,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 0.2% of total for procedures.">16 statements</a>
+    title=" 0.2% of total for procedures.">15 statements</a>
      </li> 
      
      
@@ -178,7 +178,13 @@
 
 
 
-<em>None</em>
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
+  <div class="list-group">
+    <a class="list-group-item" href="../proc/saxpyi.html#src">saxpyi</a>
+  </div>
+</div>
+
 
 
 </div>
@@ -196,6 +202,8 @@ subroutine saxpyi(a, x, y, n)
   
 
 
+    
+    <p>saxpy with interchange of x and y</p>
     
 
     <h3>Arguments</h3>
@@ -305,7 +313,13 @@ subroutine saxpyi(a, x, y, n)
 
 
 
-<em>None</em>
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
+  <div class="list-group">
+    <a class="list-group-item" href="../proc/saxpyi.html#src">saxpyi</a>
+  </div>
+</div>
+
 
 
     </section>
@@ -328,6 +342,28 @@ subroutine saxpyi(a, x, y, n)
 
     
     
+    
+    <section>
+    <h2><span class="anchor" id="src"></span>Source Code</h2>
+    <div class="highlight"><pre><span></span>      <span class="k">subroutine </span><span class="n">saxpyi</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">y</span><span class="p">,</span><span class="n">n</span><span class="p">)</span>
+      <span class="k">implicit </span><span class="kt">double precision</span> <span class="p">(</span><span class="n">a</span><span class="o">-</span><span class="n">h</span><span class="p">,</span><span class="n">o</span><span class="o">-</span><span class="n">z</span><span class="p">)</span>
+      <span class="k">dimension </span><span class="n">x</span><span class="p">(</span><span class="o">*</span><span class="p">),</span><span class="n">y</span><span class="p">(</span><span class="o">*</span><span class="p">)</span>
+      <span class="k">if</span> <span class="p">(</span><span class="n">a</span><span class="o">==</span><span class="mf">0.D0</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">        do </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span>
+          <span class="k">call </span><span class="n">rexch</span><span class="p">(</span><span class="n">x</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="n">y</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+        <span class="k">end do</span>
+<span class="k">      else</span>
+<span class="k">        do </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span>
+          <span class="n">z</span><span class="o">=</span><span class="n">y</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+          <span class="n">y</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">=</span><span class="n">x</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">+</span><span class="n">a</span><span class="o">*</span><span class="n">y</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+          <span class="n">x</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">=</span><span class="n">z</span>
+        <span class="k">end do</span>
+<span class="k">      end if</span>
+<span class="k">      end subroutine </span><span class="n">saxpyi</span>
+</pre></div>
+
+    </section>
+    <br>
     
     
     </div>

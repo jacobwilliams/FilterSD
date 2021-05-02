@@ -122,7 +122,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 0.1% of total for procedures.">7 statements</a>
+    title=" 0.1% of total for procedures.">6 statements</a>
      </li> 
      
      
@@ -178,7 +178,13 @@
 
 
 
-<em>None</em>
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
+  <div class="list-group">
+    <a class="list-group-item" href="../proc/rexch.html#src">rexch</a>
+  </div>
+</div>
+
 
 
 </div>
@@ -275,7 +281,13 @@ subroutine rexch(a, b)
 
 
 
-<em>None</em>
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
+  <div class="list-group">
+    <a class="list-group-item" href="../proc/rexch.html#src">rexch</a>
+  </div>
+</div>
+
 
 
     </section>
@@ -298,6 +310,19 @@ subroutine rexch(a, b)
 
     
     
+    
+    <section>
+    <h2><span class="anchor" id="src"></span>Source Code</h2>
+    <div class="highlight"><pre><span></span>      <span class="k">subroutine </span><span class="n">rexch</span><span class="p">(</span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+      <span class="kt">double precision </span><span class="n">a</span><span class="p">,</span><span class="n">b</span><span class="p">,</span><span class="n">z</span>
+      <span class="n">z</span><span class="o">=</span><span class="n">a</span>
+      <span class="n">a</span><span class="o">=</span><span class="n">b</span>
+      <span class="n">b</span><span class="o">=</span><span class="n">z</span>
+      <span class="k">end subroutine </span><span class="n">rexch</span>
+</pre></div>
+
+    </section>
+    <br>
     
     
     </div>

@@ -122,7 +122,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 0.1% of total for procedures.">14 statements</a>
+    title=" 0.1% of total for procedures.">13 statements</a>
      </li> 
      
      
@@ -178,7 +178,13 @@
 
 
 
-<em>None</em>
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
+  <div class="list-group">
+    <a class="list-group-item" href="../proc/rtsol.html#src">rtsol</a>
+  </div>
+</div>
+
 
 
 </div>
@@ -196,6 +202,9 @@ subroutine rtsol(n, nn, nmax, R, b)
   
 
 
+    
+    <p>solves Rt.x=b with same conventions as above
+  nn is not required on entry but is set on exit</p>
     
 
     <h3>Arguments</h3>
@@ -453,7 +462,13 @@ subroutine rtsol(n, nn, nmax, R, b)
 
 
 
-<em>None</em>
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
+  <div class="list-group">
+    <a class="list-group-item" href="../proc/rtsol.html#src">rtsol</a>
+  </div>
+</div>
+
 
 
     </section>
@@ -476,6 +491,26 @@ subroutine rtsol(n, nn, nmax, R, b)
 
     
     
+    
+    <section>
+    <h2><span class="anchor" id="src"></span>Source Code</h2>
+    <div class="highlight"><pre><span></span>      <span class="k">subroutine </span><span class="n">rtsol</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">nn</span><span class="p">,</span><span class="n">nmax</span><span class="p">,</span><span class="n">R</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+      <span class="k">implicit </span><span class="kt">double precision</span> <span class="p">(</span><span class="n">a</span><span class="o">-</span><span class="n">h</span><span class="p">,</span><span class="n">o</span><span class="o">-</span><span class="n">z</span><span class="p">)</span>
+      <span class="k">dimension </span><span class="n">R</span><span class="p">(</span><span class="o">*</span><span class="p">),</span><span class="n">b</span><span class="p">(</span><span class="o">*</span><span class="p">)</span>
+      <span class="n">n2</span><span class="o">=</span><span class="n">nmax</span><span class="o">+</span><span class="mi">2</span>
+      <span class="n">nn</span><span class="o">=</span><span class="mi">1</span>
+      <span class="n">b</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">=</span><span class="n">b</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="n">R</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+      <span class="k">do </span><span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span><span class="n">n</span>
+        <span class="n">i1</span><span class="o">=</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span>
+        <span class="k">call </span><span class="n">mysaxpy</span><span class="p">(</span><span class="o">-</span><span class="n">b</span><span class="p">(</span><span class="n">i1</span><span class="p">),</span><span class="n">R</span><span class="p">(</span><span class="n">nn</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">b</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="n">n</span><span class="o">-</span><span class="n">i1</span><span class="p">)</span>
+        <span class="n">nn</span><span class="o">=</span><span class="n">nn</span><span class="o">+</span><span class="n">n2</span><span class="o">-</span><span class="n">i</span>
+        <span class="n">b</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">=</span><span class="n">b</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">/</span><span class="n">R</span><span class="p">(</span><span class="n">nn</span><span class="p">)</span>
+      <span class="k">end do</span>
+<span class="k">      end subroutine </span><span class="n">rtsol</span>
+</pre></div>
+
+    </section>
+    <br>
     
     
     </div>

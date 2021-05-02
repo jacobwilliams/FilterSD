@@ -122,7 +122,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 0.1% of total for procedures.">14 statements</a>
+    title=" 0.1% of total for procedures.">13 statements</a>
      </li> 
      
      
@@ -178,7 +178,13 @@
 
 
 
-<em>None</em>
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
+  <div class="list-group">
+    <a class="list-group-item" href="../proc/frots.html#src">frots</a>
+  </div>
+</div>
+
 
 
 </div>
@@ -196,6 +202,8 @@ subroutine frots(nr, nc, nmax, R, v)
   
 
 
+    
+    <p>nr is either nc or nc+1</p>
     
 
     <h3>Arguments</h3>
@@ -320,7 +328,13 @@ subroutine frots(nr, nc, nmax, R, v)
 
 
 
-<em>None</em>
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
+  <div class="list-group">
+    <a class="list-group-item" href="../proc/frots.html#src">frots</a>
+  </div>
+</div>
+
 
 
     </section>
@@ -343,6 +357,26 @@ subroutine frots(nr, nc, nmax, R, v)
 
     
     
+    
+    <section>
+    <h2><span class="anchor" id="src"></span>Source Code</h2>
+    <div class="highlight"><pre><span></span>      <span class="k">subroutine </span><span class="n">frots</span><span class="p">(</span><span class="n">nr</span><span class="p">,</span><span class="n">nc</span><span class="p">,</span><span class="n">nmax</span><span class="p">,</span><span class="n">R</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+      <span class="k">implicit </span><span class="kt">double precision</span> <span class="p">(</span><span class="n">a</span><span class="o">-</span><span class="n">h</span><span class="p">,</span><span class="n">o</span><span class="o">-</span><span class="n">z</span><span class="p">)</span>
+      <span class="k">dimension </span><span class="n">R</span><span class="p">(</span><span class="o">*</span><span class="p">),</span><span class="n">v</span><span class="p">(</span><span class="o">*</span><span class="p">)</span>
+      <span class="n">ii</span><span class="o">=</span><span class="mi">1</span>
+      <span class="k">do </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">nc</span>
+        <span class="n">ip</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span>
+        <span class="n">ipi</span><span class="o">=</span><span class="n">ii</span><span class="o">+</span><span class="mi">1</span>
+        <span class="n">ipip</span><span class="o">=</span><span class="n">ipi</span><span class="o">+</span><span class="n">nmax</span><span class="o">-</span><span class="n">i</span>
+        <span class="k">call </span><span class="n">angle</span><span class="p">(</span><span class="n">R</span><span class="p">(</span><span class="n">ii</span><span class="p">),</span><span class="n">v</span><span class="p">(</span><span class="n">ip</span><span class="p">),</span><span class="nb">cos</span><span class="p">,</span><span class="nb">sin</span><span class="p">)</span>
+        <span class="k">call </span><span class="n">rot</span><span class="p">(</span><span class="n">nr</span><span class="o">-</span><span class="n">i</span><span class="p">,</span><span class="n">R</span><span class="p">(</span><span class="n">ipi</span><span class="p">),</span><span class="n">R</span><span class="p">(</span><span class="n">ipip</span><span class="p">),</span><span class="nb">cos</span><span class="p">,</span><span class="nb">sin</span><span class="p">)</span>
+        <span class="n">ii</span><span class="o">=</span><span class="n">ipip</span>
+      <span class="k">end do</span>
+<span class="k">      end subroutine </span><span class="n">frots</span>
+</pre></div>
+
+    </section>
+    <br>
     
     
     </div>

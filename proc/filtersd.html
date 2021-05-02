@@ -196,6 +196,14 @@
 
 
 
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
+  <div class="list-group">
+    <a class="list-group-item" href="../proc/filtersd.html#src">filterSD</a>
+  </div>
+</div>
+
+
 
 </div>
 
@@ -212,6 +220,129 @@ subroutine filterSD(n, m, x, al, f, fmin, cstype, bl, bu, ws, lws, v, nv, maxa, 
   
 
 
+    
+    <p>Copyright (C) 2010 Roger Fletcher</p>
+<p>Current version dated 5 October 2011</p>
+<p>THE ACCOMPANYING PROGRAM IS PROVIDED UNDER THE TERMS OF THE ECLIPSE PUBLIC
+  LICENSE ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THE PROGRAM
+  CONSTITUTES RECIPIENT'S ACCEPTANCE OF THIS AGREEMENT</p>
+<p>Solves an NLP problem of the form: find a local solution x to</p>
+<div class="codehilite"><pre><span></span><code>  minimize    f(x)
+                    [  x   ]
+  subject to  bl &lt;= [      ] &lt;= bu
+                    [ c(x) ]
+</code></pre></div>
+
+<p>where f(x) is a given function of n variables x and c(x) is a vector of m
+  given constraint functions. f(x) is minimized subject to lower and upper
+  bounds bl and bu on x and c(x). f(x) and c(x) are defined by a user supplied
+  subroutine 'functions'. The user is also required to supply a subroutine
+  'gradients' which calculates gradients of f(x) and c(x) with respect to x.</p>
+<p>If linearized constraints and the trust region are incompatible, the code
+  enters 'phase 1' in which an 'l1 feasibility problem' is solved. If this
+  is unsuccessful in resolving the situation then the code exits with
+  ifail=3 and returns a 'locally infeasible point' in x.</p>
+<h3>Parameter List  (variables in a line starting with C must be set on entry)</h3>
+<p>n     number of variables
+  m     number of general constraints
+  x(n+m)  x(1:n) stores the vector of variables. Initially an estimate of the
+            solution must be set, replaced by the solution (if it exists)
+            on exit. The rest of x is workspace
+  al(n+m) stores Lagrange multipliers at the solution on exit. A positive
+            multiplier indicates that the lower bound is active, and a
+            negative multiplier indicates that the upper bound is active.
+            Inactive constraints have a zero multiplier.
+  f     returns the value of f(x) when x is a feasible solution
+  fmin  set a strict lower bound on f(x) for feasible x (used to identify
+          an unbounded NLP)
+  cstype(m) character workspace: if ifail=3, cstype indicates constraints
+              that are infeasible in the L1 solution. cstype(i)='A' if the
+              lower bound on c/s i is infeasible, 'Z' if the upper bound is
+              infeasible, else 'N' if feasible.
+  bl(n+m) lower bounds on x and c(x) (use numbers no less than -ainfty
+            (see below) and where possible supply realistic bounds on x)
+  bu(n+m) upper bounds on x and c(x) (use numbers no greater than ainfty)
+  ws(<em>)   double precision workspace
+  lws(</em>)  integer workspace
+  v(maxg) stores nv Ritz values (estimates of eigenvalues of reduced Hessian)
+            supply the setting from a previous run of filterSD, or set
+            nv=1 and v(1)=1.D0 in absence of other information
+  nv      number of values set in v
+  maxa    maximum number of entries in the Jacobian a(<em>) set by gradients
+  maxla   number of entries required for sparse matrix indices and pointers
+            la(0:</em>) to be set up in lws(<em>) (maxla&gt;=maxa+m+3).
+            Set maxla=1 if using dense matrix format
+  maxu    length of workspace user(</em>) passed through to user subroutines
+            'functions' and 'gradients'
+  maxiu   length of workspace iuser(*) passed through to user subroutines
+  kmax    maximum dimension of null space allowed for (kmax&lt;=n)
+  maxg    maximum number of reduced gradient vectors stored by the
+            limited memory method (typically 6 or 7)
+  rho     initial trust region radius (typically 1.D1)
+  htol    tolerance allowed in sum h of constraint feasibilities (e.g. 1.D-6)
+  rgtol   tolerance allowed in reduced gradient l2 norm (typically 1.D-4)
+  maxit   maximum number of major iterations allowed
+  iprint  verbosity of printing (0=none, 1=one line per iteration,
+            2=additional text information given)
+  nout    output channel for printing
+  ifail   returns failure indication as follows
+              0 = successful run
+              1 = unbounded NLP (f &lt;= fmin at an htol-feasible point)
+              2 = bounds on x are inconsistent
+              3 = local minimum of feasibility problem and h &gt; htol
+                  (nonlinear constraints are locally inconsistent)
+              4 = initial point x has h &gt; ubd (reset ubd or x and re-enter)
+              5 = maxit major iterations have been carried out
+              6 = termination with rho &lt;= htol
+              7 = not enough workspace in ws or lws (see message)
+              8 = insufficient space for filter (increase mxf and re-enter)
+             &gt;9 = unexpected fail in LCP solver (10 has been added to ifail)</p>
+<h3>User Routines</h3>
+<p>The user must supply two subroutines to calculate f(x), c(x) and their
+  first derivatives as follows</p>
+<div class="codehilite"><pre><span></span><code>     <span class="k">subroutine </span><span class="n">functions</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="n">c</span><span class="p">,</span><span class="n">user</span><span class="p">,</span><span class="n">iuser</span><span class="p">)</span>
+     <span class="k">implicit </span><span class="kt">double precision</span> <span class="p">(</span><span class="n">a</span><span class="o">-</span><span class="n">h</span><span class="p">,</span><span class="n">o</span><span class="o">-</span><span class="n">z</span><span class="p">)</span>
+     <span class="k">dimension </span><span class="n">x</span><span class="p">(</span><span class="o">*</span><span class="p">),</span><span class="n">c</span><span class="p">(</span><span class="o">*</span><span class="p">),</span><span class="n">user</span><span class="p">(</span><span class="o">*</span><span class="p">),</span><span class="n">iuser</span><span class="p">(</span><span class="o">*</span><span class="p">)</span>
+     <span class="c">!...</span>
+     <span class="c">!Statements to calculate f(x) and the m-vector c(x). The user is</span>
+     <span class="c">!responsible for ensuring that any failures such as IEEE errors</span>
+     <span class="c">!(overflow, NaN&#39;s etc.) are trapped and not returned to filterSD.</span>
+     <span class="c">!The same holds for gradients.</span>
+     <span class="c">!...</span>
+     <span class="k">return</span>
+<span class="k">     end</span>
+
+<span class="k">     subroutine </span><span class="n">gradients</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">a</span><span class="p">,</span><span class="n">user</span><span class="p">,</span><span class="n">iuser</span><span class="p">)</span>
+     <span class="k">implicit </span><span class="kt">double precision</span><span class="p">(</span><span class="n">a</span><span class="o">-</span><span class="n">h</span><span class="p">,</span><span class="n">o</span><span class="o">-</span><span class="n">z</span><span class="p">)</span>
+     <span class="k">dimension </span><span class="n">x</span><span class="p">(</span><span class="o">*</span><span class="p">),</span><span class="n">a</span><span class="p">(</span><span class="o">*</span><span class="p">),</span><span class="n">user</span><span class="p">(</span><span class="o">*</span><span class="p">),</span><span class="n">iuser</span><span class="p">(</span><span class="o">*</span><span class="p">)</span>
+     <span class="c">!...</span>
+     <span class="c">!Statements to calculate gradients of f(x) and c(x) and set in a(*).</span>
+     <span class="c">!The column vector grad(f) must be followed by the column vectors</span>
+     <span class="c">!grad(c_i), i=1,2,...,m, in the one dimensional array a(*). Either a</span>
+     <span class="c">!dense or sparse data structure may be used. If using the sparse data</span>
+     <span class="c">!structure, only stucturally non-zero entries are set. Pointers etc. for</span>
+     <span class="c">!the data structure are set once and for all in lws as described below.</span>
+     <span class="c">!The user may assume that a call of &#39;gradients&#39; immediately follows one</span>
+     <span class="c">! of &#39;functions&#39; with the same vector x.)</span>
+     <span class="c">!...</span>
+     <span class="k">return</span>
+<span class="k">     end</span>
+</code></pre></div>
+
+<p>The user must also supply a driver routine which calls filterSD. This must
+  set parameters and common blocks of filterSD as appropriate.
+  Space for x,al,bl,bu,ws,lws,v and cstype must be assigned.
+  If using the sparse data structure for setting gradients, indices and
+  pointers la(0:maxla-1) must be set in the driver in lws, immediately
+  following any user workspace in lws(1:maxiu). No changes in this
+  data structure are allowed during the operation of filterSD.
+  More details of the format of a(<em>) and la(</em>) are given in the file sparseA.f
+  For dense format just set maxla=1 and set lws(maxiu+1) to the
+  'stride' (&gt;=n) used in setting the columns of grad(f) and grad(c_i).
+  For efficiency, constant entries in the gradients may be set in the driver.
+  However two copies of the gradients are kept by filterSD . These reside in
+  ws(maxu+1:maxu+maxa) and ws(maxu+maxa+1:maxu+2*maxa). Any constant entries
+  must be set in both copies.</p>
     
 
     <h3>Arguments</h3>
@@ -667,6 +798,14 @@ subroutine filterSD(n, m, x, al, f, fmin, cstype, bl, bu, ws, lws, v, nv, maxa, 
 
 
 
+
+
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
+  <div class="list-group">
+    <a class="list-group-item" href="../proc/filtersd.html#src">filterSD</a>
+  </div>
+</div>
 
 
 
@@ -1197,6 +1336,159 @@ subroutine filterSD(n, m, x, al, f, fmin, cstype, bl, bu, ws, lws, v, nv, maxa, 
 
     
     
+    
+    <section>
+    <h2><span class="anchor" id="src"></span>Source Code</h2>
+    <div class="highlight"><pre><span></span>    <span class="k">subroutine </span><span class="n">filterSD</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">m</span><span class="p">,</span><span class="n">x</span><span class="p">,</span><span class="n">al</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="n">fmin</span><span class="p">,</span><span class="n">cstype</span><span class="p">,</span><span class="n">bl</span><span class="p">,</span><span class="n">bu</span><span class="p">,</span><span class="n">ws</span><span class="p">,</span><span class="n">lws</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">nv</span><span class="p">,</span> <span class="p">&amp;</span>
+                        <span class="n">maxa</span><span class="p">,</span><span class="n">maxla</span><span class="p">,</span><span class="n">maxu</span><span class="p">,</span><span class="n">maxiu</span><span class="p">,</span><span class="n">kmax</span><span class="p">,</span><span class="n">maxg</span><span class="p">,</span><span class="n">rho</span><span class="p">,</span><span class="n">htol</span><span class="p">,</span><span class="n">rgtol</span><span class="p">,</span><span class="n">maxit</span><span class="p">,</span><span class="n">iprint</span><span class="p">,</span> <span class="p">&amp;</span>
+                        <span class="n">nout</span><span class="p">,</span><span class="n">ifail</span><span class="p">)</span>
+
+      <span class="k">implicit </span><span class="kt">double precision</span> <span class="p">(</span><span class="n">a</span><span class="o">-</span><span class="n">h</span><span class="p">,</span><span class="n">o</span><span class="o">-</span><span class="n">z</span><span class="p">)</span>
+      <span class="k">dimension </span><span class="n">x</span><span class="p">(</span><span class="o">*</span><span class="p">),</span><span class="n">al</span><span class="p">(</span><span class="o">*</span><span class="p">),</span><span class="n">bl</span><span class="p">(</span><span class="o">*</span><span class="p">),</span><span class="n">bu</span><span class="p">(</span><span class="o">*</span><span class="p">),</span><span class="n">ws</span><span class="p">(</span><span class="o">*</span><span class="p">),</span><span class="n">lws</span><span class="p">(</span><span class="o">*</span><span class="p">),</span><span class="n">v</span><span class="p">(</span><span class="o">*</span><span class="p">)</span>
+      <span class="kt">character </span><span class="n">cstype</span><span class="p">(</span><span class="o">*</span><span class="p">)</span>
+
+<span class="c">!  Common blocks</span>
+<span class="c">!  =============</span>
+<span class="c">!      common/wsc/kk,ll,kkk,lll,mxws,mxlws</span>
+<span class="c">!  The user must specify the length of the workspace arrays ws(*) and lws(*)</span>
+<span class="c">!  in mxws and mxlws respectively. It may not be easy to specify a-priori how</span>
+<span class="c">!  large these arrays should be. Set a suitable large estimate, and filterSD</span>
+<span class="c">!  will prompt if larger values are required. As a guide, ws(*) contains</span>
+<span class="c">!  first user workspace, then workspace for filterSD, then workspace for glcpd,</span>
+<span class="c">!  and finally workspace for denseL.f or schurQR.f. lws(*) contains user</span>
+<span class="c">!  workspace, then maxla+n+m+mlp locations for filterSD and additional locations</span>
+<span class="c">!  for denseL.f or schurQR.f.</span>
+<span class="c">!     common/defaultc/ainfty,ubd,mlp,mxf</span>
+<span class="c">!  Default values of some control parameters are set here. ainfty is used to</span>
+<span class="c">!  represent infinity. ubd provides an upper bound on the allowed constraint</span>
+<span class="c">!  violation. mlp is the maximum length of arrays used in degeneracy control.</span>
+<span class="c">!  mxf is the maximum length of filter arrays. Default values are 1.D20, 1.D4,</span>
+<span class="c">!  50,  50 respectively.</span>
+<span class="c">!     common/ngrc/mxgr</span>
+<span class="c">!  The user can limit the time spent in each call of the LCP solver by setting</span>
+<span class="c">!  an upper limit on the number of gradient calls in mxgr (default=1000000)</span>
+<span class="c">!     common/mxm1c/mxm1</span>
+<span class="c">!  When using denseL.f, mxm1 must be set to the maximum number of general</span>
+<span class="c">!  constraints allowed in the active set. mxm1=min(m+1,n) is always sufficient</span>
+<span class="c">!     common/epsc/eps,tol,emin</span>
+<span class="c">!     common/repc/sgnf,nrep,npiv,nres</span>
+<span class="c">!  These common blocks provide default parameters that control glcpd</span>
+<span class="c">!     common/statsc/dnorm,h,hJt,hJ,ipeq,k,itn,nft,ngt</span>
+<span class="c">!  This common block returns information about the outcome of filterSD.</span>
+<span class="c">!  dnorm=final step length, h=final c/s violation, hJt=ditto for &#39;N&#39; c/s,</span>
+<span class="c">!  hJ=ditto for &#39;A&#39; and &#39;Z&#39; c/s, ipeq=number of active equations, k=number of</span>
+<span class="c">!  free variables, itn=number of iterations, nft=total number of function</span>
+<span class="c">!  calls, ngt=total number of gradient calls</span>
+
+      <span class="k">common</span><span class="o">/</span><span class="n">wsc</span><span class="o">/</span><span class="n">kk</span><span class="p">,</span><span class="n">ll</span><span class="p">,</span><span class="n">kkk</span><span class="p">,</span><span class="n">lll</span><span class="p">,</span><span class="n">mxws</span><span class="p">,</span><span class="n">mxlws</span>
+      <span class="k">common</span><span class="o">/</span><span class="n">defaultc</span><span class="o">/</span><span class="n">ainfty</span><span class="p">,</span><span class="n">ubd</span><span class="p">,</span><span class="n">mlp</span><span class="p">,</span><span class="n">mxf</span>
+      <span class="k">common</span><span class="o">/</span><span class="n">functc</span><span class="o">/</span><span class="n">fxd</span><span class="p">,</span><span class="n">alc</span><span class="p">,</span><span class="n">m_</span><span class="p">,</span><span class="n">iph</span><span class="p">,</span><span class="n">last1</span><span class="p">,</span><span class="n">next1</span><span class="p">,</span><span class="n">nx</span><span class="p">,</span><span class="n">nx1</span><span class="p">,</span> <span class="p">&amp;</span>
+        <span class="n">nal</span><span class="p">,</span><span class="n">nal1</span><span class="p">,</span><span class="n">naal</span><span class="p">,</span><span class="n">naal1</span><span class="p">,</span><span class="n">nxd</span><span class="p">,</span><span class="n">nxd1</span><span class="p">,</span><span class="n">ncx</span><span class="p">,</span><span class="n">ncx1</span><span class="p">,</span><span class="n">ncxd</span><span class="p">,</span><span class="n">ncxd1</span><span class="p">,</span><span class="n">nla1</span>
+
+      <span class="n">m_</span><span class="o">=</span><span class="n">m</span>
+      <span class="n">nm</span><span class="o">=</span><span class="n">n</span><span class="o">+</span><span class="n">m</span>
+<span class="c">!  set real storage map for ws</span>
+<span class="c">!  first maxu locations are user storage for functions and gradients</span>
+<span class="c">!  vectors required by funct: two slots of length maxa for a(*)</span>
+      <span class="n">last1</span><span class="o">=</span><span class="n">maxu</span><span class="o">+</span><span class="mi">1</span>
+      <span class="n">next1</span><span class="o">=</span><span class="n">last1</span><span class="o">+</span><span class="n">maxa</span>
+<span class="c">!  slot of length n for x</span>
+      <span class="n">nx1</span><span class="o">=</span><span class="n">next1</span><span class="o">+</span><span class="n">maxa</span>
+      <span class="n">nx</span><span class="o">=</span><span class="n">nx1</span><span class="o">-</span><span class="mi">1</span>
+<span class="c">!  slot of length m for lambda</span>
+      <span class="n">nal</span><span class="o">=</span><span class="n">nx</span><span class="o">+</span><span class="n">n</span>
+      <span class="n">nal1</span><span class="o">=</span><span class="n">nal</span><span class="o">+</span><span class="mi">1</span>
+<span class="c">!  slot of length n for Ak.al, or for storing x</span>
+      <span class="n">naal</span><span class="o">=</span><span class="n">nal</span><span class="o">+</span><span class="n">m</span>
+      <span class="n">naal1</span><span class="o">=</span><span class="n">naal</span><span class="o">+</span><span class="mi">1</span>
+<span class="c">!  slot of length n for x at x+d</span>
+      <span class="n">nxd</span><span class="o">=</span><span class="n">naal</span><span class="o">+</span><span class="n">n</span>
+      <span class="n">nxd1</span><span class="o">=</span><span class="n">nxd</span><span class="o">+</span><span class="mi">1</span>
+<span class="c">!  slot of length m for c at x</span>
+      <span class="n">ncx</span><span class="o">=</span><span class="n">nxd</span><span class="o">+</span><span class="n">n</span>
+      <span class="n">ncx1</span><span class="o">=</span><span class="n">ncx</span><span class="o">+</span><span class="mi">1</span>
+<span class="c">!  slot of length m for c at x+d</span>
+      <span class="n">ncxd</span><span class="o">=</span><span class="n">ncx</span><span class="o">+</span><span class="n">m</span>
+      <span class="n">ncxd1</span><span class="o">=</span><span class="n">ncxd</span><span class="o">+</span><span class="mi">1</span>
+<span class="c">!  local storage for filter_SD</span>
+<span class="c">!  slot of length n for d</span>
+      <span class="n">id1</span><span class="o">=</span><span class="n">ncxd1</span><span class="o">+</span><span class="n">m</span>
+<span class="c">!  slot of length n+m for dl</span>
+      <span class="n">idl1</span><span class="o">=</span><span class="n">id1</span><span class="o">+</span><span class="n">n</span>
+<span class="c">!  slot of length n+m for du</span>
+      <span class="n">idu1</span><span class="o">=</span><span class="n">idl1</span><span class="o">+</span><span class="n">nm</span>
+<span class="c">!  slot of length n for g</span>
+      <span class="n">ig1</span><span class="o">=</span><span class="n">idu1</span><span class="o">+</span><span class="n">nm</span>
+<span class="c">!  slot of length n+m for e</span>
+      <span class="n">ie1</span><span class="o">=</span><span class="n">ig1</span><span class="o">+</span><span class="n">n</span>
+<span class="c">!  slot of length mlp for alp</span>
+      <span class="n">ialp1</span><span class="o">=</span><span class="n">ie1</span><span class="o">+</span><span class="n">nm</span>
+<span class="c">!  slot of length mxf for filh</span>
+      <span class="n">ifilh1</span><span class="o">=</span><span class="n">ialp1</span><span class="o">+</span><span class="n">mlp</span>
+<span class="c">!  slot of length mxf for filf</span>
+      <span class="n">ifilf1</span><span class="o">=</span><span class="n">ifilh1</span><span class="o">+</span><span class="n">mxf</span>
+<span class="c">!  total length of ws so far</span>
+      <span class="n">kk</span><span class="o">=</span><span class="n">ifilf1</span><span class="o">+</span><span class="n">mxf</span><span class="o">-</span><span class="mi">1</span>
+
+<span class="c">!  set integer storage map for lws</span>
+<span class="c">!  first maxiu locations are user storage for functions and gradients</span>
+<span class="c">!  storage of length maxla for la(0:*)</span>
+      <span class="n">nla1</span><span class="o">=</span><span class="n">maxiu</span><span class="o">+</span><span class="mi">1</span>
+<span class="c">!  local storage for filter_SD</span>
+<span class="c">!  slot of length n+m for ls</span>
+      <span class="n">ils1</span><span class="o">=</span><span class="n">nla1</span><span class="o">+</span><span class="n">maxla</span>
+      <span class="n">ils</span><span class="o">=</span><span class="n">ils1</span><span class="o">-</span><span class="mi">1</span>
+<span class="c">!  slot of length mlp for lp</span>
+      <span class="n">ilp1</span><span class="o">=</span><span class="n">ils1</span><span class="o">+</span><span class="n">nm</span>
+<span class="c">!  total length of lws so far</span>
+      <span class="n">ll</span><span class="o">=</span><span class="n">ilp1</span><span class="o">+</span><span class="n">mlp</span><span class="o">-</span><span class="mi">1</span>
+
+      <span class="k">do </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">bl</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">&gt;</span><span class="n">bu</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">then</span>
+<span class="k">          if</span> <span class="p">(</span><span class="n">iprint</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">)</span> <span class="k">write</span><span class="p">(</span><span class="n">nout</span><span class="p">,</span><span class="o">*</span><span class="p">)</span><span class="s1">&#39;simple bounds infeasible&#39;</span>
+          <span class="n">ifail</span><span class="o">=</span><span class="mi">2</span>
+          <span class="k">return</span>
+<span class="k">        end if</span>
+<span class="k">        </span><span class="n">ws</span><span class="p">(</span><span class="n">nx</span><span class="o">+</span><span class="n">i</span><span class="p">)</span><span class="o">=</span><span class="nb">min</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">bl</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="n">x</span><span class="p">(</span><span class="n">i</span><span class="p">)),</span><span class="n">bu</span><span class="p">(</span><span class="n">i</span><span class="p">))</span>
+      <span class="k">end do</span>
+
+<span class="c">!  note x and al are just used as workspace: the true values are those in ws</span>
+
+      <span class="k">call </span><span class="n">filter_SD</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">f</span><span class="p">,</span><span class="n">fmin</span><span class="p">,</span><span class="n">cstype</span><span class="p">,</span><span class="n">bl</span><span class="p">,</span><span class="n">bu</span><span class="p">,</span><span class="n">ws</span><span class="p">,</span><span class="n">lws</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">nv</span><span class="p">,</span> <span class="p">&amp;</span>
+        <span class="n">maxa</span><span class="p">,</span><span class="n">kmax</span><span class="p">,</span><span class="n">maxg</span><span class="p">,</span> <span class="p">&amp;</span>
+        <span class="n">ws</span><span class="p">(</span><span class="n">id1</span><span class="p">),</span><span class="n">ws</span><span class="p">(</span><span class="n">idl1</span><span class="p">),</span><span class="n">ws</span><span class="p">(</span><span class="n">idu1</span><span class="p">),</span><span class="n">ws</span><span class="p">(</span><span class="n">ig1</span><span class="p">),</span><span class="n">x</span><span class="p">,</span><span class="n">al</span><span class="p">,</span><span class="n">ws</span><span class="p">(</span><span class="n">ie1</span><span class="p">),</span><span class="n">lws</span><span class="p">(</span><span class="n">ils1</span><span class="p">),</span> <span class="p">&amp;</span>
+        <span class="n">ws</span><span class="p">(</span><span class="n">ialp1</span><span class="p">),</span><span class="n">lws</span><span class="p">(</span><span class="n">ilp1</span><span class="p">),</span><span class="n">ws</span><span class="p">(</span><span class="n">ifilh1</span><span class="p">),</span><span class="n">ws</span><span class="p">(</span><span class="n">ifilf1</span><span class="p">),</span><span class="n">rho</span><span class="p">,</span><span class="n">htol</span><span class="p">,</span><span class="n">rgtol</span><span class="p">,</span> <span class="p">&amp;</span>
+        <span class="n">maxit</span><span class="p">,</span><span class="n">iprint</span><span class="p">,</span><span class="n">nout</span><span class="p">,</span><span class="n">ifail</span><span class="p">)</span>
+
+      <span class="k">if</span> <span class="p">(</span><span class="n">ifail</span><span class="o">&gt;=</span><span class="mi">7</span><span class="p">)</span> <span class="k">return</span>
+<span class="c">!  scatter ws(nx.. and ws(nal.. and bound multipliers into x and al</span>
+      <span class="k">do </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span>
+        <span class="n">al</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">=</span><span class="mf">0.D0</span>
+      <span class="k">end do</span>
+<span class="k">      do </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">m</span>
+        <span class="n">al</span><span class="p">(</span><span class="n">n</span><span class="o">+</span><span class="n">i</span><span class="p">)</span><span class="o">=</span><span class="n">ws</span><span class="p">(</span><span class="n">nal</span><span class="o">+</span><span class="n">i</span><span class="p">)</span>
+      <span class="k">end do</span>
+<span class="k">      do </span><span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span>
+        <span class="n">i</span><span class="o">=</span><span class="nb">abs</span><span class="p">(</span><span class="n">lws</span><span class="p">(</span><span class="n">ils</span><span class="o">+</span><span class="n">j</span><span class="p">))</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">i</span><span class="o">&lt;=</span><span class="n">n</span><span class="p">)</span> <span class="k">then</span>
+<span class="k">          if</span> <span class="p">(</span><span class="n">ws</span><span class="p">(</span><span class="n">nx</span><span class="o">+</span><span class="n">i</span><span class="p">)</span><span class="o">==</span><span class="n">bl</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">then</span>
+<span class="k">            </span><span class="n">al</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">=</span><span class="n">x</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+          <span class="k">else if</span> <span class="p">(</span><span class="n">ws</span><span class="p">(</span><span class="n">nx</span><span class="o">+</span><span class="n">i</span><span class="p">)</span><span class="o">==</span><span class="n">bu</span><span class="p">(</span><span class="n">i</span><span class="p">))</span> <span class="k">then</span>
+<span class="k">            </span><span class="n">al</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">=-</span><span class="n">x</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+          <span class="k">end if</span>
+<span class="k">        end if</span>
+<span class="k">      end do</span>
+<span class="k">      do </span><span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span>
+        <span class="n">x</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">=</span><span class="n">ws</span><span class="p">(</span><span class="n">nx</span><span class="o">+</span><span class="n">i</span><span class="p">)</span>
+      <span class="k">end do</span>
+
+<span class="k">      return</span>
+<span class="mi">1</span>     <span class="k">format</span><span class="p">(</span><span class="n">A</span><span class="p">,</span><span class="mi">15</span><span class="n">I5</span><span class="p">)</span>
+    <span class="k">end subroutine </span><span class="n">filterSD</span>
+</pre></div>
+
+    </section>
+    <br>
     
     
     </div>

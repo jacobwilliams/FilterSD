@@ -122,7 +122,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 0.2% of total for procedures.">16 statements</a>
+    title=" 0.2% of total for procedures.">15 statements</a>
      </li> 
      
      
@@ -178,7 +178,13 @@
 
 
 
-<em>None</em>
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
+  <div class="list-group">
+    <a class="list-group-item" href="../proc/brots.html#src">brots</a>
+  </div>
+</div>
+
 
 
 </div>
@@ -335,7 +341,13 @@ subroutine brots(n, nmax, k, kk, R, v)
 
 
 
-<em>None</em>
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
+  <div class="list-group">
+    <a class="list-group-item" href="../proc/brots.html#src">brots</a>
+  </div>
+</div>
+
 
 
     </section>
@@ -358,6 +370,28 @@ subroutine brots(n, nmax, k, kk, R, v)
 
     
     
+    
+    <section>
+    <h2><span class="anchor" id="src"></span>Source Code</h2>
+    <div class="highlight"><pre><span></span>      <span class="k">subroutine </span><span class="n">brots</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">nmax</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">kk</span><span class="p">,</span><span class="n">R</span><span class="p">,</span><span class="n">v</span><span class="p">)</span>
+      <span class="k">implicit </span><span class="kt">double precision</span> <span class="p">(</span><span class="n">a</span><span class="o">-</span><span class="n">h</span><span class="p">,</span><span class="n">o</span><span class="o">-</span><span class="n">z</span><span class="p">)</span>
+      <span class="k">dimension </span><span class="n">R</span><span class="p">(</span><span class="o">*</span><span class="p">),</span><span class="n">v</span><span class="p">(</span><span class="o">*</span><span class="p">)</span>
+      <span class="n">ipip</span><span class="o">=</span><span class="n">kk</span>
+      <span class="k">do </span><span class="n">i</span><span class="o">=</span><span class="n">k</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span>
+        <span class="n">ip</span><span class="o">=</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span>
+        <span class="n">ipi</span><span class="o">=</span><span class="n">ipip</span><span class="o">-</span><span class="n">nmax</span><span class="o">+</span><span class="n">i</span>
+        <span class="n">ii</span><span class="o">=</span><span class="n">ipi</span><span class="o">-</span><span class="mi">1</span>
+        <span class="k">call </span><span class="n">angle</span><span class="p">(</span><span class="n">v</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="n">v</span><span class="p">(</span><span class="n">ip</span><span class="p">),</span><span class="nb">cos</span><span class="p">,</span><span class="nb">sin</span><span class="p">)</span>
+        <span class="k">call </span><span class="n">rot</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="n">i</span><span class="p">,</span><span class="n">R</span><span class="p">(</span><span class="n">ipi</span><span class="p">),</span><span class="n">R</span><span class="p">(</span><span class="n">ipip</span><span class="p">),</span><span class="nb">cos</span><span class="p">,</span><span class="nb">sin</span><span class="p">)</span>
+        <span class="n">v</span><span class="p">(</span><span class="n">ip</span><span class="p">)</span><span class="o">=</span><span class="nb">sin</span><span class="o">*</span><span class="n">R</span><span class="p">(</span><span class="n">ii</span><span class="p">)</span>
+        <span class="n">R</span><span class="p">(</span><span class="n">ii</span><span class="p">)</span><span class="o">=</span><span class="nb">cos</span><span class="o">*</span><span class="n">R</span><span class="p">(</span><span class="n">ii</span><span class="p">)</span>
+        <span class="n">ipip</span><span class="o">=</span><span class="n">ii</span>
+      <span class="k">end do</span>
+<span class="k">      end subroutine </span><span class="n">brots</span>
+</pre></div>
+
+    </section>
+    <br>
     
     
     </div>

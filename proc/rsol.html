@@ -122,7 +122,7 @@
      <li><i class="fa fa-list-ol"></i>
        <a data-toggle="tooltip"
     data-placement="bottom" data-html="true"
-    title=" 0.1% of total for procedures.">12 statements</a>
+    title=" 0.1% of total for procedures.">11 statements</a>
      </li> 
      
      
@@ -178,7 +178,13 @@
 
 
 
-<em>None</em>
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
+  <div class="list-group">
+    <a class="list-group-item" href="../proc/rsol.html#src">rsol</a>
+  </div>
+</div>
+
 
 
 </div>
@@ -196,6 +202,21 @@ subroutine rsol(n, nn, nmax, R, b)
   
 
 
+    
+    <p>dense matrix utilities</p>
+<p>Copyright (C) 1996 Roger Fletcher</p>
+<p>Current version dated 26 May 2011</p>
+<p>THE ACCOMPANYING PROGRAM IS PROVIDED UNDER THE TERMS OF THE ECLIPSE PUBLIC
+  LICENSE ("AGREEMENT"). ANY USE, REPRODUCTION OR DISTRIBUTION OF THE PROGRAM
+  CONSTITUTES RECIPIENT'S ACCEPTANCE OF THIS AGREEMENT
+    module utilities
+    contains</p>
+<hr>
+<hr>
+<p>solves Rx=b where R is nxn upper triangular. Solution overwrites b.
+  R is a single suffix array: the first nmax elements contain the first row
+  of R in positions 1:n, the next nmax-1 elements contain the second row of R,
+  and so on. nn indexes the element R(n,n) (where nn=n<em>(3-n)/2+(n-1)</em>nmax)</p>
     
 
     <h3>Arguments</h3>
@@ -539,7 +560,13 @@ subroutine rsol(n, nn, nmax, R, b)
 
 
 
-<em>None</em>
+<div class="panel panel-primary">
+  <div class="panel-heading text-left"><h3 class="panel-title">Source Code</h3></div>
+  <div class="list-group">
+    <a class="list-group-item" href="../proc/rsol.html#src">rsol</a>
+  </div>
+</div>
+
 
 
     </section>
@@ -562,6 +589,24 @@ subroutine rsol(n, nn, nmax, R, b)
 
     
     
+    
+    <section>
+    <h2><span class="anchor" id="src"></span>Source Code</h2>
+    <div class="highlight"><pre><span></span>      <span class="k">subroutine </span><span class="n">rsol</span><span class="p">(</span><span class="n">n</span><span class="p">,</span><span class="n">nn</span><span class="p">,</span><span class="n">nmax</span><span class="p">,</span><span class="n">R</span><span class="p">,</span><span class="n">b</span><span class="p">)</span>
+      <span class="k">implicit </span><span class="kt">double precision</span> <span class="p">(</span><span class="n">a</span><span class="o">-</span><span class="n">h</span><span class="p">,</span><span class="n">o</span><span class="o">-</span><span class="n">z</span><span class="p">)</span>
+      <span class="k">dimension </span><span class="n">R</span><span class="p">(</span><span class="o">*</span><span class="p">),</span><span class="n">b</span><span class="p">(</span><span class="o">*</span><span class="p">)</span>
+      <span class="n">n1</span><span class="o">=</span><span class="n">nmax</span><span class="o">+</span><span class="mi">1</span>
+      <span class="n">ii</span><span class="o">=</span><span class="n">nn</span>
+      <span class="n">b</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">=</span><span class="n">b</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="o">/</span><span class="n">R</span><span class="p">(</span><span class="n">nn</span><span class="p">)</span>
+      <span class="k">do </span><span class="n">i</span><span class="o">=</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span>
+        <span class="n">ii</span><span class="o">=</span><span class="n">ii</span><span class="o">-</span><span class="n">n1</span><span class="o">+</span><span class="n">i</span>
+        <span class="n">b</span><span class="p">(</span><span class="n">i</span><span class="p">)</span><span class="o">=-</span><span class="n">scpr</span><span class="p">(</span><span class="o">-</span><span class="n">b</span><span class="p">(</span><span class="n">i</span><span class="p">),</span><span class="n">R</span><span class="p">(</span><span class="n">ii</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">b</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span><span class="n">n</span><span class="o">-</span><span class="n">i</span><span class="p">)</span><span class="o">/</span><span class="n">R</span><span class="p">(</span><span class="n">ii</span><span class="p">)</span>
+      <span class="k">end do</span>
+<span class="k">      end subroutine </span><span class="n">rsol</span>
+</pre></div>
+
+    </section>
+    <br>
     
     
     </div>
