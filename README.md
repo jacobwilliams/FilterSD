@@ -44,7 +44,4 @@ Information on how to set up the driver program is contained in the files `filte
 
 ## Documentation
 
-The latest API documentation can be found [here](http://jacobwilliams.github.io/filterSD/). This was generated from the source code using [FORD](https://github.com/cmacmackin/ford).
-
-
-
+The latest API documentation can be found [here](https://jacobwilliams.github.io/FilterSD/). This was generated from the source code using [FORD](https://github.com/cmacmackin/ford).
