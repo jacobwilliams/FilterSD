@@ -9,18 +9,25 @@ rm -rf bin
 mkdir bin
 # mkdir build
 
-COMPILER=gfortran
+COMPILER=ifort
 FLAGS="-O2 -std=legacy"
 
 # To solve an NLP using a sparse matrix data structure, the subroutines in the following files are required
 $COMPILER $FLAGS ./src/filterSD.f90 ./src/checkd.f90 ./src/glcpd.f90 ./src/l1sold.f90 ./src/shared.f90 ./src/schurQR.f90 ./src/sparseA.f90 ./src/util.f90 ./src/hs106.f90 -o ./bin/hs106
 
-$COMPILER $FLAGS ./src/filterSD.f90 ./src/checkd.f90 ./src/glcpd.f90 ./src/l1sold.f90 ./src/shared.f90 ./src/schurQR.f90 ./src/sparseA.f90 ./src/util.f90 ./src/hs72.f90 -o ./bin/hs72
-
 # To solve an NLP using a dense matrix data structure, the subroutines in the following files are required
 $COMPILER $FLAGS ./src/filterSD.f90 ./src/checkd.f90 ./src/glcpd.f90 ./src/l1sold.f90 ./src/shared.f90 ./src/denseL.f90 ./src/denseA.f90 ./src/util.f90 ./src/hs106d.f90 -o ./bin/hs106d
 
-$COMPILER $FLAGS ./src/filterSD.f90 ./src/checkd.f90 ./src/glcpd.f90 ./src/l1sold.f90 ./src/shared.f90 ./src/denseL.f90 ./src/denseA.f90 ./src/util.f90 ./src/hs72d.f90 -o ./bin/hs72d
+
+# $COMPILER $FLAGS ./src/filterSD.f90 ./src/checkd.f90 ./src/glcpd.f90 ./src/l1sold.f90 ./src/shared.f90 ./src/schurQR.f90 ./src/sparseA.f90 ./src/util.f90 ./src/hs72.f90 -o ./bin/hs72
+
+# $COMPILER $FLAGS ./src/filterSD.f90 ./src/checkd.f90 ./src/glcpd.f90 ./src/l1sold.f90 ./src/shared.f90 ./src/denseL.f90 ./src/denseA.f90 ./src/util.f90 ./src/hs72d.f90 -o ./bin/hs72d
+
+# To solve an LCP using a sparse matrix data structure, the subroutines in the following files are required
+$COMPILER $FLAGS ./src/glcpd.f90 ./src/shared.f90 ./src/util.f90 ./src/checkg.f90 ./src/schurQR.f90 ./src/sparseA.f90 ./src/hs72.f90 -o ./bin/hs72
+
+# To solve an LCP using a dense matrix data structure, the subroutines in the following files are required
+$COMPILER $FLAGS ./src/glcpd.f90 ./src/checkg.f90 ./src/shared.f90 ./src/denseL.f90 ./src/denseA.f90 ./src/util.f90 ./src/hs72d.f90 -o ./bin/hs72d
 
 
 # # To solve an LCP using a sparse matrix data structure, the subroutines in the following files are required
