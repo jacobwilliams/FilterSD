@@ -1,6 +1,8 @@
 
 !Christen this file hs106.f
 
+! reference: http://apmonitor.com/wiki/uploads/Apps/hs106.apm
+
       program hs106_driver
 
       implicit double precision (a-h, o-z)
@@ -35,6 +37,10 @@
 !     data x(1:n)/579.3167, 1359.943, 5110.071, 182.0174,
 !    *  295.5985, 217.9799, 286.4162, 395.5979/
 !     al = [1964.046;5210.645;5110.092;8.475914E-03;9.578792E-03;0.01]
+
+      write(*,*) ''
+      write(*,*) 'hs106'
+      write(*,*) ''
 
       mxws_=mxws
       mxlws_=mxlws

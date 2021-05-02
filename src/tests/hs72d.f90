@@ -1,43 +1,46 @@
 
-      program hs72_driver
+      program hs72d_driver
 
 ! program to drive the HS72 test problem, modified to give linear constraints,
-! using sparse matrix format
+! using dense storage format
 
       implicit double precision (a-h, o-z)
 
-      parameter (maxa=8,n=4,m=2,nm=n+m,mlp=n,mxws=30000,mxlws=5000)
+      parameter (maxa=12,n=4,m=2,nm=n+m,mlp=n,mxws=30000,mxlws=5000)
 
-      dimension a(maxa),la(0:maxa+m+2),x(n),bl(nm),bu(nm),g(n),r(nm), &
+      dimension a(maxa),x(n),bl(nm),bu(nm),g(n),r(nm), &
        w(nm),e(nm),ls(nm),alp(mlp),lp(mlp),ws(mxws),lws(mxlws),v(n)
 
       character cws
 
       common/wsc/kk,ll,kkk,lll,mxws_,mxlws_
-      common/refactorc/mc,mxmc
       common/infoc/rgnorm,vstep,iter,npv,nfn,ngr
+      common/mxm1c/mxm1
 
-      data a/4.D0,2.25D0,1.D0,0.25D0,0.16D0,0.36D0,2*0.64D0/
+      data a/4*0.D0,4.D0,2.25D0,1.D0,0.25D0,0.16D0,0.36D0,2*0.64D0/
 
       parameter(ainfty=1.D20,tol=1.D-12)
+
+      write(*,*) ''
+      write(*,*) 'hs72d'
+      write(*,*) ''
 
       mxws_=mxws
       mxlws_=mxlws
       kk=0
       ll=0
 
+!  set mxm1 (max size of non-trivial block of basis matrix (see denseL.f))
+      mxm1=min(m+1,n)
+
+!  set stride
+      la=n
+
       do i=1,n
-        la(i)=i
-        la(4+i)=i
         x(i)=1.D0
         bl(i)=1.D0/((5-i)*1.D5)
         bu(i)=1.D3
       end do
-      la(0)=9
-      la(9)=1
-      la(10)=1
-      la(11)=5
-      la(12)=9
       bl(5)=-ainfty
       bl(6)=-ainfty
       bu(5)=4.01D-2
@@ -48,7 +51,6 @@
       fmin=-ainfty
       rgtol=1.D-5
       mode=0
-      mxmc=25
       mxgr=100
       iprint=1
       nout=0
