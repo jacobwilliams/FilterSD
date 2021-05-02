@@ -84,9 +84,7 @@
       do i=1,n
         xi=x(i)
         x(i)=x(i)+al(i)
-        !call functions(n,m,x,ws(ncxd0),ws(ncxd1),ws,lws,iflag)  ! JW : is this a typo???
         call functions(n,m,x,ws(ncxd0),ws(ncxd1),ws,lws)
-        !call gradients(n,m,x,ws(next1),ws,lws,iflag)  ! JW : is this a typo???
         call gradients(n,m,x,ws(next1),ws,lws)
         do 10 j=0,m
           dfi=(ws(ncxd0+j)-ws(ncx0+j))/al(i)
