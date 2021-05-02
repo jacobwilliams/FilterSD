@@ -9,7 +9,7 @@ rm -rf bin
 mkdir bin
 # mkdir build
 
-COMPILER=ifort
+COMPILER=gfortran
 FLAGS="-O2 -std=legacy"
 
 # To solve an NLP using a sparse matrix data structure, the subroutines in the following files are required
