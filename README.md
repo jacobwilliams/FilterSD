@@ -4,6 +4,8 @@ A work in progress to create a modern Fortran version of the filterSD optimizati
 
 ## Original Fortran 77 Documentation
 
+Author: Roger Fletcher, University of Dundee, Scotland
+
 **FilterSD** is a package of Fortran 77 subroutines for solving nonlinear programming problems and linearly constrained problems in continuous optimization.
 
 Please see the `README.pdf` file for instructions on compiling the source code.
