@@ -904,7 +904,7 @@
            goto 10
         else if (ifail>5) then
           if (iprint>1) &
-           write(nout,*),'malfunction in phase 2 projection subproblem'
+           write(nout,*) 'malfunction in phase 2 projection subproblem'
            goto 99
         end if
         do i=1,n
