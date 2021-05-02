@@ -55,9 +55,13 @@ jobs:
 
     - name: Run tests
       run: |
+        echo " ... hs106 ..."
         ./bin/hs106
+        echo " ... hs106d ..."
         ./bin/hs106d
+        echo " ... hs72 ..."
         ./bin/hs72
+        echo " ... hs72d ..."
         ./bin/hs72d
 
     # - name: Build documentation
