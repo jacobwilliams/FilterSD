@@ -21,6 +21,10 @@
 
       parameter(ainfty=1.D20,tol=1.D-12)
 
+      write(*,*) ''
+      write(*,*) 'hs72d'
+      write(*,*) ''
+
       mxws_=mxws
       mxlws_=mxlws
       kk=0

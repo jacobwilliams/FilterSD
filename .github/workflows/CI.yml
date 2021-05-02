@@ -53,16 +53,17 @@ jobs:
         gfortran -O2 -std=legacy ./src/glcpd.f90 ./src/shared.f90 ./src/util.f90 ./src/checkg.f90 ./src/schurQR.f90 ./src/sparseA.f90 ./src/hs72.f90 -o ./bin/hs72
         gfortran -O2 -std=legacy ./src/glcpd.f90 ./src/checkg.f90 ./src/shared.f90 ./src/denseL.f90 ./src/denseA.f90 ./src/util.f90 ./src/hs72d.f90 -o ./bin/hs72d
 
-    - name: Run tests
-      run: |
-        echo " ... hs106 ..."
-        ./bin/hs106
-        echo " ... hs106d ..."
-        ./bin/hs106d
-        echo " ... hs72 ..."
-        ./bin/hs72
-        echo " ... hs72d ..."
-        ./bin/hs72d
+    - name: hs106
+      run: ./bin/hs106
+
+    - name: hs106d
+      run: ./bin/hs106d
+    
+    - name: hs72
+      run: ./bin/hs72
+    
+    - name: hs72d
+      run: ./bin/hs72d
 
     # - name: Build documentation
     #   run: ford ./filterSD.md

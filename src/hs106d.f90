@@ -35,6 +35,10 @@
 !    *  295.5985, 217.9799, 286.4162, 395.5979/
 !     al = [1964.046;5210.645;5110.092;8.475914E-03;9.578792E-03;0.01]
 
+      write(*,*) ''
+      write(*,*) 'hs106d'
+      write(*,*) ''
+
 !  set mxm1 (max size of non-trivial block of basis matrix (see denseL.f))
       mxm1=min(m+1,n)
 
